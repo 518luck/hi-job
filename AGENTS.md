@@ -18,7 +18,7 @@ hi-job/
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
 │   ├── background.ts       # 后台 Service Worker
 │   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
-│   └── popup/              # 工具栏弹窗（React 挂载）
+│   └── sidepanel/          # 侧边栏面板（React 挂载，点工具栏图标展开）
 ├── assets/                 # 参与构建的静态资源（import 引用，经 Vite 处理）
 ├── public/                 # 原样复制的静态资源（不经构建处理）
 │   └── icon/               # 扩展图标，WXT 自动发现并写入 manifest
@@ -37,7 +37,7 @@ manifest 由 `entrypoints/` 下的文件名约定自动生成，**无需手写 m
 | 文件 / 目录         | 入口类型   | 说明                                       |
 | ------------------- | ---------- | ------------------------------------------ |
 | `background.ts`     | 后台脚本   | Service Worker，长驻逻辑、消息中枢         |
-| `popup/index.html`  | 弹窗页面   | 点击工具栏图标弹出，React 挂载点           |
+| `sidepanel/index.html` | 侧边栏面板 | Chrome Side Panel，点工具栏图标在浏览器左侧展开 |
 | `xxx.content.ts(x)` | 内容脚本   | 注入匹配网页，`matches` 写在文件内         |
 | `options/index.html`| 设置页     | 扩展选项页（按需新增）                     |
 
