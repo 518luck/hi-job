@@ -3,8 +3,8 @@
 import type { SubmitEvent } from 'react';
 import { useEffect, useState } from 'react';
 
-import type { AiProviderRecord } from '@/infra/storage';
-import { aiProviderStore } from '@/infra/storage';
+import type { AiVendorRecord } from '@/infra/storage';
+import { aiVendorStore } from '@/infra/storage';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,
@@ -20,18 +20,16 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { vendorFormSchema } from '@/shared/zod/ai-vendor';
+import { fieldErrorsOf } from '@/shared/zod/field-errors';
 
-import type { BuiltInProvider } from '../config/built-in-providers';
-import { fetchProviderModels } from '../model/provider-client';
-import {
-  fieldErrorsOf,
-  providerFormSchema,
-} from '../model/provider-form-schema';
+import type { BuiltInVendor } from '../config/built-in-vendors';
+import { fetchVendorModels } from '../model/vendor-client';
 
 // 弹窗初始值来源：编辑已有记录、内置预设预填或空白新增
-type ProviderDialogSeed =
-  | { record: AiProviderRecord }
-  | { preset: BuiltInProvider }
+type VendorDialogSeed =
+  | { record: AiVendorRecord }
+  | { preset: BuiltInVendor }
   | null;
 
 // API 格式合法值判断，用于 ToggleGroup 回调收窄
@@ -39,13 +37,13 @@ const isApiFormat = (value: string): value is 'openai' | 'anthropic' =>
   value === 'openai' || value === 'anthropic';
 
 // 厂商表单弹窗：open 受控，seed 决定回填内容
-interface ProviderDialogProps {
+interface VendorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  seed: ProviderDialogSeed;
+  seed: VendorDialogSeed;
 }
 
-function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
+function VendorDialog({ open, onOpenChange, seed }: VendorDialogProps) {
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -94,7 +92,7 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line !== '');
-    const parsed = providerFormSchema.safeParse({
+    const parsed = vendorFormSchema.safeParse({
       name: name.trim(),
       baseUrl: baseUrl.trim(),
       apiKey: apiKey.trim(),
@@ -107,12 +105,12 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
     }
 
     const now = Date.now();
-    const providerId =
+    const vendorId =
       seed !== null && 'record' in seed
-        ? seed.record.providerId
+        ? seed.record.vendorId
         : crypto.randomUUID();
-    void aiProviderStore.saveAiProvider({
-      provider: { providerId, ...parsed.data, createdAt: now, updatedAt: now },
+    void aiVendorStore.saveVendor({
+      vendor: { vendorId, ...parsed.data, createdAt: now, updatedAt: now },
     });
     onOpenChange(false);
   };
@@ -126,7 +124,7 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
     setPulling(true);
     setPullMessage('拉取中…');
     try {
-      const models = await fetchProviderModels({
+      const models = await fetchVendorModels({
         baseUrl: baseUrl.trim(),
         apiKey: apiKey.trim(),
         apiFormat,
@@ -162,9 +160,9 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-1.5">
-            <Label htmlFor="provider-name">厂商名称</Label>
+            <Label htmlFor="vendor-name">厂商名称</Label>
             <Input
-              id="provider-name"
+              id="vendor-name"
               value={name}
               aria-invalid={errorOf('name') !== undefined}
               onChange={(event) => setName(event.target.value)}
@@ -174,9 +172,9 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="provider-base-url">Base URL</Label>
+            <Label htmlFor="vendor-base-url">Base URL</Label>
             <Input
-              id="provider-base-url"
+              id="vendor-base-url"
               value={baseUrl}
               placeholder="https://api.example.com/v1"
               aria-invalid={errorOf('baseUrl') !== undefined}
@@ -187,9 +185,9 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
             )}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="provider-api-key">API Key</Label>
+            <Label htmlFor="vendor-api-key">API Key</Label>
             <Input
-              id="provider-api-key"
+              id="vendor-api-key"
               type="password"
               value={apiKey}
               aria-invalid={errorOf('apiKey') !== undefined}
@@ -222,7 +220,7 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
           </div>
           <div className="grid gap-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="provider-models">模型列表（每行一个）</Label>
+              <Label htmlFor="vendor-models">模型列表（每行一个）</Label>
               <Button
                 type="button"
                 variant="ghost"
@@ -237,7 +235,7 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
               </Button>
             </div>
             <Textarea
-              id="provider-models"
+              id="vendor-models"
               rows={4}
               value={modelsText}
               aria-invalid={errorOf('models') !== undefined}
@@ -262,5 +260,5 @@ function ProviderDialog({ open, onOpenChange, seed }: ProviderDialogProps) {
   );
 }
 
-export type { ProviderDialogSeed };
-export { ProviderDialog };
+export type { VendorDialogSeed };
+export { VendorDialog };

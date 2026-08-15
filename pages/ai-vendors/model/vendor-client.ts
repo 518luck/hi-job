@@ -1,21 +1,21 @@
-// # AI 供应商客户端：AI SDK 供应商工厂与模型列表拉取
+// # AI 厂商客户端：构造 AI SDK 供应商实例与模型列表拉取
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
-interface ProviderConnection {
+interface VendorConnection {
   baseUrl: string; // API 基础地址
   apiKey: string; // API 密钥
   apiFormat: 'openai' | 'anthropic'; // API 协议格式
 }
 
 // 构造厂商的 AI SDK 供应商实例：后续对话、JD 分析等调用统一走此入口
-const createProviderClient = ({
+const createVendorClient = ({
   name,
   baseUrl,
   apiKey,
   apiFormat,
-}: ProviderConnection & { name: string }) => {
+}: VendorConnection & { name: string }) => {
   if (apiFormat === 'anthropic') {
     return createAnthropic({ baseURL: baseUrl, apiKey });
   }
@@ -48,11 +48,11 @@ const isModelsResponse = (
 };
 
 // 拉取厂商的可用模型 id 列表：openai 兼容走 /models，anthropic 走 /v1/models
-const fetchProviderModels = async ({
+const fetchVendorModels = async ({
   baseUrl,
   apiKey,
   apiFormat,
-}: ProviderConnection): Promise<string[]> => {
+}: VendorConnection): Promise<string[]> => {
   const granted = await ensureOriginPermission({ baseUrl });
   if (!granted) {
     throw new Error('未授权访问该地址');
@@ -80,4 +80,4 @@ const fetchProviderModels = async ({
     .filter((id) => id !== '');
 };
 
-export { createProviderClient, fetchProviderModels };
+export { createVendorClient, fetchVendorModels };

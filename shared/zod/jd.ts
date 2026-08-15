@@ -1,7 +1,8 @@
+// # jd 域数据字典：落库实体为基座，传输 DTO 与消息信封从实体派生
 import { z } from 'zod';
 
-// 职位（JD）数据 schema：内容脚本回包是跨环境传来的无类型数据，收包时用它校验
-const selectedJdSchema = z.object({
+// 表 jd（职位明细）落库实体：主键 jobId，字段最全，是该域字段字典的唯一事实来源
+const recordedJdSchema = z.object({
   jobId: z.string(), // 职位唯一 id，取自详情链接
   companyId: z.string(), // 公司唯一 id，匿名公司为 anonymous:<公司名>
   companyName: z.string(), // 公司名
@@ -12,19 +13,46 @@ const selectedJdSchema = z.object({
   description: z.string(), // 职位描述全文
   address: z.string(), // 工作地址
   url: z.string(), // 职位详情链接
+  firstSeenAt: z.number(), // 首次记录的时间戳（毫秒）
+  lastSeenAt: z.number(), // 最近记录的时间戳（毫秒）
+  seenCount: z.number(), // 该职位被点开的总次数
+});
+
+// 表 company（公司推送聚合）落库实体：主键 companyId
+const companyRecordSchema = z.object({
+  companyId: z.string(), // 公司唯一 id，与 recordedJdSchema 的 companyId 一致
+  companyName: z.string(), // 公司名
+  jobIds: z.array(z.string()), // 该公司推送过的全部职位 id
+  firstSeenAt: z.number(), // 首次出现的时间戳（毫秒）
+  lastSeenAt: z.number(), // 最近出现的时间戳（毫秒）
+});
+
+// 传输 DTO：内容脚本回包的职位数据，从落库实体剔除记录元字段派生，禁止重复声明
+const selectedJdSchema = recordedJdSchema.omit({
+  firstSeenAt: true,
+  lastSeenAt: true,
+  seenCount: true,
 });
 
 // 内容脚本向后台发送记录请求的消息类型
 const RECORD_JD = 'hi-job:record-jd';
 
-// 记录消息的校验 schema：后台收到跨环境无类型消息后用它校验
+// 消息信封：后台收到跨环境无类型消息后用它校验
 const recordJdMessageSchema = z.object({
   type: z.literal(RECORD_JD), // 消息类型标识
   jd: selectedJdSchema, // 待记录的职位数据
 });
 
 // 从 schema 派生类型，保持单一事实来源
+type RecordedJd = z.infer<typeof recordedJdSchema>;
+type CompanyRecord = z.infer<typeof companyRecordSchema>;
 type SelectedJd = z.infer<typeof selectedJdSchema>;
 
-export type { SelectedJd };
-export { RECORD_JD, recordJdMessageSchema, selectedJdSchema };
+export type { CompanyRecord, RecordedJd, SelectedJd };
+export {
+  companyRecordSchema,
+  RECORD_JD,
+  recordedJdSchema,
+  recordJdMessageSchema,
+  selectedJdSchema,
+};

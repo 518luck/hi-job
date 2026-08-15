@@ -1,0 +1,33 @@
+// # ai-vendor 域数据字典：落库实体为基座，厂商表单从实体派生
+import { z } from 'zod';
+
+// 表 aiVendor（AI 厂商配置）落库实体：主键 vendorId
+const aiVendorSchema = z.object({
+  vendorId: z.string(), // 厂商配置唯一 id，创建时 crypto.randomUUID 生成
+  name: z.string(), // 厂商名称（内置预设预填，可改）
+  baseUrl: z.string(), // API 基础地址，如 https://api.deepseek.com
+  apiKey: z.string(), // API 密钥，仅存本机 IndexedDB，不参与任何同步
+  apiFormat: z.enum(['openai', 'anthropic']), // API 协议格式：openai 兼容或 anthropic
+  models: z.array(z.string()), // 该厂商下可用的模型 id 列表
+  createdAt: z.number(), // 首次创建时间戳（毫秒）
+  updatedAt: z.number(), // 最近编辑时间戳（毫秒）
+});
+
+// 厂商表单：从落库实体剔除主键与时间戳（由仓储维护），extend 附加校验规则与错误文案
+const vendorFormSchema = aiVendorSchema
+  .omit({ vendorId: true, createdAt: true, updatedAt: true })
+  .extend({
+    name: z.string().min(1, '请填写厂商名称'), // 厂商名称
+    baseUrl: z.url('Base URL 需为合法网址'), // API 基础地址
+    apiKey: z.string().min(1, '请填写 API Key'), // API 密钥
+    models: z
+      .array(z.string().min(1))
+      .min(1, '至少填写一个模型，可点「拉取模型列表」'), // 模型 id 列表
+  });
+
+// 从 schema 派生类型，保持单一事实来源
+type AiVendorRecord = z.infer<typeof aiVendorSchema>;
+type VendorFormValues = z.infer<typeof vendorFormSchema>;
+
+export type { AiVendorRecord, VendorFormValues };
+export { aiVendorSchema, vendorFormSchema };

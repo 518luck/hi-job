@@ -86,7 +86,7 @@ const useXxxContext = (): XxxContextType => {
 - `entrypoints/` 按 WXT 入口约定组织（background、sidepanel、content 等），视同 app 层：只做入口挂载与消息搬运，不承载业务。
 - 常用 segment（按代码目的分组）：
   - `ui` — UI 显示相关：组件、样式、日期格式化等。
-  - `model` — 数据模型：schema、类型、store、业务逻辑、DOM 解析。
+  - `model` — 数据模型：store、业务逻辑、DOM 解析（数据 schema 统一放 `shared/zod/`）。
   - `api` — 请求与接口封装。
   - `lib` — 本 slice 复用的工具代码。
   - `config` — 配置、常量、feature flags。
@@ -97,7 +97,7 @@ const useXxxContext = (): XxxContextType => {
 slice 内的文件不必重复 slice 名（文件夹路径已经标注过了）。常用 segment 下的文件命名约定如下：
 
 - **`ui/`** — 单个页面组件用通用名 `page.tsx`，组件名保留语义，由 `index.ts` 导出（`pages/favorites/ui/page.tsx` → `FavoritesPage`）。其余组件：有明确 UI 形态的直接用 UI 形态命名（`card.tsx`、`dialog.tsx`）；同一形态有多个时，用 UI 形态作前缀区分（`card-cluster.tsx`、`dialog-template-edit.tsx`）；无具体 UI 形态的按作用命名。
-- **`model/`** — 数据获取 hook 用 `use-xxx.ts`；schema 用 `schema-xxx.ts`；类型用 `types.ts`；Context 用 `context-xxx.tsx`；纯函数/辅助按作用命名（如 `parse-jd.ts`）。
+- **`model/`** — 数据获取 hook 用 `use-xxx.ts`；Context 用 `context-xxx.tsx`；纯函数/辅助按作用命名（如 `parse-jd.ts`）；数据 schema 一律放 `shared/zod/` 并从领域实体派生，不放 model。
 - **`lib/`** — 工具/生成器按语义命名（`docx-builder.ts`、`format.ts`）。
 - **`config/`** — 常量/枚举/静态配置，按内容命名（`constants.ts`、`menu-meta.ts`），内容简单时直接 `index.ts`。
 

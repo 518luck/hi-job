@@ -29,7 +29,7 @@ const Icons = {
   chevronDown: ChevronDown,
   exportData: Download,
   clearData: Trash2,
-  aiProviders: Bot,
+  aiVendors: Bot,
   add: Plus,
   edit: Pencil,
   remove: Trash2,

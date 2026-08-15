@@ -1,8 +1,8 @@
-// # AI 模型设置页：厂商配置的增删改查与内置预设快速启用
+// # AI 厂商设置页：厂商配置的增删改查与内置预设快速启用
 import { useState } from 'react';
 
-import type { AiProviderRecord } from '@/infra/storage';
-import { aiProviderStore } from '@/infra/storage';
+import type { AiVendorRecord } from '@/infra/storage';
+import { aiVendorStore } from '@/infra/storage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,17 +16,17 @@ import {
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
 
-import { BUILT_IN_PROVIDERS } from '../config/built-in-providers';
-import { useAiProviders } from '../model/use-ai-providers';
-import { ProviderCard } from './provider-card';
-import { ProviderDialog, type ProviderDialogSeed } from './provider-dialog';
+import { BUILT_IN_VENDORS } from '../config/built-in-vendors';
+import { useAiVendors } from '../model/use-ai-vendors';
+import { VendorCard } from './vendor-card';
+import { VendorDialog, type VendorDialogSeed } from './vendor-dialog';
 
-// AI 模型设置页：内置厂商预设 + 自定义厂商，配置保存于本机
-function AiProvidersPage() {
-  const { providers, loading } = useAiProviders();
+// AI 厂商设置页：内置厂商预设 + 自定义厂商，配置保存于本机
+function AiVendorsPage() {
+  const { vendors, loading } = useAiVendors();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [seed, setSeed] = useState<ProviderDialogSeed>(null);
-  const [removing, setRemoving] = useState<AiProviderRecord | null>(null);
+  const [seed, setSeed] = useState<VendorDialogSeed>(null);
+  const [removing, setRemoving] = useState<AiVendorRecord | null>(null);
 
   // 打开空白新增表单
   const openCreate = () => {
@@ -35,13 +35,13 @@ function AiProvidersPage() {
   };
 
   // 用内置预设打开表单：预填连接信息，密钥由用户补充
-  const openPreset = (preset: ProviderDialogSeed) => {
+  const openPreset = (preset: VendorDialogSeed) => {
     setSeed(preset);
     setDialogOpen(true);
   };
 
   // 打开编辑表单：回填已有配置
-  const openEdit = (record: AiProviderRecord) => {
+  const openEdit = (record: AiVendorRecord) => {
     setSeed({ record });
     setDialogOpen(true);
   };
@@ -51,7 +51,7 @@ function AiProvidersPage() {
     if (loading) {
       return <p className="text-xs text-muted-foreground">读取中…</p>;
     }
-    if (providers.length === 0) {
+    if (vendors.length === 0) {
       return (
         <p className="text-xs text-muted-foreground">
           还没有配置厂商：点上方「添加厂商」自定义，或点内置厂商快速启用
@@ -60,10 +60,10 @@ function AiProvidersPage() {
     }
     return (
       <div className="flex flex-col gap-2">
-        {providers.map((provider) => (
-          <ProviderCard
-            key={provider.providerId}
-            provider={provider}
+        {vendors.map((vendor) => (
+          <VendorCard
+            key={vendor.vendorId}
+            vendor={vendor}
             onEdit={openEdit}
             onRemove={setRemoving}
           />
@@ -74,9 +74,9 @@ function AiProvidersPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
-      <h2 className="text-base font-medium">AI 模型</h2>
+      <h2 className="text-base font-medium">AI 厂商</h2>
       <p className="text-xs text-muted-foreground">
-        管理 AI 模型厂商：内置预设一键启用，或自定义任意 OpenAI 兼容 / Anthropic
+        管理 AI 厂商：内置预设一键启用，或自定义任意 OpenAI 兼容 / Anthropic
         接口
       </p>
       <Button size="sm" onClick={openCreate}>
@@ -84,7 +84,7 @@ function AiProvidersPage() {
         <span>添加厂商</span>
       </Button>
       <div className="flex flex-wrap gap-1">
-        {BUILT_IN_PROVIDERS.map((preset) => (
+        {BUILT_IN_VENDORS.map((preset) => (
           <Button
             key={preset.key}
             variant="outline"
@@ -96,7 +96,7 @@ function AiProvidersPage() {
         ))}
       </div>
       {renderList()}
-      <ProviderDialog
+      <VendorDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         seed={seed}
@@ -122,8 +122,8 @@ function AiProvidersPage() {
               variant="destructive"
               onClick={() => {
                 if (removing !== null) {
-                  void aiProviderStore.removeAiProvider({
-                    providerId: removing.providerId,
+                  void aiVendorStore.removeVendor({
+                    vendorId: removing.vendorId,
                   });
                 }
                 setRemoving(null);
@@ -138,4 +138,4 @@ function AiProvidersPage() {
   );
 }
 
-export { AiProvidersPage };
+export { AiVendorsPage };

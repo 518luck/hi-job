@@ -1,7 +1,6 @@
-import type { SelectedJd } from '@/shared/zod/jd';
+import type { CompanyRecord, RecordedJd, SelectedJd } from '@/shared/zod/jd';
 
 import { db } from '../db';
-import type { CompanyRecord, RecordedJd } from './schema';
 
 // > 记录一次选中的 JD：按主键 upsert，同一职位累计次数，公司聚合同事务更新
 const saveSelectedJd = async ({ jd }: { jd: SelectedJd }): Promise<void> => {

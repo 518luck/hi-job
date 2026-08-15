@@ -1,7 +1,7 @@
 // # 内置厂商预设：点击芯片预填表单，密钥由用户补充，所有字段均可修改
 
 // 内置厂商预设结构：作为表单初始值使用，不直接落库
-interface BuiltInProvider {
+interface BuiltInVendor {
   key: string; // 预设唯一标识
   name: string; // 厂商名称
   baseUrl: string; // API 基础地址
@@ -10,7 +10,7 @@ interface BuiltInProvider {
 }
 
 // 内置厂商清单：覆盖国内外主流服务，模型名为常见默认值、仅供参考
-const BUILT_IN_PROVIDERS: BuiltInProvider[] = [
+const BUILT_IN_VENDORS: BuiltInVendor[] = [
   {
     key: 'zhipu',
     name: '智谱 GLM',
@@ -55,5 +55,5 @@ const BUILT_IN_PROVIDERS: BuiltInProvider[] = [
   },
 ];
 
-export type { BuiltInProvider };
-export { BUILT_IN_PROVIDERS };
+export type { BuiltInVendor };
+export { BUILT_IN_VENDORS };
