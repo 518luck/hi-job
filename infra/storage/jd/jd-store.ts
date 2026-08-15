@@ -15,7 +15,19 @@ const saveSelectedJd = async ({ jd }: { jd: SelectedJd }): Promise<void> => {
     const recorded: RecordedJd =
       existing === undefined
         ? { ...jd, firstSeenAt: now, lastSeenAt: now, seenCount: 1 }
-        : { ...existing, lastSeenAt: now, seenCount: existing.seenCount + 1 };
+        : {
+            ...existing,
+            // 公司级属性随每次记录刷新为最新值；新值采集失败（空串）时保留旧值
+            companyName: jd.companyName,
+            companyIndustry:
+              jd.companyIndustry !== ''
+                ? jd.companyIndustry
+                : existing.companyIndustry,
+            companyScale:
+              jd.companyScale !== '' ? jd.companyScale : existing.companyScale,
+            lastSeenAt: now,
+            seenCount: existing.seenCount + 1,
+          };
     await db.jd.put(recorded);
 
     const company = await db.company.get(jd.companyId);
@@ -24,12 +36,17 @@ const saveSelectedJd = async ({ jd }: { jd: SelectedJd }): Promise<void> => {
         ? {
             companyId: jd.companyId,
             companyName: jd.companyName,
+            industryName: jd.companyIndustry,
+            scaleName: jd.companyScale,
             jobIds: [jd.jobId],
             firstSeenAt: now,
             lastSeenAt: now,
           }
         : {
             ...company,
+            companyName: jd.companyName,
+            industryName: jd.companyIndustry,
+            scaleName: jd.companyScale,
             jobIds: isNewJob ? [...company.jobIds, jd.jobId] : company.jobIds,
             lastSeenAt: now,
           };

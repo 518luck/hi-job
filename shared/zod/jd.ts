@@ -6,6 +6,8 @@ const recordedJdSchema = z.object({
   jobId: z.string(), // 职位唯一 id，取自详情链接
   companyId: z.string(), // 公司唯一 id，匿名公司为 anonymous:<公司名>
   companyName: z.string(), // 公司名
+  companyIndustry: z.string(), // 公司行业，取 Vue 原始数据（如 互联网），读不到为空串
+  companyScale: z.string(), // 公司规模，取 Vue 原始数据（如 100-499人），读不到为空串
   title: z.string(), // 职位名称
   salary: z.string(), // 薪资文本，取页面 Vue 原始数据，读不到时回退 DOM 文本（可能被字体混淆）
   tags: z.array(z.string()), // 头部基本信息与技能标签合集

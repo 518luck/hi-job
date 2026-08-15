@@ -67,7 +67,9 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
           </Badge>
         </CardTitle>
         <CardDescription className="truncate">
-          {jd.companyName} · {jd.recruiter}
+          {[jd.companyName, jd.companyScale, jd.companyIndustry, jd.recruiter]
+            .filter((part) => part !== '')
+            .join(' · ')}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">

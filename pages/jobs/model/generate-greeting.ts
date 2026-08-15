@@ -6,7 +6,7 @@ import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
 const GREETING_SYSTEM =
   '你是资深求职教练，帮求职者撰写发给招聘者的打招呼消息。只输出消息正文本身，不要解释、不要引号。';
 
-// 由职位信息拼用户提示：给出匹配点、语气与字数约束
+// 由职位信息拼用户提示：给出匹配点、语气与字数约束，规模/行业有值时一并带上
 const greetingPromptOf = (jd: RecordedJd): string =>
   [
     '根据下面职位信息，写一段求职者发给招聘者的打招呼消息。',
@@ -14,9 +14,13 @@ const greetingPromptOf = (jd: RecordedJd): string =>
     '',
     `职位名称：${jd.title}`,
     `公司：${jd.companyName}`,
+    jd.companyScale !== '' ? `公司规模：${jd.companyScale}` : '',
+    jd.companyIndustry !== '' ? `公司行业：${jd.companyIndustry}` : '',
     `薪资：${jd.salary}`,
     `职位描述：${jd.description}`,
-  ].join('\n');
+  ]
+    .filter((line) => line !== '')
+    .join('\n');
 
 // 用所选厂商与模型生成打招呼消息
 const generateGreeting = async ({

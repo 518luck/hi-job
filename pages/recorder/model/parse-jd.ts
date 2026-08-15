@@ -1,19 +1,10 @@
 import type { SelectedJd } from '@/shared/zod';
 
-import { requestVueSalary } from './vue-salary';
+import { requestVueJobData } from './vue-job-data';
 
 // 取第一个匹配元素的文本，找不到返回空串
 const textOf = (root: ParentNode, selector: string): string =>
   root.querySelector(selector)?.textContent?.trim() ?? '';
-
-// 优先请求主世界读取 Vue 原始薪资，读取不到时回退到（可能被字体混淆的）页面文本
-const salaryOf = async ({
-  detailBox,
-}: {
-  detailBox: HTMLElement;
-}): Promise<string> =>
-  (await requestVueSalary()) ||
-  textOf(detailBox, '.job-detail-info .job-salary');
 
 // 从职位详情链接中提取职位唯一 id
 const jobIdOfUrl = (url: string): string => {
@@ -70,12 +61,19 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
 
   const { companyId, companyName } = parseCompany(doc);
 
+  // 请求主世界的 Vue 原始数据：公司规模/行业直接取用；薪资读不到时回退 DOM 文本
+  const vueJobData = await requestVueJobData();
+
   return {
     jobId: jobIdOfUrl(url),
     companyId,
     companyName,
+    companyIndustry: vueJobData.companyIndustry,
+    companyScale: vueJobData.companyScale,
     title: textOf(detailBox, '.job-detail-info .job-name'),
-    salary: await salaryOf({ detailBox }),
+    salary:
+      vueJobData.salaryDesc ||
+      textOf(detailBox, '.job-detail-info .job-salary'),
     tags: collectTags(detailBox),
     recruiter: textOf(detailBox, '.boss-info-attr'),
     description:
