@@ -1,7 +1,9 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
+
 import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+
 import { useRecordedJds } from '../model/use-recorded-jds';
 import { CompanyList } from './company-list';
 import { JdCard } from './jd-card';

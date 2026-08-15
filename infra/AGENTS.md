@@ -2,41 +2,38 @@
 
 ## 定位
 
-infra 是基础设施层，按技术域（存储、网络、日志等）组织，每个域内分两层：
+infra 是基础设施层，按技术域组织（存储、网络、日志等）。每个域分两层：
 
-- **原语层**（如 `storage/lib/kv.ts`）：业务无关的能力封装，回答"怎么存/怎么连"。
-- **领域仓储层**（如 `storage/jd/`）：按业务领域划分的子目录，是该领域数据的完整仓储——key 布局、schema 绑定、读写与聚合规则都封装在领域目录内。
+- **装配层**（如 `storage/db.ts`）：全局实例与注册清单。
+- **领域层**（如 `storage/jd/`）：按业务领域划分的子目录，是该领域数据的完整仓储。
 
 ## 依赖规则
 
-- infra 只可依赖 shared（如 `@/shared/zod` 的 schema），禁止依赖业务 layer（pages / widgets / app / entrypoints）。
-- 上层（shared、widgets、pages、app/entrypoints）均可向下导入 infra，统一走各域的聚合入口（如 `@/infra/storage`）。
-- 原语层保持业务无关；业务语义只允许出现在领域仓储目录内。
+- infra 只可依赖 shared 与第三方库，禁止依赖业务 layer（pages / widgets / app / entrypoints）。
+- 各上层均向下使用 infra，统一走域根聚合入口（如 `@/infra/storage`）。
 
 ## 结构与命名
 
-- 先按技术域分目录（`storage/` 等），域下建 `lib/` 放业务无关原语。
-- 域根的 `index.ts` 聚合导出各领域仓储，上层统一从 `@/infra/storage` 导入；各领域目录的 `index.ts` 供域根聚合使用。lib 原语是域内部实现，领域仓储之间以相对路径（`../lib/kv`）复用，不暴露给上层。
-- 每个业务领域在域下建独立子目录（如 `storage/jd/`），以 `index.ts` 作为该领域仓储的公有 API。
-- 领域仓储以单个对象导出（如 `jdStore`），成员为该领域的读写方法；仓储无实例状态，不使用类。
-- 文件按作用用 kebab-case 命名（如 `kv.ts`、`jd-store.ts`）。
-- 仓储导出稳定的读写接口，隐藏实现细节；底层更换（如 storage 换 SQLite）时接口保持不变。
+- 域根 `index.ts` 聚合导出各领域的仓储与实体类型。
+- 领域子目录三件套：`schema.ts`（表结构与索引声明）、仓储实现、`index.ts`（领域公有 API）。
+- 装配文件集中管理实例与版本：schema 变更递增 `version` 只写增量迁移，禁止修改历史声明。
+- 跨环境传输的数据结构放 `shared/zod/`，不与存储实体重复。
+- 仓储以单个对象导出（如 `jdStore`），成员为读写方法并带行尾简短注释；仓储无状态，不使用类。
+- 仓储接口保持稳定，更换底层实现时不动调用方。
 
-## 存储域的 key 命名空间
+## 存储写入链路
 
-领域仓储的 key 必须以领域名为第一段命名空间，统一通过 `namespacedKey('<领域>')` 创建 key 工厂：
+内容脚本运行在网页 origin 下，不能访问扩展的 IndexedDB，统一走消息：
 
-```ts
-const key = namespacedKey('jd');
-key('job', jobId); // local:jd:job:<jobId>
+```
+content script → sendMessage → background 校验（zod）→ 仓储写入
 ```
 
-不同领域的存储 key 因此天然隔离，互不冲突；`local:` 下不允许出现无命名空间前缀的业务 key。
+界面用 `dexie-react-hooks` 的 `useLiveQuery` 订阅查询，数据变化自动重渲染。
 
 ## 当前域
 
 | 目录 | 职责 |
 | --- | --- |
-| `storage/`（域根） | 聚合导出各领域仓储（`index.ts`） |
-| `storage/lib/` | kv 原语（域内部实现，不对外）：key 工厂、zod 校验读写、批量写入、变更监听 |
-| `storage/jd/` | jd 领域仓储：职位明细、公司聚合与索引的读写 |
+| `storage/` | 存储域：聚合入口（`index.ts`）、数据库装配（`db.ts`） |
+| `storage/jd/` | jd 领域：表结构 + 职位与公司记录的读写 |

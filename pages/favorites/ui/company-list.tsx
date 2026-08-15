@@ -1,7 +1,9 @@
 import { useState } from 'react';
+
+import type { CompanyRecord, RecordedJd } from '@/infra/storage';
 import { cn } from '@/shared/lib/cn';
 import { Icons } from '@/shared/ui/icons';
-import type { CompanyRecord, RecordedJd } from '@/shared/zod/jd';
+
 import { JdCard } from './jd-card';
 
 // 公司聚合列表的 props

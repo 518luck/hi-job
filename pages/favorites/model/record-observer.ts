@@ -1,10 +1,11 @@
-import { jdStore } from '@/infra/storage';
+import { RECORD_JD } from '@/shared/zod/jd';
+
 import { parseSelectedJd } from './parse-jd';
 
 // 防抖等待时长：等详情面板渲染稳定后再解析
 const DEBOUNCE_MS = 500;
 
-// 解析当前详情并入库；同一职位在会话内重复触发时跳过，返回最新职位 id
+// 解析当前详情并把 JD 发给后台落库；同一职位在会话内重复触发时跳过
 const record = ({
   doc,
   lastJobId,
@@ -16,11 +17,12 @@ const record = ({
   if (jd === null || jd.jobId === '' || jd.jobId === lastJobId) {
     return lastJobId;
   }
-  jdStore.saveSelectedJd({ jd });
+  // 后台唤醒失败等极端情况下静默放弃本条，等下次页面变化再记录
+  browser.runtime.sendMessage({ type: RECORD_JD, jd }).catch(() => {});
   return jd.jobId;
 };
 
-// 监听页面变化，把用户点开的每个职位自动写入存储
+// 监听页面变化，把用户点开的每个职位自动发送给后台记录
 const startJdRecorder = ({ doc }: { doc: Document }) => {
   let lastJobId = '';
 

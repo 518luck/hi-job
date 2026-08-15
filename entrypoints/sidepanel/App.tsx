@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { FavoritesPage } from '@/pages/favorites';
 import { JobsPage } from '@/pages/jobs';
 import { SettingsPage } from '@/pages/settings';

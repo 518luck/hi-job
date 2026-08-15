@@ -1,4 +1,5 @@
 import { useTheme } from 'next-themes';
+
 import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 

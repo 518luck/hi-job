@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
 import { AppProvider } from '@/app/providers/app-provider';
 import '@/app/app.css';
 import App from './App.tsx';

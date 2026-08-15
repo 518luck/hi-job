@@ -1,38 +1,25 @@
-import { useEffect, useState } from 'react';
-import type { CompanyRecord, RecordedJd } from '@/shared/zod/jd';
+import { useLiveQuery } from 'dexie-react-hooks';
+
+import type { CompanyRecord, RecordedJd } from '@/infra/storage';
 import { jdStore } from '@/infra/storage';
 
-// 收藏页列表数据：挂载时全量读取，存储变化时自动刷新
+// 收藏页列表数据：数据库变化时自动重新查询
 const useRecordedJds = (): {
   jds: RecordedJd[];
   companies: CompanyRecord[];
   loading: boolean;
 } => {
-  const [jds, setJds] = useState<RecordedJd[]>([]);
-  const [companies, setCompanies] = useState<CompanyRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const jdsQuery = useLiveQuery(() => jdStore.readAllRecordedJds(), []);
+  const companiesQuery = useLiveQuery(
+    () => jdStore.readAllCompanyRecords(),
+    [],
+  );
 
-  useEffect(() => {
-    // 全量读取职位与公司记录
-    const refresh = async () => {
-      const [nextJds, nextCompanies] = await Promise.all([
-        jdStore.readAllRecordedJds(),
-        jdStore.readAllCompanyRecords(),
-      ]);
-      setJds(nextJds);
-      setCompanies(nextCompanies);
-      setLoading(false);
-    };
-    refresh();
-    const unwatch = jdStore.watchStore(() => {
-      refresh();
-    });
-    return () => {
-      unwatch();
-    };
-  }, []);
-
-  return { jds, companies, loading };
+  return {
+    jds: jdsQuery ?? [],
+    companies: companiesQuery ?? [],
+    loading: jdsQuery === undefined || companiesQuery === undefined,
+  };
 };
 
 export { useRecordedJds };
