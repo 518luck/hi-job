@@ -1,6 +1,9 @@
-// # AI 厂商客户端：构造 AI SDK 供应商实例与模型列表拉取
+// # AI 厂商客户端：构造 AI SDK 供应商实例、模型列表拉取与文本生成
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+import type { AiVendorRecord } from '@/shared/zod';
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
@@ -80,4 +83,34 @@ const fetchVendorModels = async ({
     .filter((id) => id !== '');
 };
 
-export { createVendorClient, fetchVendorModels };
+// > 用厂商配置与指定模型跑一次文本生成：先申请跨域权限，须在用户手势（按钮点击）内调用
+const chatWithVendor = async ({
+  vendor,
+  modelId,
+  system,
+  prompt,
+}: {
+  vendor: AiVendorRecord; // 厂商配置记录
+  modelId: string; // 本次调用使用的模型 id
+  system: string; // 系统提示
+  prompt: string; // 用户提示
+}): Promise<string> => {
+  const granted = await ensureOriginPermission({ baseUrl: vendor.baseUrl });
+  if (!granted) {
+    throw new Error('未授权访问该厂商地址');
+  }
+  const provider = createVendorClient({
+    name: vendor.name,
+    baseUrl: vendor.baseUrl,
+    apiKey: vendor.apiKey,
+    apiFormat: vendor.apiFormat,
+  });
+  const { text } = await generateText({
+    model: provider(modelId),
+    system,
+    prompt,
+  });
+  return text.trim();
+};
+
+export { chatWithVendor, createVendorClient, fetchVendorModels };

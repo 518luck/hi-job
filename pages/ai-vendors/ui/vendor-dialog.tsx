@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import type { SubmitEvent } from 'react';
 import { useEffect, useState } from 'react';
 
+import { fetchVendorModels } from '@/infra/ai';
 import type { AiVendorRecord } from '@/infra/storage';
 import { aiVendorStore } from '@/infra/storage';
 import { Button } from '@/shared/ui/button';
@@ -36,7 +37,6 @@ import {
 } from '@/shared/zod';
 
 import type { BuiltInVendor } from '../config/built-in-vendors';
-import { fetchVendorModels } from '../model/vendor-client';
 
 // 弹窗初始值来源：编辑已有记录、内置预设预填或空白新增
 type VendorDialogSeed =

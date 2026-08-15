@@ -3,6 +3,7 @@ import {
   Briefcase,
   Building2,
   ChevronDown,
+  Copy,
   Download,
   History,
   Monitor,
@@ -34,6 +35,7 @@ const Icons = {
   edit: Pencil,
   remove: Trash2,
   refresh: RefreshCw,
+  copy: Copy,
 };
 
 export { Icons };

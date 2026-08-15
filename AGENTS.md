@@ -21,7 +21,8 @@ hi-job/
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
 │   └── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
 ├── infra/                  # 基础设施层，规范见 infra/AGENTS.md
-│   └── storage/            # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
+│   ├── storage/            # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
+│   └── ai/                 # AI 域：厂商客户端（供应商实例、模型拉取、文本生成）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
 │   ├── background.ts       # 后台 Service Worker
 │   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
