@@ -90,7 +90,8 @@ function FavoritesPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>清空全部收藏？</AlertDialogTitle>
               <AlertDialogDescription>
-                将删除 {jds.length} 条职位与 {companies.length} 家公司的全部记录，删除后无法恢复，建议先导出备份。
+                将删除 {jds.length} 条职位与 {companies.length}
+                家公司的全部记录，删除后无法恢复，建议先导出备份。
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
