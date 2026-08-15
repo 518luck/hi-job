@@ -1,6 +1,7 @@
-// # AI 打招呼生成：拼提示词并调用所选厂商模型
-import { chatWithVendor } from '@/infra/ai';
-import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
+// # AI 打招呼生成：拼提示词并调用所选厂商模型，供侧边栏与后台共用
+import type { AiVendorRecord, RecordedJd } from '@/shared/zod';
+
+import { chatWithVendor } from './vendor-client';
 
 // 打招呼生成的系统提示：限定角色与输出形态
 const GREETING_SYSTEM =

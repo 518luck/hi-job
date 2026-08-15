@@ -1,6 +1,7 @@
 // # 职位卡片：职位概要 + AI 打招呼生成与结果展示
 import { useState } from 'react';
 
+import { generateGreeting } from '@/infra/ai';
 import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -14,8 +15,6 @@ import {
 } from '@/shared/ui/card';
 import { Icons } from '@/shared/ui/icons';
 import { Textarea } from '@/shared/ui/textarea';
-
-import { generateGreeting } from '../model/generate-greeting';
 
 // 职位卡片的 props：vendor/modelId 为页面所选的生成配置，未配置厂商时为 undefined
 interface JdCardProps {
@@ -31,22 +30,29 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState('');
 
-  // 生成打招呼内容：未配置厂商时就地提示，失败时展示错误文案
-  const handleGenerate = async () => {
+  // 核心生成：按当前 JD 生成打招呼文本并展示，未配置厂商或失败时写入提示
+  const generate = async (): Promise<string> => {
     if (vendor === undefined || modelId === undefined) {
       setMessage('还没有配置 AI 厂商：去「AI 厂商」页添加');
-      return;
+      return '';
     }
     setGenerating(true);
     setMessage('');
     try {
       const text = await generateGreeting({ jd, vendor, modelId });
       setGreeting(text);
+      return text;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '生成失败');
+      return '';
     } finally {
       setGenerating(false);
     }
+  };
+
+  // 生成问候：按当前 JD 生成打招呼文本，供查看与编辑
+  const handleGenerateOnly = async () => {
+    await generate();
   };
 
   // 复制打招呼内容到剪贴板，短暂切换按钮文案
@@ -101,10 +107,11 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
             size="xs"
             disabled={generating}
             onClick={() => {
-              void handleGenerate();
+              void handleGenerateOnly();
             }}
           >
-            {generating ? '生成中…' : '一键去沟通'}
+            <Icons.refresh data-icon="inline-start" />
+            <span>{generating ? '生成中…' : '生成问候'}</span>
           </Button>
         </div>
         {message !== '' && (
@@ -124,7 +131,7 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
                   title="重新生成"
                   aria-label="重新生成"
                   onClick={() => {
-                    void handleGenerate();
+                    void handleGenerateOnly();
                   }}
                 >
                   <Icons.refresh
