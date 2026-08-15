@@ -10,8 +10,11 @@
 
 ```
 hi-job/
-├── app/                    # 全局应用层（应用级共享代码与全局样式）
-│   └── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
+├── app/                    # 全局应用层
+│   ├── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
+│   └── providers/          # 全局 Provider 组合根（AppProvider）
+├── pages/                  # 页面级组件（jobs / favorites / settings）
+├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn 等）
 │   └── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
