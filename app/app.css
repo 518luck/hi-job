@@ -1,10 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* lyra 风格签名字体：JetBrains Mono（本地打包，扩展 CSP 禁止远程字体） */
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* lyra 预设：全局使用 JetBrains Mono（font: jetbrains-mono） */
+  --font-sans:
+    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
