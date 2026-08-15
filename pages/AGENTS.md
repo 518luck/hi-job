@@ -128,7 +128,7 @@ import { FavoritesPage } from '@/pages/favorites';
 import { FavoritesPage } from '@/pages/favorites/ui/page';
 ```
 
-- index.ts 只导出外部真正需要使用的组件、函数和类型（如 favorites 同时导出 `GET_SELECTED_JD` 与 `parseSelectedJd`，供内容脚本使用）。
+- index.ts 只导出外部真正需要使用的组件、函数和类型（如 favorites 导出 `startJdRecorder`，供内容脚本使用）。
 - 禁止在 slice 公有 API 中使用 `export *` 无差别导出。
 - slice 内部文件互相引用时使用相对路径。
 - 不要从本 slice 的 index.ts 再导入本 slice 内部成员。

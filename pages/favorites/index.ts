@@ -1,5 +1,4 @@
-// # favorites slice 公有 API：页面组件 + 内容脚本所需的常量与解析器
+// # favorites slice 公有 API：页面组件与内容脚本记录器
 
-export { GET_SELECTED_JD } from './config/constants';
-export { parseSelectedJd } from './model/parse-jd';
+export { startJdRecorder } from './model/record-observer';
 export { FavoritesPage } from './ui/page';

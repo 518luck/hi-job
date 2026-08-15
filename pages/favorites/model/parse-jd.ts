@@ -4,6 +4,34 @@ import type { SelectedJd } from '@/shared/zod/jd';
 const textOf = (root: ParentNode, selector: string): string =>
   root.querySelector(selector)?.textContent?.trim() ?? '';
 
+// 从职位详情链接中提取职位唯一 id
+const jobIdOfUrl = (url: string): string => {
+  const match = url.match(/\/job_detail\/([^.]+)\.html/);
+  return match?.[1] ?? '';
+};
+
+// 解析公司标识与名称：优先取选中卡片的公司链接；匿名或无卡片时按名称聚合
+const parseCompany = (
+  doc: Document,
+): {
+  companyId: string;
+  companyName: string;
+} => {
+  const companyHref =
+    doc
+      .querySelector<HTMLAnchorElement>('.job-card-wrap.active .boss-info')
+      ?.getAttribute('href') ?? '';
+  const idMatch = companyHref.match(/\/gongsi\/([^.]+)\.html/);
+
+  const cardName = textOf(doc, '.job-card-wrap.active .boss-name');
+  const detailName = textOf(doc, '.job-boss-info .boss-info-attr')
+    .split('·')[0]
+    ?.trim();
+  const companyName = cardName || detailName || '未知公司';
+
+  return { companyId: idMatch?.[1] ?? `anonymous:${companyName}`, companyName };
+};
+
 // 合并头部基本信息与"职位描述"下方技能标签两处 tag，去空去重
 const collectTags = (root: ParentNode): string[] => {
   const items = [
@@ -29,7 +57,12 @@ const parseSelectedJd = (doc: Document): SelectedJd | null => {
     doc.location?.href ||
     '';
 
+  const { companyId, companyName } = parseCompany(doc);
+
   return {
+    jobId: jobIdOfUrl(url),
+    companyId,
+    companyName,
     title: textOf(detailBox, '.job-detail-info .job-name'),
     salary: textOf(detailBox, '.job-detail-info .job-salary'),
     tags: collectTags(detailBox),

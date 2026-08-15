@@ -14,7 +14,7 @@ hi-job/
 │   ├── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
 │   └── providers/          # 全局 Provider 组合根（AppProvider）
 ├── pages/                  # 页面 slice 层，结构/命名/导入边界规范见 pages/AGENTS.md
-│   └── favorites/          # ui=页面与展示组件，model=JD 解析，config=常量，index.ts=公有 API
+│   └── favorites/          # ui=页面与展示组件，model=JD 解析/存储/自动记录，index.ts=公有 API
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn 等）
@@ -80,6 +80,7 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 
 - 所有新代码使用 TypeScript；避免使用 `any`。
 - 接口数据类型（Dto/Vo）统一放在 `shared/zod/`，类型从 zod schema 派生（`z.infer`）。
+- zod schema 的每个字段必须在行尾用简短中文注释说明字段含义（业务语义或取值来源），让 schema 自带数据字典。
 - 公共 API 和导出函数优先使用显式返回类型。
 - 类型专用导入使用 `import type`。
 - 除非局部合理，避免非空断言（`!`）。
