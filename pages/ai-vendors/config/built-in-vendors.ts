@@ -53,6 +53,25 @@ const BUILT_IN_VENDORS: BuiltInVendor[] = [
     apiFormat: 'anthropic',
     models: ['claude-sonnet-4-5', 'claude-opus-4-5', 'claude-haiku-4-5'],
   },
+  {
+    key: 'opencode-go',
+    name: 'OpenCode Go',
+    baseUrl: 'https://opencode.ai/zen/go/v1',
+    apiFormat: 'openai',
+    models: [
+      'glm-5.3',
+      'glm-5.2',
+      'glm-5.1',
+      'kimi-k3',
+      'kimi-k2.7-code',
+      'kimi-k2.6',
+      'deepseek-v4-pro',
+      'deepseek-v4-flash',
+      'mimo-v2.5',
+      'mimo-v2.5-pro',
+      'hy3',
+    ],
+  },
 ];
 
 export type { BuiltInVendor };
