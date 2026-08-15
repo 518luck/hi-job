@@ -1,41 +1,42 @@
 
 ## 图标
 
-大部分图标统一维护在 src/shared/ui/icons.tsx 中。
+大部分图标统一维护在 `shared/ui/icons.tsx` 中。
 
-默认使用 @tabler/icons-react 提供的图标。不要在业务代码中直接从图标库导入图标，也不要在组件内临时定义图标；应先在 icons.tsx 中统一注册，再通过 Icons 对象使用。
+默认使用 `lucide-react` 提供的图标（与 `components.json` 的 `iconLibrary` 一致）。不要在业务代码中直接从图标库导入图标，也不要在组件内临时定义图标；应先在 `icons.tsx` 中统一注册，再通过 `Icons` 对象使用。`shared/ui/` 下由 shadcn CLI 生成的组件不受此约束。
 
-注册图标时必须按业务语义命名，不要直接使用图标库原始名称；例如使用 `specCreate`、`helpCenter`，而不是 `IconPlus`、`IconHelpCircle`。
+注册图标时必须按业务语义命名，不要直接使用图标库原始名称；例如使用 `jobs`、`themeDark`，而不是 `Briefcase`、`Moon`。
 
 ### 正确示例
 
 添加图标：
 
 ```typescript
-import { IconRobot } from "@tabler/icons-react";
+import { Briefcase, Sun } from 'lucide-react';
 
 export const Icons = {
-  logo: IconRobot,
+  jobs: Briefcase,
+  themeLight: Sun,
 };
 ```
 
 使用的时候：
 
 ```typescript
-import { Icons } from "@/shared/ui/icons";
+import { Icons } from '@/shared/ui/icons';
 
-<Icons.logo className="size-4" />
+<Icons.jobs className="size-4" />
 ```
 
 ### 错误示例
 
-不要在业务组件中直接从 @tabler/icons-react 导入图标：
+不要在业务组件中直接从 lucide-react 导入图标：
 
 ```typescript
-import { IconRobot } from "@tabler/icons-react";
+import { Briefcase } from 'lucide-react';
 
 export function Header() {
-  return <IconRobot className="size-4" />;
+  return <Briefcase className="size-4" />;
 }
 ```
 
@@ -55,6 +56,6 @@ export function HeaderLogo() {
 
 ## SVG 资源
 
-少量自定义 SVG 图标存放在 shared/assets/icons 目录下。
+少量自定义 SVG 图标存放在 `shared/assets/icons` 目录下（目录尚未创建，首次存放时建立）。
 
-不要在应用代码中内联 SVG，也不要将 SVG 图标放到其他目录。新增或修改 SVG 文件前，应使 SVGO 进行优化。
+不要在应用代码中内联 SVG，也不要将 SVG 图标放到其他目录。新增或修改 SVG 文件前，应使用 SVGO 优化（如 `npx svgo icons/xxx.svg`）。

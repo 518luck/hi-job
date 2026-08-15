@@ -62,9 +62,9 @@ npx shadcn@latest add <component>
 
 ## 上下文感知加载
 
-### 前端
+### shared 层
 
-前端开发模式、设计系统指南和 React 测试最佳实践，参见 `src/AGENTS.md`。
+shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 
 ## 代码风格指南
 

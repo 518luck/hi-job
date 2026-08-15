@@ -1,11 +1,11 @@
-import { Briefcase, Settings, Star } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
+import { Icons } from '@/shared/ui/icons';
 
 // 右侧菜单栏的导航配置
 const NAV_ITEMS = [
-  { key: 'jobs', label: '职位', icon: Briefcase },
-  { key: 'favorites', label: '收藏', icon: Star },
-  { key: 'settings', label: '设置', icon: Settings },
+  { key: 'jobs', label: '职位', icon: Icons.jobs },
+  { key: 'favorites', label: '收藏', icon: Icons.favorites },
+  { key: 'settings', label: '设置', icon: Icons.settings },
 ] as const;
 
 // 导航项的唯一标识
