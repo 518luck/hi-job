@@ -122,6 +122,7 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
             </div>
             <Textarea
               rows={5}
+              className="max-h-60 overflow-y-auto"
               value={greeting}
               onChange={(event) => setGreeting(event.target.value)}
             />

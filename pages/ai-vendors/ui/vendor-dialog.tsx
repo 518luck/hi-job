@@ -307,16 +307,16 @@ function VendorDialog({ open, onOpenChange, seed }: VendorDialogProps) {
                   <Textarea
                     id="vendor-models"
                     rows={4}
+                    className="max-h-48 overflow-y-auto"
                     value={field.state.value}
                     aria-invalid={error !== undefined}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                   />
-                  {pullMessage !== '' && (
-                    <p className="text-xs text-muted-foreground">
-                      {pullMessage}
-                    </p>
-                  )}
+                  {/* 拉取状态文案常驻占位：出现时不顶高弹窗把按钮挤出屏幕 */}
+                  <p className="flex min-h-4 items-center text-xs text-muted-foreground">
+                    {pullMessage}
+                  </p>
                   {error !== undefined && (
                     <p className="text-xs text-destructive">{error}</p>
                   )}
