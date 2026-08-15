@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Copy,
   Download,
+  ExternalLink,
   History,
   Monitor,
   Moon,
@@ -36,6 +37,7 @@ const Icons = {
   remove: Trash2,
   refresh: RefreshCw,
   copy: Copy,
+  externalLink: ExternalLink,
 };
 
 export { Icons };

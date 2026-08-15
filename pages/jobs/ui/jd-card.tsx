@@ -83,7 +83,20 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-1">
+          {jd.url !== '' && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title="打开原职位页"
+              aria-label="打开原职位页"
+              onClick={() => {
+                void browser.tabs.create({ url: jd.url });
+              }}
+            >
+              <Icons.externalLink />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="xs"
