@@ -122,4 +122,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* 按钮悬停统一显示手型指针（shadcn/Tailwind v4 默认保持浏览器原生箭头） */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
