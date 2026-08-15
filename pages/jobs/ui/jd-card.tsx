@@ -1,7 +1,7 @@
 // # 职位卡片：职位概要 + AI 打招呼生成与结果展示
 import { useState } from 'react';
 
-import type { RecordedJd } from '@/infra/storage';
+import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {
@@ -16,24 +16,30 @@ import { Textarea } from '@/shared/ui/textarea';
 
 import { generateGreeting } from '../model/generate-greeting';
 
-// 职位卡片的 props
+// 职位卡片的 props：vendor/modelId 为页面所选的生成配置，未配置厂商时为 undefined
 interface JdCardProps {
   jd: RecordedJd;
+  vendor?: AiVendorRecord;
+  modelId?: string;
 }
 
 // 职位卡片：概要信息与 AI 打招呼生成
-function JdCard({ jd }: JdCardProps) {
+function JdCard({ jd, vendor, modelId }: JdCardProps) {
   const [greeting, setGreeting] = useState('');
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState('');
 
-  // 生成打招呼内容：失败时就地展示错误文案
+  // 生成打招呼内容：未配置厂商时就地提示，失败时展示错误文案
   const handleGenerate = async () => {
+    if (vendor === undefined || modelId === undefined) {
+      setMessage('还没有配置 AI 厂商：去「AI 厂商」页添加');
+      return;
+    }
     setGenerating(true);
     setMessage('');
     try {
-      const text = await generateGreeting({ jd });
+      const text = await generateGreeting({ jd, vendor, modelId });
       setGreeting(text);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '生成失败');

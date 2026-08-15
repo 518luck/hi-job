@@ -1,7 +1,6 @@
-// # AI 打招呼生成：选厂商、拼提示词并调用厂商模型
+// # AI 打招呼生成：拼提示词并调用所选厂商模型
 import { chatWithVendor } from '@/infra/ai';
-import type { RecordedJd } from '@/infra/storage';
-import { aiVendorStore } from '@/infra/storage';
+import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
 
 // 打招呼生成的系统提示：限定角色与输出形态
 const GREETING_SYSTEM =
@@ -19,27 +18,21 @@ const greetingPromptOf = (jd: RecordedJd): string =>
     `职位描述：${jd.description}`,
   ].join('\n');
 
-// 用最近编辑的厂商与其第一个模型生成打招呼消息
+// 用所选厂商与模型生成打招呼消息
 const generateGreeting = async ({
   jd,
+  vendor,
+  modelId,
 }: {
-  jd: RecordedJd;
-}): Promise<string> => {
-  const vendors = await aiVendorStore.readAllVendors();
-  const vendor = vendors[0];
-  if (vendor === undefined) {
-    throw new Error('还没有配置 AI 厂商：去「AI 厂商」页添加');
-  }
-  const modelId = vendor.models[0];
-  if (modelId === undefined) {
-    throw new Error(`厂商「${vendor.name}」没有可用模型`);
-  }
-  return chatWithVendor({
+  jd: RecordedJd; // 目标职位
+  vendor: AiVendorRecord; // 所选厂商配置
+  modelId: string; // 所选模型 id
+}): Promise<string> =>
+  chatWithVendor({
     vendor,
     modelId,
     system: GREETING_SYSTEM,
     prompt: greetingPromptOf(jd),
   });
-};
 
 export { generateGreeting };
