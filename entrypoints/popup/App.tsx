@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import reactLogo from '@/assets/react.svg';
+import { Button } from '@/shared/ui/button';
 import wxtLogo from '/wxt.svg';
 import './App.css';
 
@@ -19,9 +20,9 @@ function App() {
       </div>
       <h1>WXT + React</h1>
       <div className="card">
-        <button type="button" onClick={() => setCount((count) => count + 1)}>
+        <Button type="button" onClick={() => setCount((count) => count + 1)}>
           count is {count}
-        </button>
+        </Button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>

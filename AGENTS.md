@@ -6,6 +6,45 @@
 
 ## 项目结构
 
+**技术栈**：WXT + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui（base-nova）+ Biome，包管理器 pnpm。默认构建 Chrome MV3 扩展（`-b firefox` 可切 Firefox）。
+
+```
+hi-job/
+├── app/                    # 全局应用层（应用级共享代码与全局样式）
+│   └── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
+├── shared/                 # 跨入口共享层
+│   ├── lib/                # 工具函数（cn 等）
+│   └── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
+├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
+│   ├── background.ts       # 后台 Service Worker
+│   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
+│   └── popup/              # 工具栏弹窗（React 挂载）
+├── assets/                 # 参与构建的静态资源（import 引用，经 Vite 处理）
+├── public/                 # 原样复制的静态资源（不经构建处理）
+│   └── icon/               # 扩展图标，WXT 自动发现并写入 manifest
+├── wxt.config.ts           # WXT 配置（模块注册、Vite 插件、manifest 定制）
+├── components.json         # shadcn CLI 配置（ui 别名指向 @/shared/ui）
+├── biome.json              # Biome lint / 格式化配置（已开启 tailwindDirectives）
+├── tsconfig.json           # 继承 .wxt/ 生成的 tsconfig，声明 @/* 别名
+├── .wxt/                   # wxt prepare 生成的类型与虚拟模块（勿手改，已 gitignore）
+└── .output/                # 构建产物（已 gitignore）
+```
+
+### 入口约定（WXT 文件式入口）
+
+manifest 由 `entrypoints/` 下的文件名约定自动生成，**无需手写 manifest.json**：
+
+| 文件 / 目录         | 入口类型   | 说明                                       |
+| ------------------- | ---------- | ------------------------------------------ |
+| `background.ts`     | 后台脚本   | Service Worker，长驻逻辑、消息中枢         |
+| `popup/index.html`  | 弹窗页面   | 点击工具栏图标弹出，React 挂载点           |
+| `xxx.content.ts(x)` | 内容脚本   | 注入匹配网页，`matches` 写在文件内         |
+| `options/index.html`| 设置页     | 扩展选项页（按需新增）                     |
+
+- 入口带配套文件（组件、样式等）时，放 `entrypoints/<name>/` 目录，以 `index.*` 为入口。
+- WXT API（`defineBackground`、`defineContentScript`、`browser` 等）自动导入，无需手写 import。
+- 路径别名：`@/` 指向项目根目录；`/xxx.png` 指向 `public/` 下的文件。
+
 ## 命令
 
 ## shadcn 组件安装
