@@ -4,6 +4,8 @@
 // 本文件只做装配：注册表类型与索引、集中管理 schema 版本。
 import Dexie, { type EntityTable } from 'dexie';
 
+import type { AiProviderRecord } from './ai-provider/schema';
+import { AI_PROVIDER_TABLES } from './ai-provider/schema';
 import type { CompanyRecord, RecordedJd } from './jd/schema';
 import { JD_TABLES } from './jd/schema';
 
@@ -11,12 +13,18 @@ import { JD_TABLES } from './jd/schema';
 const db = new Dexie('hi-job') as Dexie & {
   jd: EntityTable<RecordedJd, 'jobId'>; // 职位明细表
   company: EntityTable<CompanyRecord, 'companyId'>; // 公司聚合表
+  aiProvider: EntityTable<AiProviderRecord, 'providerId'>; // AI 模型厂商配置表
 };
 
 // 表索引来自各领域 schema；新增字段递增 version 并只写增量迁移，禁止修改已发布的旧版本声明
 db.version(1).stores({
   jd: JD_TABLES.jd,
   company: JD_TABLES.company,
+});
+
+// v2：新增 aiProvider 表（AI 模型厂商配置）
+db.version(2).stores({
+  aiProvider: AI_PROVIDER_TABLES.aiProvider,
 });
 
 export { db };

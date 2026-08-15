@@ -5,6 +5,7 @@ import { Icons } from '@/shared/ui/icons';
 const NAV_ITEMS = [
   { key: 'jobs', label: '职位', icon: Icons.jobs },
   { key: 'favorites', label: '收藏', icon: Icons.favorites },
+  { key: 'aiProviders', label: 'AI 模型', icon: Icons.aiProviders },
   { key: 'settings', label: '设置', icon: Icons.settings },
 ] as const;
 

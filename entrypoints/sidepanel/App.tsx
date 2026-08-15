@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { AiProvidersPage } from '@/pages/ai-providers';
 import { FavoritesPage } from '@/pages/favorites';
 import { JobsPage } from '@/pages/jobs';
 import { SettingsPage } from '@/pages/settings';
@@ -14,6 +15,7 @@ function App() {
       <main className="flex flex-1 flex-col overflow-y-auto">
         {activeKey === 'jobs' && <JobsPage />}
         {activeKey === 'favorites' && <FavoritesPage />}
+        {activeKey === 'aiProviders' && <AiProvidersPage />}
         {activeKey === 'settings' && <SettingsPage />}
       </main>
       <NavBar activeKey={activeKey} onSelect={setActiveKey} />

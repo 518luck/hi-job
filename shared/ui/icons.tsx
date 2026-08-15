@@ -1,4 +1,5 @@
 import {
+  Bot,
   Briefcase,
   Building2,
   ChevronDown,
@@ -6,6 +7,9 @@ import {
   History,
   Monitor,
   Moon,
+  Pencil,
+  Plus,
+  RefreshCw,
   Settings,
   Star,
   Sun,
@@ -25,6 +29,11 @@ const Icons = {
   chevronDown: ChevronDown,
   exportData: Download,
   clearData: Trash2,
+  aiProviders: Bot,
+  add: Plus,
+  edit: Pencil,
+  remove: Trash2,
+  refresh: RefreshCw,
 };
 
 export { Icons };

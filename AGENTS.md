@@ -212,7 +212,7 @@ class StorageClient {
 完成代码修改后，根据变更范围运行相关检查：
 
 - 类型检查：`pnpm run typecheck`
-- Lint：`pnpm run lint`
+- Lint 检查与自动修复（含导入排序、格式化）：`pnpm run fix`
 
 ## 贡献规范
 
