@@ -7,8 +7,13 @@ const textOf = (root: ParentNode, selector: string): string =>
   root.querySelector(selector)?.textContent?.trim() ?? '';
 
 // 优先请求主世界读取 Vue 原始薪资，读取不到时回退到（可能被字体混淆的）页面文本
-const salaryOf = async ({ detailBox }: { detailBox: HTMLElement }): Promise<string> =>
-  (await requestVueSalary()) || textOf(detailBox, '.job-detail-info .job-salary');
+const salaryOf = async ({
+  detailBox,
+}: {
+  detailBox: HTMLElement;
+}): Promise<string> =>
+  (await requestVueSalary()) ||
+  textOf(detailBox, '.job-detail-info .job-salary');
 
 // 从职位详情链接中提取职位唯一 id
 const jobIdOfUrl = (url: string): string => {
