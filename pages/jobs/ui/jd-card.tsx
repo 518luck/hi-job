@@ -6,6 +6,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -60,19 +61,17 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle className="flex items-baseline justify-between gap-2">
-          <span className="truncate">{jd.title}</span>
-          <span className="flex shrink-0 items-center gap-1.5">
-            <Badge variant="secondary">{jd.salary}</Badge>
-            {jd.recruiterActive ? (
-              <Badge variant="outline">
-                <span className="size-1.5 rounded-full bg-primary" />
-                {jd.recruiterActive}
-              </Badge>
-            ) : null}
-          </span>
-        </CardTitle>
-        <CardDescription className="truncate">
+        <CardTitle className="min-w-0 truncate">{jd.title}</CardTitle>
+        <CardAction className="flex items-center gap-1.5">
+          <Badge variant="secondary">{jd.salary}</Badge>
+          {jd.recruiterActive ? (
+            <Badge variant="outline">
+              <span className="size-1.5 rounded-full bg-primary" />
+              {jd.recruiterActive}
+            </Badge>
+          ) : null}
+        </CardAction>
+        <CardDescription className="line-clamp-2">
           {[
             jd.companyScale,
             jd.companyIndustry,

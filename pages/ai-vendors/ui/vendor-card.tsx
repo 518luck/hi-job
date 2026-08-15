@@ -28,7 +28,7 @@ function VendorCard({ vendor, onEdit, onRemove }: VendorCardProps) {
     <Card size="sm">
       <CardHeader>
         <CardTitle className="flex items-baseline justify-between gap-2">
-          <span className="truncate">{vendor.name}</span>
+          <span className="min-w-0 flex-1 truncate">{vendor.name}</span>
           <Badge variant="secondary" className="shrink-0">
             {apiFormatLabel(vendor.apiFormat)}
           </Badge>
