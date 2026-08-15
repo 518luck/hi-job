@@ -19,7 +19,7 @@ hi-job/
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn 等）
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
-│   └── zod/                # zod 数据字典：各领域落库实体（基座）+ 派生 schema
+│   └── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
 ├── infra/                  # 基础设施层，规范见 infra/AGENTS.md
 │   └── storage/            # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
@@ -85,7 +85,8 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 ### TypeScript 与类型
 
 - 所有新代码使用 TypeScript；避免使用 `any`。
-- 所有数据 schema（落库实体、跨环境 DTO、消息信封、表单校验）统一放在 `shared/zod/`，一个领域一个文件。
+- 所有数据 schema（落库实体、跨环境 DTO、消息信封、表单校验）统一放在 `shared/zod/`，一个落库实体一个文件，文件名与表名一致；从该实体派生的 schema 放同一文件。
+- 上层统一从 `@/shared/zod` 聚合入口导入，禁止深层导入字典内具体文件；字典内部重组不影响调用方。
 - 落库实体字段最全、作为基座；其余 schema 必须从基座派生（`omit` / `pick` / `extend` 附加校验），禁止从零重新声明字段。
 - 类型一律从 schema 用 `z.infer` 派生，不手写重复的 interface。
 - zod schema 的每个字段必须在行尾用简短中文注释说明字段含义（业务语义或取值来源），让 schema 自带数据字典。

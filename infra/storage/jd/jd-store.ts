@@ -1,4 +1,4 @@
-import type { CompanyRecord, RecordedJd, SelectedJd } from '@/shared/zod/jd';
+import type { CompanyRecord, RecordedJd, SelectedJd } from '@/shared/zod';
 
 import { db } from '../db';
 

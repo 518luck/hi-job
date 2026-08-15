@@ -1,6 +1,6 @@
 // # 后台脚本：侧边栏行为 + 消息中枢（内容脚本的记录请求落库）
 import { jdStore } from '@/infra/storage';
-import { recordJdMessageSchema } from '@/shared/zod/jd';
+import { recordJdMessageSchema } from '@/shared/zod';
 
 export default defineBackground(() => {
   // 点击工具栏图标直接打开侧边栏面板（Chrome 专属 API，Firefox 自动跳过）

@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/card';
-import type { SelectedJd } from '@/shared/zod/jd';
+import type { SelectedJd } from '@/shared/zod';
 
 // JD 展示卡片的 props
 interface JdCardProps {

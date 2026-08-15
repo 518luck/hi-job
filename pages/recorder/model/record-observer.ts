@@ -1,4 +1,4 @@
-import { RECORD_JD } from '@/shared/zod/jd';
+import { RECORD_JD } from '@/shared/zod';
 
 import { parseSelectedJd } from './parse-jd';
 

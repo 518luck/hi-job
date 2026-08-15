@@ -20,8 +20,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Textarea } from '@/shared/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
-import { vendorFormSchema } from '@/shared/zod/ai-vendor';
-import { fieldErrorsOf } from '@/shared/zod/field-errors';
+import { fieldErrorsOf, vendorFormSchema } from '@/shared/zod';
 
 import type { BuiltInVendor } from '../config/built-in-vendors';
 import { fetchVendorModels } from '../model/vendor-client';

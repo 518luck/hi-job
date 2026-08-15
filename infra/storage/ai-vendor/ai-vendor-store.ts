@@ -1,4 +1,4 @@
-import type { AiVendorRecord } from '@/shared/zod/ai-vendor';
+import type { AiVendorRecord } from '@/shared/zod';
 
 import { db } from '../db';
 

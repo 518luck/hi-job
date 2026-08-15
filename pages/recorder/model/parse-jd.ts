@@ -1,4 +1,4 @@
-import type { SelectedJd } from '@/shared/zod/jd';
+import type { SelectedJd } from '@/shared/zod';
 
 import { requestVueSalary } from './vue-salary';
 

@@ -4,8 +4,7 @@
 // 本文件集中管理表注册、索引声明与版本迁移。
 import Dexie, { type EntityTable } from 'dexie';
 
-import type { AiVendorRecord } from '@/shared/zod/ai-vendor';
-import type { CompanyRecord, RecordedJd } from '@/shared/zod/jd';
+import type { AiVendorRecord, CompanyRecord, RecordedJd } from '@/shared/zod';
 
 // 全局数据库实例：各领域的表统一在此注册类型
 const db = new Dexie('hi-job') as Dexie & {
