@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CompanyRecord, RecordedJd } from '@/shared/zod/jd';
-import { readAllCompanyRecords, readAllRecordedJds, watchStore } from './jd-store';
+import { jdStore } from '@/infra/storage';
 
 // 收藏页列表数据：挂载时全量读取，存储变化时自动刷新
 const useRecordedJds = (): {
@@ -16,15 +16,15 @@ const useRecordedJds = (): {
     // 全量读取职位与公司记录
     const refresh = async () => {
       const [nextJds, nextCompanies] = await Promise.all([
-        readAllRecordedJds(),
-        readAllCompanyRecords(),
+        jdStore.readAllRecordedJds(),
+        jdStore.readAllCompanyRecords(),
       ]);
       setJds(nextJds);
       setCompanies(nextCompanies);
       setLoading(false);
     };
     refresh();
-    const unwatch = watchStore(() => {
+    const unwatch = jdStore.watchStore(() => {
       refresh();
     });
     return () => {

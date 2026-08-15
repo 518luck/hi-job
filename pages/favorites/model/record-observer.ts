@@ -1,4 +1,4 @@
-import { saveSelectedJd } from './jd-store';
+import { jdStore } from '@/infra/storage';
 import { parseSelectedJd } from './parse-jd';
 
 // 防抖等待时长：等详情面板渲染稳定后再解析
@@ -16,7 +16,7 @@ const record = ({
   if (jd === null || jd.jobId === '' || jd.jobId === lastJobId) {
     return lastJobId;
   }
-  saveSelectedJd({ jd });
+  jdStore.saveSelectedJd({ jd });
   return jd.jobId;
 };
 

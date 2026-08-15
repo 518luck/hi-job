@@ -20,6 +20,8 @@ hi-job/
 │   ├── lib/                # 工具函数（cn 等）
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
 │   └── zod/                # zod 数据校验 schema（类型从 schema 派生）
+├── infra/                  # 基础设施层，规范见 infra/AGENTS.md
+│   └── storage/            # 存储域：kv 原语 + 按领域划分的仓储（jd 等）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
 │   ├── background.ts       # 后台 Service Worker
 │   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
@@ -71,6 +73,10 @@ npx shadcn@latest add <component>
 ### shared 层
 
 shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
+
+### infra 层
+
+基础设施层的定位、依赖规则与当前域说明，参见 `infra/AGENTS.md`。
 
 ## 代码风格指南
 
