@@ -6,14 +6,14 @@ import { parseSelectedJd } from './parse-jd';
 const DEBOUNCE_MS = 500;
 
 // 解析当前详情并把 JD 发给后台落库；同一职位在会话内重复触发时跳过
-const record = ({
+const record = async ({
   doc,
   lastJobId,
 }: {
   doc: Document;
   lastJobId: string;
-}): string => {
-  const jd = parseSelectedJd(doc);
+}): Promise<string> => {
+  const jd = await parseSelectedJd(doc);
   if (jd === null || jd.jobId === '' || jd.jobId === lastJobId) {
     return lastJobId;
   }
@@ -25,16 +25,24 @@ const record = ({
 // 监听页面变化，把用户点开的每个职位自动发送给后台记录
 const startJdRecorder = ({ doc }: { doc: Document }) => {
   let lastJobId = '';
+  // > 薪资需等待主世界应答，解析已异步化；串行执行避免并发时绕过 lastJobId 去重
+  let pending: Promise<void> = Promise.resolve();
+
+  const scheduleRecord = () => {
+    pending = pending
+      .then(async () => {
+        lastJobId = await record({ doc, lastJobId });
+      })
+      .catch(() => {});
+  };
 
   // 页面加载时详情可能已展开，先记录一次
-  lastJobId = record({ doc, lastJobId });
+  scheduleRecord();
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   const observer = new MutationObserver(() => {
     clearTimeout(timer);
-    timer = setTimeout(() => {
-      lastJobId = record({ doc, lastJobId });
-    }, DEBOUNCE_MS);
+    timer = setTimeout(scheduleRecord, DEBOUNCE_MS);
   });
   observer.observe(doc.body, {
     childList: true,

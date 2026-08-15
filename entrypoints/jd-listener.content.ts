@@ -1,4 +1,4 @@
-// # Boss直聘 内容脚本：自动记录用户点开的职位
+// # Boss直聘 内容脚本（隔离世界）：监听用户点开的职位并自动记录
 import { startJdRecorder } from '@/pages/recorder';
 
 export default defineContentScript({

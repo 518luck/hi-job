@@ -1,46 +1,14 @@
 import type { SelectedJd } from '@/shared/zod/jd';
 
+import { requestVueSalary } from './vue-salary';
+
 // 取第一个匹配元素的文本，找不到返回空串
 const textOf = (root: ParentNode, selector: string): string =>
   root.querySelector(selector)?.textContent?.trim() ?? '';
 
-// 安全读取页面私有对象属性，避免 Vue 内部代理异常阻断 JD 解析
-const readProperty = (source: unknown, key: string): unknown => {
-  if (source === null || typeof source !== 'object') {
-    return undefined;
-  }
-
-  try {
-    return Reflect.get(source, key);
-  } catch {
-    return undefined;
-  }
-};
-
-// 从 Vue 职位对象中读取未经过字体混淆的原始薪资
-const salaryFromVue = (doc: Document, detailBox: HTMLElement): string => {
-  const detailVue = readProperty(detailBox, '__vue__');
-  const detailData = readProperty(detailVue, 'data');
-  const detailSalary = readProperty(detailData, 'salaryDesc');
-  if (typeof detailSalary === 'string' && detailSalary.trim() !== '') {
-    return detailSalary.trim();
-  }
-
-  const jobsMain = doc.querySelector<HTMLElement>('.page-jobs-main');
-  const jobsVue = readProperty(jobsMain, '__vue__');
-  const currentJob = readProperty(jobsVue, 'currentJob');
-  const currentSalary = readProperty(currentJob, 'salaryDesc');
-  if (typeof currentSalary === 'string' && currentSalary.trim() !== '') {
-    return currentSalary.trim();
-  }
-
-  return '';
-};
-
-// 优先读取 Vue 原始薪资，读取不到时回退到页面文本
-const salaryOf = (doc: Document, detailBox: HTMLElement): string =>
-  salaryFromVue(doc, detailBox) ||
-  textOf(detailBox, '.job-detail-info .job-salary');
+// 优先请求主世界读取 Vue 原始薪资，读取不到时回退到（可能被字体混淆的）页面文本
+const salaryOf = async ({ detailBox }: { detailBox: HTMLElement }): Promise<string> =>
+  (await requestVueSalary()) || textOf(detailBox, '.job-detail-info .job-salary');
 
 // 从职位详情链接中提取职位唯一 id
 const jobIdOfUrl = (url: string): string => {
@@ -83,7 +51,7 @@ const collectTags = (root: ParentNode): string[] => {
 };
 
 // 从 Boss直聘 页面解析当前选中的职位（JD）；未选中任何职位时返回 null
-const parseSelectedJd = (doc: Document): SelectedJd | null => {
+const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
   const detailBox = doc.querySelector<HTMLElement>('.job-detail-box');
   if (detailBox === null) {
     return null;
@@ -102,7 +70,7 @@ const parseSelectedJd = (doc: Document): SelectedJd | null => {
     companyId,
     companyName,
     title: textOf(detailBox, '.job-detail-info .job-name'),
-    salary: salaryOf(doc, detailBox),
+    salary: await salaryOf({ detailBox }),
     tags: collectTags(detailBox),
     recruiter: textOf(detailBox, '.boss-info-attr'),
     description:

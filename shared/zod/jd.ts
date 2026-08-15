@@ -6,7 +6,7 @@ const selectedJdSchema = z.object({
   companyId: z.string(), // 公司唯一 id，匿名公司为 anonymous:<公司名>
   companyName: z.string(), // 公司名
   title: z.string(), // 职位名称
-  salary: z.string(), // 薪资文本，站点脱敏时为 "-K"
+  salary: z.string(), // 薪资文本，取页面 Vue 原始数据，读不到时回退 DOM 文本（可能被字体混淆）
   tags: z.array(z.string()), // 头部基本信息与技能标签合集
   recruiter: z.string(), // 招聘者信息，"公司 · 职位" 格式
   description: z.string(), // 职位描述全文
