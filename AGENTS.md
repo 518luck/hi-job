@@ -136,6 +136,7 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 ### React / UI 约定
 
 - 使用函数式组件；显式声明 props 类型。
+- 表单统一用 TanStack Form（`@tanstack/react-form`）：校验 schema 从 `shared/zod` 派生并以表单级 `validators.onSubmit` 挂载（错误自动映射到字段），字段渲染走 `form.Field` render props，不手写逐字段 `useState`。
 - 将 hooks 保持在顶层；避免条件式 hooks。
 - 除非与文件约定一致，避免内联样式。
 

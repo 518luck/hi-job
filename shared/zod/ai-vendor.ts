@@ -17,17 +17,37 @@ const aiVendorSchema = z.object({
 const vendorFormSchema = aiVendorSchema
   .omit({ vendorId: true, createdAt: true, updatedAt: true })
   .extend({
-    name: z.string().min(1, '请填写厂商名称'), // 厂商名称
+    name: z.string().trim().min(1, '请填写厂商名称'), // 厂商名称
     baseUrl: z.url('Base URL 需为合法网址'), // API 基础地址
-    apiKey: z.string().min(1, '请填写 API Key'), // API 密钥
+    apiKey: z.string().trim().min(1, '请填写 API Key'), // API 密钥
     models: z
       .array(z.string().min(1))
       .min(1, '至少填写一个模型，可点「拉取模型列表」'), // 模型 id 列表
   });
 
+// 多行模型文本 → 模型 id 列表：逐行去空白，剔除空行
+const modelLinesOf = (text: string): string[] =>
+  text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '');
+
+// 弹窗表单：模型列表以多行文本收集，提交时经 modelLinesOf 还原为列表
+const vendorDialogFormSchema = vendorFormSchema.omit({ models: true }).extend({
+  modelsText: z.string().refine((text) => modelLinesOf(text).length > 0, {
+    message: '至少填写一个模型，可点「拉取模型列表」',
+  }), // 模型列表（每行一个）
+});
+
 // 从 schema 派生类型，保持单一事实来源
 type AiVendorRecord = z.infer<typeof aiVendorSchema>;
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
+type VendorDialogFormValues = z.infer<typeof vendorDialogFormSchema>;
 
-export type { AiVendorRecord, VendorFormValues };
-export { aiVendorSchema, vendorFormSchema };
+export type { AiVendorRecord, VendorDialogFormValues, VendorFormValues };
+export {
+  aiVendorSchema,
+  modelLinesOf,
+  vendorDialogFormSchema,
+  vendorFormSchema,
+};
