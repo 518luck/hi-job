@@ -4,6 +4,44 @@ import type { SelectedJd } from '@/shared/zod/jd';
 const textOf = (root: ParentNode, selector: string): string =>
   root.querySelector(selector)?.textContent?.trim() ?? '';
 
+// 安全读取页面私有对象属性，避免 Vue 内部代理异常阻断 JD 解析
+const readProperty = (source: unknown, key: string): unknown => {
+  if (source === null || typeof source !== 'object') {
+    return undefined;
+  }
+
+  try {
+    return Reflect.get(source, key);
+  } catch {
+    return undefined;
+  }
+};
+
+// 从 Vue 职位对象中读取未经过字体混淆的原始薪资
+const salaryFromVue = (doc: Document, detailBox: HTMLElement): string => {
+  const detailVue = readProperty(detailBox, '__vue__');
+  const detailData = readProperty(detailVue, 'data');
+  const detailSalary = readProperty(detailData, 'salaryDesc');
+  if (typeof detailSalary === 'string' && detailSalary.trim() !== '') {
+    return detailSalary.trim();
+  }
+
+  const jobsMain = doc.querySelector<HTMLElement>('.page-jobs-main');
+  const jobsVue = readProperty(jobsMain, '__vue__');
+  const currentJob = readProperty(jobsVue, 'currentJob');
+  const currentSalary = readProperty(currentJob, 'salaryDesc');
+  if (typeof currentSalary === 'string' && currentSalary.trim() !== '') {
+    return currentSalary.trim();
+  }
+
+  return '';
+};
+
+// 优先读取 Vue 原始薪资，读取不到时回退到页面文本
+const salaryOf = (doc: Document, detailBox: HTMLElement): string =>
+  salaryFromVue(doc, detailBox) ||
+  textOf(detailBox, '.job-detail-info .job-salary');
+
 // 从职位详情链接中提取职位唯一 id
 const jobIdOfUrl = (url: string): string => {
   const match = url.match(/\/job_detail\/([^.]+)\.html/);
@@ -64,7 +102,7 @@ const parseSelectedJd = (doc: Document): SelectedJd | null => {
     companyId,
     companyName,
     title: textOf(detailBox, '.job-detail-info .job-name'),
-    salary: textOf(detailBox, '.job-detail-info .job-salary'),
+    salary: salaryOf(doc, detailBox),
     tags: collectTags(detailBox),
     recruiter: textOf(detailBox, '.boss-info-attr'),
     description:
