@@ -104,8 +104,7 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
               void handleGenerate();
             }}
           >
-            <Icons.aiVendors data-icon="inline-start" />
-            <span>{generating ? '生成中…' : 'AI 打招呼'}</span>
+            {generating ? '生成中…' : '一键去沟通'}
           </Button>
         </div>
         {message !== '' && (
