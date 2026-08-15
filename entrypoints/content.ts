@@ -1,5 +1,5 @@
 // # Boss直聘 内容脚本：自动记录用户点开的职位
-import { startJdRecorder } from '@/pages/favorites';
+import { startJdRecorder } from '@/pages/recorder';
 
 export default defineContentScript({
   matches: ['*://*.zhipin.com/*'],
