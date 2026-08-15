@@ -93,16 +93,32 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
               <span className="text-xs text-muted-foreground">
                 打招呼内容（可编辑）
               </span>
-              <Button
-                variant="ghost"
-                size="xs"
-                onClick={() => {
-                  void handleCopy();
-                }}
-              >
-                <Icons.copy data-icon="inline-start" />
-                <span>{copied ? '已复制' : '复制'}</span>
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  disabled={generating}
+                  title="重新生成"
+                  aria-label="重新生成"
+                  onClick={() => {
+                    void handleGenerate();
+                  }}
+                >
+                  <Icons.refresh
+                    className={generating ? 'animate-spin' : undefined}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    void handleCopy();
+                  }}
+                >
+                  <Icons.copy data-icon="inline-start" />
+                  <span>{copied ? '已复制' : '复制'}</span>
+                </Button>
+              </div>
             </div>
             <Textarea
               rows={5}
