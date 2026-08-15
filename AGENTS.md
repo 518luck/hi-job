@@ -13,11 +13,13 @@ hi-job/
 ├── app/                    # 全局应用层
 │   ├── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
 │   └── providers/          # 全局 Provider 组合根（AppProvider）
-├── pages/                  # 页面级组件（jobs / favorites / settings）
+├── pages/                  # 页面 slice 层，结构/命名/导入边界规范见 pages/AGENTS.md
+│   └── favorites/          # ui=页面与展示组件，model=JD 解析，config=常量，index.ts=公有 API
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn 等）
-│   └── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
+│   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
+│   └── zod/                # zod 数据校验 schema（类型从 schema 派生）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
 │   ├── background.ts       # 后台 Service Worker
 │   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
@@ -62,6 +64,10 @@ npx shadcn@latest add <component>
 
 ## 上下文感知加载
 
+### pages / widgets 层
+
+页面与组件的 JSX 渲染、状态管理、slice/segment 结构与导入边界规范，参见 `pages/AGENTS.md`。
+
 ### shared 层
 
 shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
@@ -73,7 +79,7 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 ### TypeScript 与类型
 
 - 所有新代码使用 TypeScript；避免使用 `any`。
-- 接口数据类型（Dto/Vo）的命名、派生、复用规则，详见 `src/shared/lib/zod/AGENTS.md`。
+- 接口数据类型（Dto/Vo）统一放在 `shared/zod/`，类型从 zod schema 派生（`z.infer`）。
 - 公共 API 和导出函数优先使用显式返回类型。
 - 类型专用导入使用 `import type`。
 - 除非局部合理，避免非空断言（`!`）。

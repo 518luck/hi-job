@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { FavoritesPage } from '@/pages/favorites/favorites-page';
-import { JobsPage } from '@/pages/jobs/jobs-page';
-import { SettingsPage } from '@/pages/settings/settings-page';
-import { NavBar, type NavKey } from '@/widgets/nav-bar/nav-bar';
+import { FavoritesPage } from '@/pages/favorites';
+import { JobsPage } from '@/pages/jobs';
+import { SettingsPage } from '@/pages/settings';
+import { NavBar, type NavKey } from '@/widgets/nav-bar';
 
 // 侧边栏主界面：左侧内容区 + 右侧菜单栏
 function App() {
