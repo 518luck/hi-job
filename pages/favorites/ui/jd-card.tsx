@@ -35,7 +35,7 @@ function JdCard({ jd }: JdCardProps) {
         {jd.address !== '' && (
           <p className="text-xs text-muted-foreground">{jd.address}</p>
         )}
-        <p className="line-clamp-8 text-xs whitespace-pre-line text-muted-foreground">
+        <p className="text-xs whitespace-pre-line text-muted-foreground">
           {jd.description}
         </p>
       </CardContent>
