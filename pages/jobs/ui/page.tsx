@@ -1,6 +1,8 @@
 // # 职位列表页：最近记录的职位与 AI 打招呼
 import { useState } from 'react';
 
+import { Button } from '@/shared/ui/button';
+import { Icons } from '@/shared/ui/icons';
 import {
   Select,
   SelectContent,
@@ -9,13 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
+import type { NavKey } from '@/widgets/nav-bar';
 
 import { useJds } from '../model/use-jds';
 import { useVendors } from '../model/use-vendors';
 import { JdCard } from './jd-card';
 
+// 职位列表页的 props：onNavigate 用于跳转到其他导航页
+interface JobsPageProps {
+  onNavigate: (key: NavKey) => void;
+}
+
 // 职位列表页：顶部选择生成用的厂商与模型，卡片流展示最近记录的职位
-function JobsPage() {
+function JobsPage({ onNavigate }: JobsPageProps) {
   const { jds, loading } = useJds();
   const { vendors } = useVendors();
   const [vendorId, setVendorId] = useState<string | null>(null);
@@ -37,9 +45,19 @@ function JobsPage() {
   const renderVendorPicker = () => {
     if (vendors.length === 0) {
       return (
-        <p className="text-xs text-muted-foreground">
-          还没有配置 AI 厂商：去「AI 厂商」页添加后可用 AI 打招呼
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            还没有配置 AI 厂商，AI 打招呼不可用
+          </p>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => onNavigate('aiVendors')}
+          >
+            <Icons.aiVendors data-icon="inline-start" />
+            <span>去配置</span>
+          </Button>
+        </div>
       );
     }
     const vendorItems = vendors.map((item) => ({

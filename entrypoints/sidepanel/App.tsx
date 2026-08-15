@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="flex h-screen">
       <main className="flex flex-1 flex-col overflow-y-auto">
-        {activeKey === 'jobs' && <JobsPage />}
+        {activeKey === 'jobs' && <JobsPage onNavigate={setActiveKey} />}
         {activeKey === 'favorites' && <FavoritesPage />}
         {activeKey === 'aiVendors' && <AiVendorsPage />}
         {activeKey === 'settings' && <SettingsPage />}
