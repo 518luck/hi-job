@@ -39,6 +39,7 @@ const nextJdRecord = ({
     companyName: jd.companyName,
     companyIndustry: freshOr(jd.companyIndustry, existing.companyIndustry),
     companyScale: freshOr(jd.companyScale, existing.companyScale),
+    recruiterActive: freshOr(jd.recruiterActive, existing.recruiterActive),
     lastSeenAt: now,
     seenCount: existing.seenCount + 1,
   };

@@ -12,6 +12,7 @@ const recordedJdSchema = z.object({
   salary: z.string(), // 薪资文本，取页面 Vue 原始数据，读不到时回退 DOM 文本（可能被字体混淆）
   tags: z.array(z.string()), // 头部基本信息与技能标签合集
   recruiter: z.string(), // 招聘者信息，"公司 · 职位" 格式
+  recruiterActive: z.string(), // 招聘者活跃状态（如 刚刚活跃），取详情面板 DOM，读不到为空串
   description: z.string(), // 职位描述全文
   address: z.string(), // 工作地址
   url: z.string(), // 职位详情链接

@@ -76,6 +76,7 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
       textOf(detailBox, '.job-detail-info .job-salary'),
     tags: collectTags(detailBox),
     recruiter: textOf(detailBox, '.boss-info-attr'),
+    recruiterActive: textOf(detailBox, '.job-boss-info .boss-active-time'),
     description:
       detailBox.querySelector<HTMLElement>('.desc')?.innerText.trim() ?? '',
     address: textOf(detailBox, '.job-address-desc'),

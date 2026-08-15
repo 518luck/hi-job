@@ -62,13 +62,23 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
       <CardHeader>
         <CardTitle className="flex items-baseline justify-between gap-2">
           <span className="truncate">{jd.title}</span>
-          <Badge variant="secondary" className="shrink-0">
-            {jd.salary}
-          </Badge>
+          <span className="flex shrink-0 items-center gap-1.5">
+            <Badge variant="secondary">{jd.salary}</Badge>
+            {jd.recruiterActive ? (
+              <Badge variant="outline">
+                <span className="size-1.5 rounded-full bg-primary" />
+                {jd.recruiterActive}
+              </Badge>
+            ) : null}
+          </span>
         </CardTitle>
         <CardDescription className="truncate">
-          {[jd.companyName, jd.companyScale, jd.companyIndustry, jd.recruiter]
-            .filter((part) => part !== '')
+          {[
+            jd.companyScale,
+            jd.companyIndustry,
+            jd.recruiter === '' ? jd.companyName : jd.recruiter,
+          ]
+            .filter(Boolean)
             .join(' · ')}
         </CardDescription>
       </CardHeader>
