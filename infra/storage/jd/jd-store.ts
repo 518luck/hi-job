@@ -10,49 +10,76 @@ const saveSelectedJd = async ({ jd }: { jd: SelectedJd }): Promise<void> => {
 
   const now = Date.now();
   await db.transaction('rw', db.jd, db.company, async () => {
-    const existing = await db.jd.get(jd.jobId);
-    const isNewJob = existing === undefined;
-    const recorded: RecordedJd =
-      existing === undefined
-        ? { ...jd, firstSeenAt: now, lastSeenAt: now, seenCount: 1 }
-        : {
-            ...existing,
-            // 公司级属性随每次记录刷新为最新值；新值采集失败（空串）时保留旧值
-            companyName: jd.companyName,
-            companyIndustry:
-              jd.companyIndustry !== ''
-                ? jd.companyIndustry
-                : existing.companyIndustry,
-            companyScale:
-              jd.companyScale !== '' ? jd.companyScale : existing.companyScale,
-            lastSeenAt: now,
-            seenCount: existing.seenCount + 1,
-          };
-    await db.jd.put(recorded);
+    const existingJd = await db.jd.get(jd.jobId);
+    const isNewJob = existingJd === undefined;
+    await db.jd.put(nextJdRecord({ jd, existing: existingJd, now }));
 
-    const company = await db.company.get(jd.companyId);
-    const nextCompany: CompanyRecord =
-      company === undefined
-        ? {
-            companyId: jd.companyId,
-            companyName: jd.companyName,
-            industryName: jd.companyIndustry,
-            scaleName: jd.companyScale,
-            jobIds: [jd.jobId],
-            firstSeenAt: now,
-            lastSeenAt: now,
-          }
-        : {
-            ...company,
-            companyName: jd.companyName,
-            industryName: jd.companyIndustry,
-            scaleName: jd.companyScale,
-            jobIds: isNewJob ? [...company.jobIds, jd.jobId] : company.jobIds,
-            lastSeenAt: now,
-          };
-    await db.company.put(nextCompany);
+    const existingCompany = await db.company.get(jd.companyId);
+    await db.company.put(
+      nextCompanyRecord({ jd, existing: existingCompany, isNewJob, now }),
+    );
   });
 };
+
+// 合成下一版 jd 行：初见整份落库；再见冻结职位快照，只追新公司级属性并累计元信息
+const nextJdRecord = ({
+  jd,
+  existing,
+  now,
+}: {
+  jd: SelectedJd;
+  existing: RecordedJd | undefined;
+  now: number;
+}): RecordedJd => {
+  if (existing === undefined) {
+    return { ...jd, firstSeenAt: now, lastSeenAt: now, seenCount: 1 };
+  }
+  return {
+    ...existing,
+    companyName: jd.companyName,
+    companyIndustry: freshOr(jd.companyIndustry, existing.companyIndustry),
+    companyScale: freshOr(jd.companyScale, existing.companyScale),
+    lastSeenAt: now,
+    seenCount: existing.seenCount + 1,
+  };
+};
+
+// 合成下一版 company 行：初见建档；再见追新公司属性，仅新职位追加 jobIds
+const nextCompanyRecord = ({
+  jd,
+  existing,
+  isNewJob,
+  now,
+}: {
+  jd: SelectedJd;
+  existing: CompanyRecord | undefined;
+  isNewJob: boolean;
+  now: number;
+}): CompanyRecord => {
+  if (existing === undefined) {
+    return {
+      companyId: jd.companyId,
+      companyName: jd.companyName,
+      industryName: jd.companyIndustry,
+      scaleName: jd.companyScale,
+      jobIds: [jd.jobId],
+      firstSeenAt: now,
+      lastSeenAt: now,
+    };
+  }
+  return {
+    ...existing,
+    companyName: jd.companyName,
+    industryName: freshOr(jd.companyIndustry, existing.industryName),
+    scaleName: freshOr(jd.companyScale, existing.scaleName),
+    jobIds: isNewJob ? [...existing.jobIds, jd.jobId] : existing.jobIds,
+    lastSeenAt: now,
+  };
+};
+
+// 采集值非空则采用，为空（桥读取失败）时保留旧值
+const freshOr = (fresh: string, stale: string): string =>
+  fresh !== '' ? fresh : stale;
 
 // 读取全部已记录职位，按最近出现时间倒序（走 lastSeenAt 索引）
 const readAllRecordedJds = (): Promise<RecordedJd[]> =>
