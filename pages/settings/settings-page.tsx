@@ -18,6 +18,7 @@ function SettingsPage() {
       <h2 className="text-base font-medium">设置</h2>
       <ToggleGroup
         variant="outline"
+        className="w-full"
         value={theme ? [theme] : []}
         onValueChange={(values) => {
           const next = values[0];
@@ -30,6 +31,7 @@ function SettingsPage() {
           <ToggleGroupItem
             key={value}
             value={value}
+            className="flex-1"
             title={label}
             aria-label={label}
           >
