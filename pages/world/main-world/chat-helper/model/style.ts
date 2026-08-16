@@ -13,6 +13,7 @@ const ensureStyle = (): void => {
   style.textContent = [
     '.friend-content{position:relative;}',
     '.hijob-pass-mask{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:#999;font-size:14px;font-weight:600;letter-spacing:1px;z-index:5;}',
+    '.hijob-since-chat{float:right;margin-right:6px;color:#999;font-size:11px;}',
     `.hijob-friend-count{margin-left:8px;color:#999;font-size:12px;vertical-align:middle;}`,
     `.hijob-reply-box{margin:8px 12px 0;padding:10px 12px;border:1px solid #e5e5e5;border-radius:6px;background:#fff;}`,
     `.hijob-reply-text{margin:6px 0;font-size:13px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-all;}`,
