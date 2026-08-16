@@ -82,7 +82,7 @@ const useXxxContext = (): XxxContextType => {
 ### 结构
 
 - `pages`、`widgets` 下必须先建 slice，再建 segment，例如 `pages/favorites/ui/jd-card.tsx`；将来引入 `features`、`entities` 层时同样适用。
-- `app` 和 `shared` 不拆 slice，直接按 segment 组织（本项目 shared 的实际 segment：`lib` / `ui` / `zod`）；`infra` 同样不拆 slice（当前 segment：`storage`）。
+- `app` 和 `shared` 不拆 slice，直接按 segment 组织（本项目 shared 的实际 segment：`lib` / `ui` / `zod`）；`shared/infra` 是 shared 下的基础设施域，按域组织（当前域：`storage` / `ai`），同样不拆 slice。
 - `entrypoints/` 按 WXT 入口约定组织（background、sidepanel、content 等），视同 app 层：只做入口挂载与消息搬运，不承载业务。
 - 常用 segment（按代码目的分组）：
   - `ui` — UI 显示相关：组件、样式、日期格式化等。
@@ -109,14 +109,13 @@ Layer 只能向下依赖：
 app / entrypoints
 → pages
 → widgets
-→ shared
-→ infra
+→ shared（含 infra 域）
 ```
 
 - pages 可以导入 widgets 和 shared，不能导入 app 与 entrypoints。
 - widgets 只能导入 shared。
 - shared 不能导入任何业务 layer。
-- infra 只依赖 shared，不依赖任何业务 layer；各层均可向下使用 infra（如 `@/infra/storage`）。
+- infra 是 shared 内的域，不依赖任何业务 layer；各层均可向下使用 infra（如 `@/shared/infra/storage`）。
 - 同一 layer 的不同 slice 默认不能互相导入。
 - 如果需要组合多个同层 slice，应放到更高 layer，例如在 pages 的页面里组合多个 widgets。
 

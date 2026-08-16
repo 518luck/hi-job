@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
 
-import { jdStore } from '@/infra/storage';
+import { jdStore } from '@/shared/infra/storage';
 import {
   AlertDialog,
   AlertDialogAction,

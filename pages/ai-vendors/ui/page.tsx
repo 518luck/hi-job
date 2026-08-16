@@ -1,8 +1,8 @@
 // # AI 厂商设置页：厂商配置的增删改查与内置预设快速启用
 import { useState } from 'react';
 
-import type { AiVendorRecord } from '@/infra/storage';
-import { aiVendorStore } from '@/infra/storage';
+import type { AiVendorRecord } from '@/shared/infra/storage';
+import { aiVendorStore } from '@/shared/infra/storage';
 import {
   AlertDialog,
   AlertDialogAction,

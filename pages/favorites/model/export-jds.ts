@@ -1,5 +1,5 @@
 // # 收藏数据导出：把全部职位与公司聚合打包成 JSON 文件下载
-import { jdStore } from '@/infra/storage';
+import { jdStore } from '@/shared/infra/storage';
 
 // 两位数字补零，用于文件名里的时间片段
 const pad2 = (value: number): string => String(value).padStart(2, '0');

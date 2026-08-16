@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 
-import { aiVendorStore } from '@/infra/storage';
+import { aiVendorStore } from '@/shared/infra/storage';
 
 // AI 厂商列表数据：数据库变化时自动重新查询
 const useAiVendors = (): {

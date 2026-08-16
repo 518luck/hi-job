@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { CompanyRecord, RecordedJd } from '@/infra/storage';
+import type { CompanyRecord, RecordedJd } from '@/shared/infra/storage';
 import { cn } from '@/shared/lib/cn';
 import { Icons } from '@/shared/ui/icons';
 

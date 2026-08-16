@@ -1,8 +1,8 @@
 // # 职位卡片：职位概要 + AI 打招呼生成与结果展示
 import { useState } from 'react';
 
-import { generateGreeting } from '@/infra/ai';
-import type { AiVendorRecord, RecordedJd } from '@/infra/storage';
+import { generateGreeting } from '@/shared/infra/ai';
+import type { AiVendorRecord, RecordedJd } from '@/shared/infra/storage';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {

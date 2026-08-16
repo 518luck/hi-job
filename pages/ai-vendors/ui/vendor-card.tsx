@@ -1,5 +1,5 @@
 // # 厂商配置卡片：名称、API 格式、地址与模型列表，编辑/删除入口
-import type { AiVendorRecord } from '@/infra/storage';
+import type { AiVendorRecord } from '@/shared/infra/storage';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {

@@ -4,9 +4,9 @@ import { useForm } from '@tanstack/react-form';
 import type { SubmitEvent } from 'react';
 import { useEffect, useState } from 'react';
 
-import { fetchVendorModels } from '@/infra/ai';
-import type { AiVendorRecord } from '@/infra/storage';
-import { aiVendorStore } from '@/infra/storage';
+import { fetchVendorModels } from '@/shared/infra/ai';
+import type { AiVendorRecord } from '@/shared/infra/storage';
+import { aiVendorStore } from '@/shared/infra/storage';
 import { Button } from '@/shared/ui/button';
 import {
   Dialog,

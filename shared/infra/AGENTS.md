@@ -1,16 +1,16 @@
-# infra 层规范
+# infra 域规范
 
 ## 定位
 
-infra 是基础设施层，按技术域组织（存储、网络、日志等）。每个域分两层：
+infra 是 shared 下的基础设施域，按技术域组织（存储、网络、日志等）。每个域分两层：
 
 - **装配层**（如 `storage/db.ts`）：全局实例与注册清单。
 - **领域层**（如 `storage/jd/`）：按业务领域划分的子目录，是该领域数据的完整仓储。
 
 ## 依赖规则
 
-- infra 只可依赖 shared 与第三方库，禁止依赖业务 layer（pages / widgets / app / entrypoints）。
-- 各上层均向下使用 infra，统一走域根聚合入口（如 `@/infra/storage`）。
+- infra 位于 shared 内，可依赖 shared 其他 segment（lib、zod 等）与第三方库，禁止依赖业务 layer（pages / widgets / app / entrypoints）。
+- 各上层均向下使用 infra，统一走域根聚合入口（如 `@/shared/infra/storage`）。
 
 ## 结构与命名
 
@@ -38,4 +38,4 @@ content script → sendMessage → background 校验（zod）→ 仓储写入
 | `storage/` | 存储域：聚合入口（`index.ts`）、数据库装配（`db.ts`） |
 | `storage/jd/` | jd 领域：表索引 + 职位与公司记录的读写 |
 | `storage/ai-vendor/` | ai-vendor 领域：表索引 + AI 厂商配置的读写 |
-| `ai/` | AI 域：厂商客户端（供应商实例、模型拉取、文本生成），聚合入口 `@/infra/ai` |
+| `ai/` | AI 域：厂商客户端（供应商实例、模型拉取、文本生成），聚合入口 `@/shared/infra/ai` |

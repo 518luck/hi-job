@@ -24,10 +24,10 @@ hi-job/
 │   ├── lib/                # 工具函数（cn、page-property 等）
 │   ├── messaging/          # 扩展消息协议：ProtocolMap 收发（隔离世界/侧边栏 ↔ 后台）
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
-│   └── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
-├── infra/                  # 基础设施层，规范见 infra/AGENTS.md
-│   ├── storage/            # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
-│   └── ai/                 # AI 域：厂商客户端（供应商实例、模型拉取、文本生成）
+│   ├── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
+│   └── infra/              # 基础设施域，规范见 shared/infra/AGENTS.md
+│       ├── storage/        # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
+│       └── ai/             # AI 域：厂商客户端（供应商实例、模型拉取、文本生成）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
 │   ├── background.ts       # 后台 Service Worker
 │   ├── content.ts          # 内容脚本（matches 决定注入哪些站点）
@@ -80,9 +80,9 @@ npx shadcn@latest add <component>
 
 shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 
-### infra 层
+### infra 域
 
-基础设施层的定位、依赖规则与当前域说明，参见 `infra/AGENTS.md`。
+基础设施域（`shared/infra`）的定位、依赖规则与当前域说明，参见 `shared/infra/AGENTS.md`。
 
 ### 跨环境通信
 
