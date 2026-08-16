@@ -1,12 +1,12 @@
 import {
   Bot,
-  Briefcase,
   Building2,
   ChevronDown,
   Copy,
   Download,
   ExternalLink,
   History,
+  LayoutDashboard,
   Monitor,
   Moon,
   Pencil,
@@ -20,7 +20,7 @@ import {
 
 // 全局图标注册表：业务代码统一通过 Icons 对象使用，不直接导入图标库
 const Icons = {
-  workbench: Briefcase,
+  workbench: LayoutDashboard,
   favorites: Star,
   settings: Settings,
   themeLight: Sun,

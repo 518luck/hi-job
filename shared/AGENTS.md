@@ -5,17 +5,17 @@
 
 默认使用 `lucide-react` 提供的图标（与 `components.json` 的 `iconLibrary` 一致）。不要在业务代码中直接从图标库导入图标，也不要在组件内临时定义图标；应先在 `icons.tsx` 中统一注册，再通过 `Icons` 对象使用。`shared/ui/` 下由 shadcn CLI 生成的组件不受此约束。
 
-注册图标时必须按业务语义命名，不要直接使用图标库原始名称；例如使用 `workbench`、`themeDark`，而不是 `Briefcase`、`Moon`。
+注册图标时必须按业务语义命名，不要直接使用图标库原始名称；例如使用 `workbench`、`themeDark`，而不是 `LayoutDashboard`、`Moon`。
 
 ### 正确示例
 
 添加图标：
 
 ```typescript
-import { Briefcase, Sun } from 'lucide-react';
+import { LayoutDashboard, Sun } from 'lucide-react';
 
 export const Icons = {
-  workbench: Briefcase,
+  workbench: LayoutDashboard,
   themeLight: Sun,
 };
 ```
@@ -33,10 +33,10 @@ import { Icons } from '@/shared/ui/icons';
 不要在业务组件中直接从 lucide-react 导入图标：
 
 ```typescript
-import { Briefcase } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
 export function Header() {
-  return <Briefcase className="size-4" />;
+  return <LayoutDashboard className="size-4" />;
 }
 ```
 
