@@ -44,17 +44,19 @@ export default defineBackground(() => {
   browser.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
 
   // > 类型安全消息中枢：数据经 zod 校验后落库/生成，handler 返回值即应答
-  onMessage('recordJd', ({ data }) => {
+  onMessage('recordJd', async ({ data }) => {
     const parsed = selectedJdSchema.safeParse(data);
-    if (parsed.success) {
-      jdStore.saveSelectedJd({ jd: parsed.data });
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: 职位记录参数不合法');
     }
+    await jdStore.saveSelectedJd({ jd: parsed.data });
   });
-  onMessage('saveFriendMark', ({ data }) => {
+  onMessage('saveFriendMark', async ({ data }) => {
     const parsed = friendMarkInputSchema.safeParse(data);
-    if (parsed.success) {
-      void friendMarkStore.saveFriendMark(parsed.data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: HR 标记参数不合法');
     }
+    await friendMarkStore.saveFriendMark(parsed.data);
   });
   onMessage('getFriendMarks', () =>
     friendMarkStore

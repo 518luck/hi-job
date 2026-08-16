@@ -16,12 +16,13 @@ hi-job/
 ├── pages/                  # 页面 slice 层，结构/命名/导入边界规范见 pages/AGENTS.md
 │   ├── favorites/          # ui=页面与展示组件，model=JD 解析/存储/自动记录，index.ts=公有 API
 │   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
+│       ├── rpc/            # 两世界共享 RPC：window-rpc 传输、方法表、Vue 数据类型
 │       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、runtime-bridge 桥转发
 │       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn、page-property 等）
-│   ├── messaging/          # 跨环境消息协议：ProtocolMap 收发、桥信封、vue-job-data 桥协议
+│   ├── messaging/          # 扩展消息协议：ProtocolMap 收发（隔离世界/侧边栏 ↔ 后台）
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
 │   └── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
 ├── infra/                  # 基础设施层，规范见 infra/AGENTS.md
@@ -82,6 +83,23 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 ### infra 层
 
 基础设施层的定位、依赖规则与当前域说明，参见 `infra/AGENTS.md`。
+
+### 跨环境通信
+
+| 通道 | 发起方 | 接收方 | 实现 |
+| --- | --- | --- | --- |
+| 扩展消息 | 隔离世界/侧边栏 | 后台 Service Worker | `@webext-core/messaging` 的 `ProtocolMap` |
+| Window RPC | 主世界 | 隔离世界 | `pages/world/rpc/window-rpc.ts` |
+| Window RPC | 隔离世界 | 主世界 | `pages/world/rpc/window-rpc.ts` |
+
+Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔离世界不逐方法登记，任何 ProtocolMap 消息原样转发后台，类型由调用处泛型与后台 handler 两端约束；`vue.*` 表示请求主世界读取页面 Vue 数据。所有 Window RPC 统一使用 namespace、version、request/response、request id、超时和错误结构；业务代码不得直接拼接 `postMessage` 信封。
+
+两条铁律：
+
+1. 主世界不能访问扩展 API，必须通过 Window RPC 交给隔离世界；隔离世界与后台使用 `@webext-core/messaging`。
+2. Window RPC 只能解决通信与协议一致性，不能把主世界当作安全边界；页面自身脚本可以观察同窗消息，因此不得通过消息传递敏感凭据。
+
+消息协议定义：`shared/messaging/protocol.ts`（扩展消息）、`pages/world/rpc/window-methods.ts`（Window RPC 方法表）、`pages/world/rpc/window-rpc.ts`（Window RPC 传输层）。
 
 ## 代码风格指南
 

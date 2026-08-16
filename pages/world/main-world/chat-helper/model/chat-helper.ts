@@ -3,12 +3,9 @@
 // 主世界才能安全读取页面 Vue 实例（__vue__）数据；主世界拿不到 chrome API，
 // 扩展协议调用经 postMessage 桥（shared/messaging）交给隔离世界转发后台。
 
+import { createWindowRpcClient } from '@/pages/world/rpc';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
-import {
-  BRIDGE_REQUEST,
-  BRIDGE_RESPONSE,
-  bridgeResponseSchema,
-} from '@/shared/messaging';
+import type { ProtocolMap } from '@/shared/messaging';
 import type {
   FriendMark,
   FriendMarkInput,
@@ -18,9 +15,32 @@ import type {
 } from '@/shared/zod';
 import { friendMarksResponseSchema } from '@/shared/zod';
 
-// 桥应答等待超时：后台生成回复可能较慢
-const BRIDGE_TIMEOUT_MS = 30_000;
+// 聊天页到隔离世界的直通 RPC 客户端
+const backgroundRpc = createWindowRpcClient<{
+  'background.call': {
+    input: { method: keyof ProtocolMap; data: unknown };
+    output: unknown;
+  };
+}>();
 
+// 直通调用后台：方法名与参数类型由 ProtocolMap 派生，编译期即校验
+const callBackground = <K extends keyof ProtocolMap>(
+  method: K,
+  data: Parameters<ProtocolMap[K]>[0],
+): Promise<ReturnType<ProtocolMap[K]>> =>
+  backgroundRpc
+    .call('background.call', { method, data })
+    .then((result) => result as ReturnType<ProtocolMap[K]>);
+
+// 业务调用封装：方法名、参数与返回值集中受 ProtocolMap 约束
+const extensionApi = {
+  saveFriendMark: (data: FriendMarkInput): Promise<void> =>
+    callBackground('saveFriendMark', data),
+  getFriendMarks: (): Promise<FriendMark[]> =>
+    callBackground('getFriendMarks', undefined),
+  generateReply: (data: ReplyInput): Promise<string> =>
+    callBackground('generateReply', data),
+};
 // 聊天页根组件挂载点：探测确认 .main-wrap 持有 Chat 根实例
 const VUE_ROOT_SELECTOR = '.main-wrap';
 
@@ -33,51 +53,6 @@ const HIJOB_PREFIX = 'hijob';
 
 // 本地标记缓存：encryptBossId -> status，页面加载时从后台拉取
 const marks = new Map<string, string>();
-
-// 经隔离世界桥按协议名调用后台，返回应答
-const bridgeSend = (protocol: string, data?: unknown): Promise<unknown> =>
-  new Promise((resolve, reject) => {
-    const requestId = crypto.randomUUID();
-    const onMessage = (event: MessageEvent) => {
-      if (event.source !== window) {
-        return;
-      }
-      const parsed = bridgeResponseSchema.safeParse(event.data);
-      if (
-        !parsed.success ||
-        parsed.data.type !== BRIDGE_RESPONSE ||
-        parsed.data.requestId !== requestId
-      ) {
-        return;
-      }
-      clearTimeout(timer);
-      window.removeEventListener('message', onMessage);
-      if (parsed.data.ok) {
-        resolve(parsed.data.response);
-      } else {
-        reject(new Error(parsed.data.error ?? '扩展调用失败'));
-      }
-    };
-    const timer = setTimeout(() => {
-      window.removeEventListener('message', onMessage);
-      reject(new Error('扩展桥响应超时'));
-    }, BRIDGE_TIMEOUT_MS);
-    window.addEventListener('message', onMessage);
-    window.postMessage(
-      { type: BRIDGE_REQUEST, requestId, protocol, data },
-      '*',
-    );
-  });
-
-// 主世界协议调用：经桥转发后台，参数类型从 zod 输入 schema 派生
-const protocol = {
-  saveFriendMark: (data: FriendMarkInput): Promise<void> =>
-    bridgeSend('saveFriendMark', data) as Promise<void>,
-  getFriendMarks: (): Promise<FriendMark[]> =>
-    bridgeSend('getFriendMarks') as Promise<FriendMark[]>,
-  generateReply: (data: ReplyInput): Promise<string> =>
-    bridgeSend('generateReply', data) as Promise<string>,
-};
 
 // 在组件树中按组件名查找实例，返回第一个匹配（限制深度）
 const findInstanceByName = (
@@ -248,7 +223,9 @@ const toggleMark = async (encryptBossId: string): Promise<void> => {
   } else {
     marks.set(encryptBossId, next);
   }
-  void protocol.saveFriendMark({ encryptBossId, status: next }).catch(() => {});
+  void extensionApi
+    .saveFriendMark({ encryptBossId, status: next })
+    .catch(() => {});
 };
 
 // 同步单个会话项：注入标记按钮与失败 badge
@@ -300,7 +277,7 @@ const syncAllItems = (): void => {
 // 从后台拉取全部标记并渲染
 const loadMarks = async (): Promise<void> => {
   try {
-    const response = await protocol.getFriendMarks();
+    const response = await extensionApi.getFriendMarks();
     const parsed = friendMarksResponseSchema.safeParse(response);
     if (parsed.success) {
       marks.clear();
@@ -334,7 +311,7 @@ const handleGenerateReply = async (box: HTMLElement): Promise<void> => {
   }
   textEl.textContent = '生成中…';
   try {
-    const response = await protocol.generateReply({
+    const response = await extensionApi.generateReply({
       jobId: stringOf(boss, 'encryptJobId'),
       jd: replyJdOf(boss),
       messages,

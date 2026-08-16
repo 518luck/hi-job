@@ -1,53 +1,30 @@
-// # 扩展运行时桥（隔离世界）：把主世界脚本的协议请求转发给后台
+// # 扩展运行时桥（隔离世界）：把主世界的后台调用原样转发给后台
 //
-// 主世界内容脚本拿不到 chrome API，经 postMessage 把「协议名 + 数据」交给本脚本，
-// 用类型安全的 sendMessage 转发后台，应答原样回传；请求/应答用 requestId 配对。
-import type { ProtocolMap } from '@/shared/messaging';
-import { bridgeRequestSchema, sendMessage } from '@/shared/messaging';
+// 桥是哑管道：不逐方法登记、不含业务逻辑，任何 ProtocolMap 消息原样转发；
+// 类型安全由两端保证——主世界调用处的泛型与后台 handler 的 ProtocolMap。
 
-// 响应一次桥请求：按协议名转发后台并回传结果
-const respondBridge = async (
-  requestId: string,
-  protocol: string,
-  data: unknown,
-): Promise<void> => {
-  try {
-    // > 协议名来自主世界字符串，运行时桥的接缝处断言为协议键
-    const response = await sendMessage(
-      protocol as keyof ProtocolMap,
-      data as never,
-    );
-    window.postMessage(
-      { type: 'hi-job:bridge-response', requestId, ok: true, response },
-      '*',
-    );
-  } catch (error) {
-    window.postMessage(
-      {
-        type: 'hi-job:bridge-response',
-        requestId,
-        ok: false,
-        error: error instanceof Error ? error.message : '扩展调用失败',
-      },
-      '*',
-    );
-  }
-};
+import {
+  type BackgroundCallInput,
+  createWindowRpcServer,
+} from '@/pages/world/rpc';
+import { sendMessage } from '@/shared/messaging';
 
-// 启动桥：监听主世界消息并转发
+let runtimeBridgeStarted = false;
+
+// 启动主世界到后台的直通 RPC 服务
 const startRuntimeBridge = (): void => {
-  window.addEventListener('message', (event) => {
-    if (event.source !== window) {
-      return;
-    }
-    const parsed = bridgeRequestSchema.safeParse(event.data);
-    if (parsed.success) {
-      void respondBridge(
-        parsed.data.requestId,
-        parsed.data.protocol,
-        parsed.data.data,
-      );
-    }
+  if (runtimeBridgeStarted) {
+    return;
+  }
+  runtimeBridgeStarted = true;
+  createWindowRpcServer<{
+    'background.call': { input: BackgroundCallInput; output: unknown };
+  }>({
+    methods: {
+      'background.call': ({ method, data }) =>
+        // > 动态消息名的转发接缝：类型由两端约束，此处断言放行
+        sendMessage(method, data as never),
+    },
   });
 };
 
