@@ -3,11 +3,13 @@ import { generateReply } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
   aiVendorStore,
+  chatSessionStore,
   friendMarkStore,
   jdStore,
 } from '@/shared/infra/storage';
 import type { ReplyInput } from '@/shared/zod';
 import {
+  chatSessionInputSchema,
   friendMarkInputSchema,
   friendMarksResponseSchema,
   replyInputSchema,
@@ -67,6 +69,13 @@ export default defineBackground(() => {
       .readAllFriendMarks()
       .then((marks) => friendMarksResponseSchema.parse(marks)),
   );
+  onMessage('saveChatSession', async ({ data }) => {
+    const parsed = chatSessionInputSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: 会话上报参数不合法');
+    }
+    await chatSessionStore.saveChatSession(parsed.data);
+  });
   onMessage('generateReply', ({ data }) => {
     const parsed = replyInputSchema.safeParse(data);
     if (!parsed.success) {

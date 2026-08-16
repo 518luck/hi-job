@@ -6,6 +6,7 @@ import Dexie, { type EntityTable } from 'dexie';
 
 import type {
   AiVendorRecord,
+  ChatSession,
   CompanyRecord,
   FriendMark,
   RecordedJd,
@@ -17,6 +18,7 @@ const db = new Dexie('hi-job') as Dexie & {
   company: EntityTable<CompanyRecord, 'companyId'>; // 公司聚合表
   aiVendor: EntityTable<AiVendorRecord, 'vendorId'>; // AI 厂商配置表
   friendMark: EntityTable<FriendMark, 'encryptBossId'>; // HR 会话标记表
+  chatSession: EntityTable<ChatSession, 'encryptBossId'>; // 聊天会话档案表
 };
 
 // 全部表统一在 v1 一次声明（首字段为主键，其余为索引）；
@@ -26,6 +28,7 @@ db.version(1).stores({
   company: 'companyId, lastSeenAt',
   aiVendor: 'vendorId, name, updatedAt',
   friendMark: 'encryptBossId, status, updatedAt',
+  chatSession: 'encryptBossId, lastChatAt',
 });
 
 export { db };

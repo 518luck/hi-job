@@ -20,4 +20,16 @@ const stringOf = (source: unknown, key: string): string => {
   return typeof value === 'string' ? value.trim() : '';
 };
 
-export { readProperty, stringOf };
+// 读取数字属性，非数字或读取失败回退 0
+const numberOf = (source: unknown, key: string): number => {
+  const value = readProperty(source, key);
+  return typeof value === 'number' ? value : 0;
+};
+
+// 读取布尔属性，非布尔或读取失败回退 false
+const booleanOf = (source: unknown, key: string): boolean => {
+  const value = readProperty(source, key);
+  return typeof value === 'boolean' ? value : false;
+};
+
+export { booleanOf, numberOf, readProperty, stringOf };

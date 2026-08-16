@@ -36,8 +36,13 @@ const decorateCard = ({
 
 // 拉取一次卡片数据并装饰当前页所有未装饰的卡片；无数据的卡不标记，等下次变化重试
 const decorateOnce = async ({ doc }: { doc: Document }): Promise<void> => {
+  const cardElements = doc.querySelectorAll<HTMLElement>('.job-card-box');
+  // 页面上没有职位卡片（聊天页等）时直接跳过，不发起数据请求
+  if (cardElements.length === 0) {
+    return;
+  }
   const cards = await requestJobCards();
-  for (const card of doc.querySelectorAll<HTMLElement>('.job-card-box')) {
+  for (const card of cardElements) {
     if (card.getAttribute(DECORATED_FLAG) === '1') {
       continue;
     }

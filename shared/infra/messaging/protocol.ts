@@ -2,6 +2,7 @@
 import { defineExtensionMessaging } from '@webext-core/messaging';
 
 import type {
+  ChatSessionInput,
   FriendMark,
   FriendMarkInput,
   ReplyInput,
@@ -13,6 +14,7 @@ interface ProtocolMap {
   recordJd(data: SelectedJd): void; // 隔离世界脚本	后台	保存职位
   saveFriendMark(data: FriendMarkInput): void; // 隔离世界脚本	后台	保存 HR 标记
   getFriendMarks(): FriendMark[]; // 隔离世界脚本	后台	获取 HR 标记
+  saveChatSession(data: ChatSessionInput): void; // 主世界脚本（经桥）	后台	上报当前聊天会话档案
   generateReply(data: ReplyInput): string; // 隔离世界脚本	后台	调 AI 生成回复
 }
 

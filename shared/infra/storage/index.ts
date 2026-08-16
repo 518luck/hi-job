@@ -2,6 +2,7 @@
 
 export type { AiVendorRecord } from './ai-vendor';
 export { aiVendorStore } from './ai-vendor';
+export { chatSessionStore } from './chat-session';
 export { friendMarkStore } from './friend-mark';
 export type { CompanyRecord, RecordedJd } from './jd';
 export { jdStore } from './jd';

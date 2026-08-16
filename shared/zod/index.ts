@@ -12,6 +12,9 @@ export {
   vendorDialogFormSchema,
   vendorFormSchema,
 } from './ai-vendor';
+// chatSession 表：聊天会话档案
+export type { ChatSession, ChatSessionInput } from './chat-session';
+export { chatSessionInputSchema, chatSessionSchema } from './chat-session';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';

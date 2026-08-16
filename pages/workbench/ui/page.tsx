@@ -11,9 +11,11 @@ import {
 } from '@/shared/ui/select';
 import type { NavKey } from '@/widgets/nav-bar';
 
+import { useChatSession } from '../model/use-chat-session';
 import { useJds } from '../model/use-jds';
 import { usePersistedVendorSelection } from '../model/use-persisted-vendor-selection';
 import { useVendors } from '../model/use-vendors';
+import { ChatSessionCard } from './chat-session-card';
 import { JdCard } from './jd-card';
 
 // 工作台页的 props：onNavigate 用于跳转到其他导航页
@@ -27,6 +29,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
   const { vendors } = useVendors();
   const { vendorId, modelId, selectVendor, selectModel } =
     usePersistedVendorSelection();
+  const { view: chatView, toggleFailed } = useChatSession();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
   const vendor =
@@ -133,6 +136,16 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     <div className="flex flex-1 flex-col gap-2 p-4">
       <h2 className="text-base font-medium">工作台</h2>
       {renderVendorPicker()}
+      {chatView !== undefined && (
+        <ChatSessionCard
+          session={chatView.session}
+          jd={chatView.jd}
+          failed={chatView.failed}
+          onToggleFailed={() => {
+            void toggleFailed();
+          }}
+        />
+      )}
       {renderList()}
     </div>
   );

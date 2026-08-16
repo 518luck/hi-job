@@ -1,6 +1,7 @@
 // # 聊天页数据探测（主世界，临时工具）：注入 test 按钮，dump 聊天页 Vue 数据
 //
 // 目标：确认聊天页 Vue 实例的挂载点与会话/消息数据结构，为 HR badge 与 AI 问答功能定字段。
+import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
 
 // 候选 Vue 挂载点：按优先级逐个探测
@@ -194,6 +195,30 @@ const renderResult = (panel: HTMLElement, result: unknown): void => {
   panel.append(pre);
 };
 
+// 渲染采集日志区：debugLog 写入隐藏节点的日志，作为无 DevTools 环境的日志出口
+const renderLogs = (panel: HTMLElement): void => {
+  const logs = readDebugLogs();
+  if (logs.length === 0) {
+    return;
+  }
+  const label = document.createElement('div');
+  label.textContent = '采集日志（点击全选复制）';
+  label.style.cssText =
+    'padding:8px 12px 0;font-size:12px;font-weight:600;color:#666;border-top:1px solid #eee;';
+  const pre = document.createElement('pre');
+  pre.textContent = logs.join('\n');
+  pre.style.cssText =
+    'margin:4px 0 0;padding:12px;font:12px/1.5 monospace;color:#333;background:#fff;white-space:pre-wrap;word-break:break-all;';
+  pre.addEventListener('click', () => {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+  panel.append(label, pre);
+};
+
 // 创建探测面板：固定定位，展示最近一次探测结果
 const showProbePanel = (): void => {
   if (document.querySelector(`[${PROBE_PANEL_FLAG}]`) !== null) {
@@ -218,6 +243,7 @@ const showProbePanel = (): void => {
   panel.append(header);
   document.body.append(panel);
   renderResult(panel, probeChatData());
+  renderLogs(panel);
 };
 
 // 启动探测：仅聊天页激活，右下角注入悬浮按钮，点击显示数据面板
