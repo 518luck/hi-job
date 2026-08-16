@@ -6,11 +6,13 @@ import { db } from '../db';
 // 单行固定主键：AI 调用偏好只有一份
 const AI_PREFERENCE_KEY = 'global';
 
-// 默认偏好：未选择厂商/模型，思考模式默认档
+// 默认偏好：未选择厂商/模型，思考模式默认档，打招呼文案用默认
 const DEFAULT_AI_PREFERENCE: AiPreferenceInput = {
   vendorId: null,
   modelId: null,
   thinkingMode: 'default',
+  greetingTask: null,
+  greetingRequirement: null,
 };
 
 // 保存偏好：单行覆盖写入
@@ -26,17 +28,19 @@ const readAiPreference = async (): Promise<AiPreferenceInput> => {
   if (record === undefined) {
     return DEFAULT_AI_PREFERENCE;
   }
-  // 去掉存储主键，只返回偏好字段
+  // 去掉存储主键，只返回偏好字段；旧记录缺字段时按 null（用默认文案）处理
   return {
     vendorId: record.vendorId,
     modelId: record.modelId,
     thinkingMode: record.thinkingMode,
+    greetingTask: record.greetingTask ?? null,
+    greetingRequirement: record.greetingRequirement ?? null,
   };
 };
 
 // ai-preference 领域仓储：AI 调用全局偏好的统一读写入口
 const aiPreferenceStore = {
-  saveAiPreference, // 保存偏好（厂商/模型/思考模式）
+  saveAiPreference, // 保存偏好（厂商/模型/思考模式/提示词）
   readAiPreference, // 读取偏好（无记录时默认值）
 };
 

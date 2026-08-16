@@ -10,6 +10,8 @@ const aiPreferenceSchema = z.object({
   vendorId: z.string().nullable(), // 工作台选择的厂商 id，null 表示未选择
   modelId: z.string().nullable(), // 工作台选择的模型 id，null 表示未选择
   thinkingMode: z.enum(THINKING_MODES), // 思考模式档位
+  greetingTask: z.string().nullable(), // 打招呼任务描述文案，null 用默认文案
+  greetingRequirement: z.string().nullable(), // 打招呼生成要求文案，null 用默认文案
 });
 
 // 协议传输的偏好：去掉存储主键

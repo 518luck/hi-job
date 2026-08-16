@@ -18,15 +18,29 @@ import { Icons } from '@/shared/ui/icons';
 
 import { BUILT_IN_VENDORS } from '../config/built-in-vendors';
 import { useAiVendors } from '../model/use-ai-vendors';
+import { GreetingPromptView } from './greeting-prompt-view';
 import { VendorCard } from './vendor-card';
 import { VendorDialog, type VendorDialogSeed } from './vendor-dialog';
+
+// AI 厂商页视图：厂商列表与提示词配置
+type AiVendorsView = 'list' | 'greetingPrompt';
 
 // AI 厂商设置页：内置厂商预设 + 自定义厂商，配置保存于本机
 function AiVendorsPage() {
   const { vendors, loading } = useAiVendors();
+  const [view, setView] = useState<AiVendorsView>('list');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [seed, setSeed] = useState<VendorDialogSeed>(null);
   const [removing, setRemoving] = useState<AiVendorRecord | null>(null);
+
+  // 提示词配置视图：单独渲染，返回按钮回厂商列表
+  if (view === 'greetingPrompt') {
+    return (
+      <div className="flex flex-1 flex-col p-4">
+        <GreetingPromptView onBack={() => setView('list')} />
+      </div>
+    );
+  }
 
   // 打开空白新增表单
   const openCreate = () => {
@@ -74,7 +88,17 @@ function AiVendorsPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
-      <h2 className="text-base font-medium">AI 厂商</h2>
+      <h2 className="flex items-center justify-between text-base font-medium">
+        <span>AI 厂商</span>
+        <Button
+          variant="outline"
+          size="xs"
+          onClick={() => setView('greetingPrompt')}
+        >
+          <Icons.promptText data-icon="inline-start" />
+          <span>提示词</span>
+        </Button>
+      </h2>
       <p className="text-xs text-muted-foreground">
         管理 AI 厂商：内置预设一键启用，或自定义任意 OpenAI 兼容 / Anthropic
         接口
