@@ -93,8 +93,8 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
             <Button
               variant="ghost"
               size="icon-xs"
-              title="打开原职位页"
-              aria-label="打开原职位页"
+              title="打开职位详情页"
+              aria-label="打开职位详情页"
               onClick={() => {
                 void browser.tabs.create({ url: jd.url });
               }}

@@ -1,4 +1,4 @@
-// # 职位列表页：最近记录的职位与 AI 打招呼
+// # 工作台页：最近记录的职位与 AI 打招呼
 import { useState } from 'react';
 
 import { Button } from '@/shared/ui/button';
@@ -17,13 +17,13 @@ import { useJds } from '../model/use-jds';
 import { useVendors } from '../model/use-vendors';
 import { JdCard } from './jd-card';
 
-// 职位列表页的 props：onNavigate 用于跳转到其他导航页
-interface JobsPageProps {
+// 工作台页的 props：onNavigate 用于跳转到其他导航页
+interface WorkbenchPageProps {
   onNavigate: (key: NavKey) => void;
 }
 
-// 职位列表页：顶部选择生成用的厂商与模型，卡片流展示最近记录的职位
-function JobsPage({ onNavigate }: JobsPageProps) {
+// 工作台页：顶部选择生成用的厂商与模型，卡片流展示最近记录的职位
+function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
   const { jds, loading } = useJds();
   const { vendors } = useVendors();
   const [vendorId, setVendorId] = useState<string | null>(null);
@@ -138,11 +138,11 @@ function JobsPage({ onNavigate }: JobsPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
-      <h2 className="text-base font-medium">职位</h2>
+      <h2 className="text-base font-medium">工作台</h2>
       {renderVendorPicker()}
       {renderList()}
     </div>
   );
 }
 
-export { JobsPage };
+export { WorkbenchPage };

@@ -1,2 +1,2 @@
-// # jobs slice 公有 API
-export { JobsPage } from './ui/page';
+// # workbench slice 公有 API
+export { WorkbenchPage } from './ui/page';
