@@ -1,8 +1,5 @@
-// # reply 消息数据字典：聊天页请求 AI 生成下一条回复的消息信封
+// # reply 消息数据字典：聊天页请求 AI 生成下一条回复的数据结构
 import { z } from 'zod';
-
-// 聊天页向后台请求生成回复的消息类型
-const GENERATE_REPLY = 'hi-job:generate-reply';
 
 // 单条聊天记录：说话方与正文
 const replyMessageSchema = z.object({
@@ -20,23 +17,17 @@ const replyJdSchema = z.object({
   description: z.string(), // 职位描述，读不到为空串
 });
 
-// 消息信封：聊天页发来的生成请求
-const generateReplyMessageSchema = z.object({
-  type: z.literal(GENERATE_REPLY), // 消息类型标识
-  jobId: z.string(), // 职位 id（encryptJobId），后台优先查库拿完整 JD
+// 生成请求的输入数据：后台优先按 jobId 查库拿完整 JD
+const replyInputSchema = z.object({
+  jobId: z.string(), // 职位 id（encryptJobId），后台优先查库
   jd: replyJdSchema, // 职位信息兜底，库中无记录时使用
   messages: z.array(replyMessageSchema), // 聊天记录，按时间正序
 });
 
 // 从 schema 派生类型，保持单一事实来源
-type GenerateReplyMessage = z.infer<typeof generateReplyMessageSchema>;
+type ReplyInput = z.infer<typeof replyInputSchema>;
 type ReplyJd = z.infer<typeof replyJdSchema>;
 type ReplyMessage = z.infer<typeof replyMessageSchema>;
 
-export type { GenerateReplyMessage, ReplyJd, ReplyMessage };
-export {
-  GENERATE_REPLY,
-  generateReplyMessageSchema,
-  replyJdSchema,
-  replyMessageSchema,
-};
+export type { ReplyInput, ReplyJd, ReplyMessage };
+export { replyInputSchema, replyJdSchema, replyMessageSchema };

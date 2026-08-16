@@ -15,34 +15,17 @@ export {
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
-// friend-mark 表：HR 会话状态标记 + 读写消息信封
-export type {
-  FriendMark,
-  GetFriendMarksMessage,
-  SaveFriendMarkMessage,
-} from './friend-mark';
+// friend-mark 表：HR 会话状态标记 + 操作输入
+export type { FriendMark, FriendMarkInput } from './friend-mark';
 export {
   FRIEND_MARK_STATUSES,
+  friendMarkInputSchema,
   friendMarkSchema,
   friendMarksResponseSchema,
-  GET_FRIEND_MARKS,
-  getFriendMarksMessageSchema,
-  SAVE_FRIEND_MARK,
-  saveFriendMarkMessageSchema,
 } from './friend-mark';
-// jd 表：落库实体 + 传输 DTO / 消息信封派生
+// jd 表：落库实体 + 传输 DTO
 export type { RecordedJd, SelectedJd } from './jd';
-export {
-  RECORD_JD,
-  recordedJdSchema,
-  recordJdMessageSchema,
-  selectedJdSchema,
-} from './jd';
+export { recordedJdSchema, selectedJdSchema } from './jd';
 // reply 消息：聊天页请求 AI 生成下一条回复
-export type { GenerateReplyMessage, ReplyJd, ReplyMessage } from './reply';
-export {
-  GENERATE_REPLY,
-  generateReplyMessageSchema,
-  replyJdSchema,
-  replyMessageSchema,
-} from './reply';
+export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
+export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';

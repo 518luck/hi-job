@@ -28,18 +28,9 @@ const selectedJdSchema = recordedJdSchema.omit({
   seenCount: true,
 });
 
-// 内容脚本向后台发送记录请求的消息类型
-const RECORD_JD = 'hi-job:record-jd';
-
-// 消息信封：后台收到跨环境无类型消息后用它校验
-const recordJdMessageSchema = z.object({
-  type: z.literal(RECORD_JD), // 消息类型标识
-  jd: selectedJdSchema, // 待记录的职位数据
-});
-
 // 从 schema 派生类型，保持单一事实来源
 type RecordedJd = z.infer<typeof recordedJdSchema>;
 type SelectedJd = z.infer<typeof selectedJdSchema>;
 
 export type { RecordedJd, SelectedJd };
-export { RECORD_JD, recordedJdSchema, recordJdMessageSchema, selectedJdSchema };
+export { recordedJdSchema, selectedJdSchema };

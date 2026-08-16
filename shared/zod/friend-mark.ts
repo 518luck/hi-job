@@ -11,22 +11,10 @@ const friendMarkSchema = z.object({
   updatedAt: z.number(), // 最近标记时间戳（毫秒）
 });
 
-// 内容脚本向后台保存/清除标记的消息类型
-const SAVE_FRIEND_MARK = 'hi-job:save-friend-mark';
-
-// 内容脚本向后台拉取全部标记的消息类型
-const GET_FRIEND_MARKS = 'hi-job:get-friend-marks';
-
-// 保存标记消息信封：status 为 null 表示清除该会话的标记
-const saveFriendMarkMessageSchema = z.object({
-  type: z.literal(SAVE_FRIEND_MARK), // 消息类型标识
+// 标记操作的输入数据：status 为 null 表示清除该会话的标记
+const friendMarkInputSchema = z.object({
   encryptBossId: z.string(), // 目标 HR 会话 id
   status: z.enum(FRIEND_MARK_STATUSES).nullable(), // 标记状态，null 清除
-});
-
-// 拉取全部标记的消息信封
-const getFriendMarksMessageSchema = z.object({
-  type: z.literal(GET_FRIEND_MARKS), // 消息类型标识
 });
 
 // 拉取标记的应答：全部标记数组，聊天页初始化渲染用
@@ -34,16 +22,12 @@ const friendMarksResponseSchema = z.array(friendMarkSchema);
 
 // 从 schema 派生类型，保持单一事实来源
 type FriendMark = z.infer<typeof friendMarkSchema>;
-type GetFriendMarksMessage = z.infer<typeof getFriendMarksMessageSchema>;
-type SaveFriendMarkMessage = z.infer<typeof saveFriendMarkMessageSchema>;
+type FriendMarkInput = z.infer<typeof friendMarkInputSchema>;
 
-export type { FriendMark, GetFriendMarksMessage, SaveFriendMarkMessage };
+export type { FriendMark, FriendMarkInput };
 export {
   FRIEND_MARK_STATUSES,
+  friendMarkInputSchema,
   friendMarkSchema,
   friendMarksResponseSchema,
-  GET_FRIEND_MARKS,
-  getFriendMarksMessageSchema,
-  SAVE_FRIEND_MARK,
-  saveFriendMarkMessageSchema,
 };

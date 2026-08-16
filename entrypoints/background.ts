@@ -1,19 +1,17 @@
 // # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、AI 回复生成）
 import { generateReply } from '@/infra/ai';
 import { aiVendorStore, friendMarkStore, jdStore } from '@/infra/storage';
-import type { GenerateReplyMessage, ReplyJd } from '@/shared/zod';
+import { onMessage } from '@/shared/messaging';
+import type { ReplyInput } from '@/shared/zod';
 import {
+  friendMarkInputSchema,
   friendMarksResponseSchema,
-  generateReplyMessageSchema,
-  getFriendMarksMessageSchema,
-  recordJdMessageSchema,
-  saveFriendMarkMessageSchema,
+  replyInputSchema,
+  selectedJdSchema,
 } from '@/shared/zod';
 
-// 生成下一条回复：优先用库中完整 JD，无记录时用聊天页兜底信息
-const handleGenerateReply = async (
-  message: GenerateReplyMessage,
-): Promise<string> => {
+// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息
+const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   const vendors = await aiVendorStore.readAllVendors();
   const vendor = vendors[0];
   const modelId = vendor?.models[0];
@@ -30,11 +28,11 @@ const handleGenerateReply = async (
       '未授权访问 AI 厂商地址：请先在侧边栏「AI 厂商」页拉取一次模型完成授权',
     );
   }
-  const recorded = await jdStore.readJdByJobId(message.jobId);
-  const jd: ReplyJd = recorded ?? message.jd;
+  const recorded = await jdStore.readJdByJobId(input.jobId);
+  const jd = recorded ?? input.jd;
   return generateReply({
     jd,
-    messages: message.messages,
+    messages: input.messages,
     vendor,
     modelId,
     requestPermission: false,
@@ -45,27 +43,29 @@ export default defineBackground(() => {
   // 点击工具栏图标直接打开侧边栏面板（Chrome 专属 API，Firefox 自动跳过）
   browser.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
 
-  // > 内容脚本消息中枢：职位记录落库、HR 标记读写、AI 回复生成（后两者返回 Promise 应答）
-  browser.runtime.onMessage.addListener((message) => {
-    const recordParsed = recordJdMessageSchema.safeParse(message);
-    if (recordParsed.success) {
-      jdStore.saveSelectedJd({ jd: recordParsed.data.jd });
-      return;
+  // > 类型安全消息中枢：数据经 zod 校验后落库/生成，handler 返回值即应答
+  onMessage('recordJd', ({ data }) => {
+    const parsed = selectedJdSchema.safeParse(data);
+    if (parsed.success) {
+      jdStore.saveSelectedJd({ jd: parsed.data });
     }
-    const saveMarkParsed = saveFriendMarkMessageSchema.safeParse(message);
-    if (saveMarkParsed.success) {
-      void friendMarkStore.saveFriendMark(saveMarkParsed.data);
-      return;
+  });
+  onMessage('saveFriendMark', ({ data }) => {
+    const parsed = friendMarkInputSchema.safeParse(data);
+    if (parsed.success) {
+      void friendMarkStore.saveFriendMark(parsed.data);
     }
-    const getMarksParsed = getFriendMarksMessageSchema.safeParse(message);
-    if (getMarksParsed.success) {
-      return friendMarkStore
-        .readAllFriendMarks()
-        .then((marks) => friendMarksResponseSchema.parse(marks));
+  });
+  onMessage('getFriendMarks', () =>
+    friendMarkStore
+      .readAllFriendMarks()
+      .then((marks) => friendMarksResponseSchema.parse(marks)),
+  );
+  onMessage('generateReply', ({ data }) => {
+    const parsed = replyInputSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('回复生成参数不合法');
     }
-    const replyParsed = generateReplyMessageSchema.safeParse(message);
-    if (replyParsed.success) {
-      return handleGenerateReply(replyParsed.data);
-    }
+    return handleGenerateReply(parsed.data);
   });
 });

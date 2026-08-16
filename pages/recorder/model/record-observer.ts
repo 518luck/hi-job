@@ -1,4 +1,4 @@
-import { RECORD_JD } from '@/shared/zod';
+import { sendMessage } from '@/shared/messaging';
 
 import { parseSelectedJd } from './parse-jd';
 
@@ -18,7 +18,7 @@ const record = async ({
     return lastJobId;
   }
   // 后台唤醒失败等极端情况下静默放弃本条，等下次页面变化再记录
-  browser.runtime.sendMessage({ type: RECORD_JD, jd }).catch(() => {});
+  sendMessage('recordJd', jd).catch(() => {});
   return jd.jobId;
 };
 

@@ -1,72 +1,46 @@
 // # 聊天页辅助脚本（主世界）：会话总数、HR 失败标记、AI 生成回复
 //
 // 主世界才能安全读取页面 Vue 实例（__vue__）数据；主世界拿不到 chrome API，
-// 扩展运行时消息经 postMessage 交给隔离世界脚本（runtime-bridge）转发后台。
-import type { ReplyJd, ReplyMessage } from '@/shared/zod';
+// 扩展协议调用经 postMessage 桥（shared/messaging）交给隔离世界转发后台。
 import {
-  friendMarksResponseSchema,
-  GENERATE_REPLY,
-  GET_FRIEND_MARKS,
-  SAVE_FRIEND_MARK,
+  BRIDGE_REQUEST,
+  BRIDGE_RESPONSE,
+  bridgeResponseSchema,
+} from '@/shared/messaging';
+import type {
+  FriendMark,
+  FriendMarkInput,
+  ReplyInput,
+  ReplyJd,
+  ReplyMessage,
 } from '@/shared/zod';
-
-// 桥请求/应答消息类型标识（与 runtime-bridge 配对）
-const BRIDGE_REQUEST = 'hi-job:bridge-request';
-const BRIDGE_RESPONSE = 'hi-job:bridge-response';
+import { friendMarksResponseSchema } from '@/shared/zod';
 
 // 桥应答等待超时：后台生成回复可能较慢
 const BRIDGE_TIMEOUT_MS = 30_000;
 
-// 桥应答结构：成功携带 response，失败携带 error
-interface BridgeResponsePayload {
-  type: string;
-  requestId: string;
-  ok: boolean;
-  response?: unknown;
-  error?: string;
-}
-
-// 解析桥应答消息，结构不符返回 null
-const parseBridgeResponse = (data: unknown): BridgeResponsePayload | null => {
-  if (typeof data !== 'object' || data === null) {
-    return null;
-  }
-  const record = data as Record<string, unknown>;
-  if (
-    record.type !== BRIDGE_RESPONSE ||
-    typeof record.requestId !== 'string' ||
-    typeof record.ok !== 'boolean'
-  ) {
-    return null;
-  }
-  return {
-    type: BRIDGE_RESPONSE,
-    requestId: record.requestId,
-    ok: record.ok,
-    response: record.response,
-    error: typeof record.error === 'string' ? record.error : undefined,
-  };
-};
-
-// 经隔离世界桥调用扩展运行时消息，返回后台应答
-const sendRuntimeMessage = (message: unknown): Promise<unknown> =>
+// 经隔离世界桥按协议名调用后台，返回应答
+const bridgeSend = (protocol: string, data?: unknown): Promise<unknown> =>
   new Promise((resolve, reject) => {
     const requestId = crypto.randomUUID();
     const onMessage = (event: MessageEvent) => {
-      const payload = parseBridgeResponse(event.data);
+      if (event.source !== window) {
+        return;
+      }
+      const parsed = bridgeResponseSchema.safeParse(event.data);
       if (
-        event.source !== window ||
-        payload === null ||
-        payload.requestId !== requestId
+        !parsed.success ||
+        parsed.data.type !== BRIDGE_RESPONSE ||
+        parsed.data.requestId !== requestId
       ) {
         return;
       }
       clearTimeout(timer);
       window.removeEventListener('message', onMessage);
-      if (payload.ok) {
-        resolve(payload.response);
+      if (parsed.data.ok) {
+        resolve(parsed.data.response);
       } else {
-        reject(new Error(payload.error ?? '扩展调用失败'));
+        reject(new Error(parsed.data.error ?? '扩展调用失败'));
       }
     };
     const timer = setTimeout(() => {
@@ -74,8 +48,21 @@ const sendRuntimeMessage = (message: unknown): Promise<unknown> =>
       reject(new Error('扩展桥响应超时'));
     }, BRIDGE_TIMEOUT_MS);
     window.addEventListener('message', onMessage);
-    window.postMessage({ type: BRIDGE_REQUEST, requestId, message }, '*');
+    window.postMessage(
+      { type: BRIDGE_REQUEST, requestId, protocol, data },
+      '*',
+    );
   });
+
+// 主世界协议调用：经桥转发后台，参数类型从 zod 输入 schema 派生
+const protocol = {
+  saveFriendMark: (data: FriendMarkInput): Promise<void> =>
+    bridgeSend('saveFriendMark', data) as Promise<void>,
+  getFriendMarks: (): Promise<FriendMark[]> =>
+    bridgeSend('getFriendMarks') as Promise<FriendMark[]>,
+  generateReply: (data: ReplyInput): Promise<string> =>
+    bridgeSend('generateReply', data) as Promise<string>,
+};
 
 // 聊天页根组件挂载点：探测确认 .main-wrap 持有 Chat 根实例
 const VUE_ROOT_SELECTOR = '.main-wrap';
@@ -277,11 +264,7 @@ const toggleMark = async (encryptBossId: string): Promise<void> => {
   } else {
     marks.set(encryptBossId, next);
   }
-  void sendRuntimeMessage({
-    type: SAVE_FRIEND_MARK,
-    encryptBossId,
-    status: next,
-  }).catch(() => {});
+  void protocol.saveFriendMark({ encryptBossId, status: next }).catch(() => {});
 };
 
 // 同步单个会话项：注入标记按钮与失败 badge
@@ -333,9 +316,7 @@ const syncAllItems = (): void => {
 // 从后台拉取全部标记并渲染
 const loadMarks = async (): Promise<void> => {
   try {
-    const response = await sendRuntimeMessage({
-      type: GET_FRIEND_MARKS,
-    });
+    const response = await protocol.getFriendMarks();
     const parsed = friendMarksResponseSchema.safeParse(response);
     if (parsed.success) {
       marks.clear();
@@ -369,13 +350,12 @@ const handleGenerateReply = async (box: HTMLElement): Promise<void> => {
   }
   textEl.textContent = '生成中…';
   try {
-    const response = await sendRuntimeMessage({
-      type: GENERATE_REPLY,
+    const response = await protocol.generateReply({
       jobId: stringOf(boss, 'encryptJobId'),
       jd: replyJdOf(boss),
       messages,
     });
-    textEl.textContent = typeof response === 'string' ? response : '生成失败';
+    textEl.textContent = response;
   } catch (error) {
     textEl.textContent =
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
