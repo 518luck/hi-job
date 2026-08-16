@@ -20,17 +20,18 @@ import {
 } from '@/shared/infra/storage';
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 
 // 提示词场景：打招呼/跟进/回复
 type PromptScene = 'greeting' | 'followUp' | 'reply';
 
-// 场景配置：偏好字段键与默认文案
+// 场景配置：偏好字段键、默认文案与场景描述
 const SCENE_CONFIGS: Record<
   PromptScene,
   {
     label: string; // 场景名
+    description: string; // 场景说明（Tab 下方展示）
     systemKey: 'greetingSystem' | 'followUpSystem' | 'replySystem'; // 系统提示偏好字段
     taskKey: 'greetingTask' | 'followUpTask' | 'replyTask'; // 任务描述偏好字段
     requirementKey:
@@ -44,6 +45,8 @@ const SCENE_CONFIGS: Record<
 > = {
   greeting: {
     label: '打招呼',
+    description:
+      '首次联系招聘者：结合职位、HR 信息与用户简历，生成打招呼语句。',
     systemKey: 'greetingSystem',
     taskKey: 'greetingTask',
     requirementKey: 'greetingRequirement',
@@ -53,6 +56,8 @@ const SCENE_CONFIGS: Record<
   },
   followUp: {
     label: '跟进',
+    description:
+      '已读不回或未读时：结合职位、已发送的打招呼语与用户简历，生成提醒问候。',
     systemKey: 'followUpSystem',
     taskKey: 'followUpTask',
     requirementKey: 'followUpRequirement',
@@ -62,6 +67,8 @@ const SCENE_CONFIGS: Record<
   },
   reply: {
     label: '回复',
+    description:
+      '招聘者已回复：结合职位、HR 信息、用户简历与当前聊天记录，生成回复。',
     systemKey: 'replySystem',
     taskKey: 'replyTask',
     requirementKey: 'replyRequirement',
@@ -165,57 +172,62 @@ function GreetingPromptView({ onBack }: GreetingPromptViewProps) {
           </Button>
         </div>
       </div>
-      <ToggleGroup
-        variant="outline"
+      <Tabs
         className="w-full"
-        value={[scene]}
-        onValueChange={(values) => {
-          const next = values[0];
-          if (next !== undefined) {
+        value={scene}
+        onValueChange={(next) => {
+          if (next !== null) {
             setScene(next as PromptScene);
           }
         }}
       >
-        {(Object.keys(SCENE_CONFIGS) as PromptScene[]).map((key) => (
-          <ToggleGroupItem key={key} value={key} className="flex-1">
-            {SCENE_CONFIGS[key].label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-      <p className="text-xs text-muted-foreground">
-        系统提示限定角色与输出规则，任务描述与生成要求会拼在职位信息之前；
-        保存后立即生效。
-      </p>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground">
-          系统提示
-        </span>
-        <Textarea
-          rows={3}
-          value={system}
-          onChange={(event) => setSystem(event.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground">
-          任务描述
-        </span>
-        <Textarea
-          rows={2}
-          value={task}
-          onChange={(event) => setTask(event.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground">
-          生成要求
-        </span>
-        <Textarea
-          rows={3}
-          value={requirement}
-          onChange={(event) => setRequirement(event.target.value)}
-        />
-      </div>
+        <TabsList className="w-full">
+          {(Object.keys(SCENE_CONFIGS) as PromptScene[]).map((key) => (
+            <TabsTrigger key={key} value={key} className="flex-1">
+              {SCENE_CONFIGS[key].label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value={scene} className="flex flex-col gap-3">
+          <p className="text-xs text-muted-foreground">
+            {SCENE_CONFIGS[scene].description}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            系统提示限定角色与输出规则，任务描述与生成要求会拼在职位信息之前；
+            保存后立即生效。
+          </p>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted-foreground">
+              系统提示
+            </span>
+            <Textarea
+              rows={3}
+              value={system}
+              onChange={(event) => setSystem(event.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted-foreground">
+              任务描述
+            </span>
+            <Textarea
+              rows={2}
+              value={task}
+              onChange={(event) => setTask(event.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted-foreground">
+              生成要求
+            </span>
+            <Textarea
+              rows={3}
+              value={requirement}
+              onChange={(event) => setRequirement(event.target.value)}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
