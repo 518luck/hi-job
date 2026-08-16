@@ -40,7 +40,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
       return (
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">
-            还没有配置 AI 厂商，AI 打招呼不可用
+            未配置 AI，生成回答需要先配置AI
           </p>
           <Button
             variant="outline"
