@@ -1,6 +1,6 @@
 // # Window RPC 方法表：主世界与隔离世界之间的远程调用类型
 
-import type { ProtocolMap } from '@/shared/messaging';
+import type { ProtocolMap } from '@/shared/infra/messaging';
 
 import type { VueJobCard, VueJobData } from './vue-job-data';
 

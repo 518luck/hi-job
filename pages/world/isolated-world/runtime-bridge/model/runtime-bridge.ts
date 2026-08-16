@@ -7,7 +7,7 @@ import {
   type BackgroundCallInput,
   createWindowRpcServer,
 } from '@/pages/world/rpc';
-import { sendMessage } from '@/shared/messaging';
+import { sendMessage } from '@/shared/infra/messaging';
 
 let runtimeBridgeStarted = false;
 

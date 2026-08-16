@@ -35,6 +35,7 @@ content script → sendMessage → background 校验（zod）→ 仓储写入
 
 | 目录 | 职责 |
 | --- | --- |
+| `messaging/` | 消息域：扩展消息协议（ProtocolMap 类型与收发封装，隔离世界/侧边栏 ↔ 后台） |
 | `storage/` | 存储域：聚合入口（`index.ts`）、数据库装配（`db.ts`） |
 | `storage/jd/` | jd 领域：表索引 + 职位与公司记录的读写 |
 | `storage/ai-vendor/` | ai-vendor 领域：表索引 + AI 厂商配置的读写 |

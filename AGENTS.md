@@ -22,10 +22,10 @@ hi-job/
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn、page-property 等）
-│   ├── messaging/          # 扩展消息协议：ProtocolMap 收发（隔离世界/侧边栏 ↔ 后台）
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
 │   ├── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
 │   └── infra/              # 基础设施域，规范见 shared/infra/AGENTS.md
+│       ├── messaging/      # 消息域：扩展消息协议（ProtocolMap 收发，隔离世界/侧边栏 ↔ 后台）
 │       ├── storage/        # 存储域：Dexie 数据库（IndexedDB）+ 按领域划分的仓储（jd 等）
 │       └── ai/             # AI 域：厂商客户端（供应商实例、模型拉取、文本生成）
 ├── entrypoints/            # 扩展入口目录（文件名约定决定入口类型，见下表）
@@ -99,7 +99,7 @@ Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔
 1. 主世界不能访问扩展 API，必须通过 Window RPC 交给隔离世界；隔离世界与后台使用 `@webext-core/messaging`。
 2. Window RPC 只能解决通信与协议一致性，不能把主世界当作安全边界；页面自身脚本可以观察同窗消息，因此不得通过消息传递敏感凭据。
 
-消息协议定义：`shared/messaging/protocol.ts`（扩展消息）、`pages/world/rpc/window-methods.ts`（Window RPC 方法表）、`pages/world/rpc/window-rpc.ts`（Window RPC 传输层）。
+消息协议定义：`shared/infra/messaging/protocol.ts`（扩展消息）、`pages/world/rpc/window-methods.ts`（Window RPC 方法表）、`pages/world/rpc/window-rpc.ts`（Window RPC 传输层）。
 
 ## 代码风格指南
 

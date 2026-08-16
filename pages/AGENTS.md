@@ -149,10 +149,10 @@ import { FavoritesPage } from '@/pages/favorites/ui/page';
 - **世界**（slice）：`isolated-world/`（隔离世界）、`main-world/`（主世界），各自提供 `index.ts` 公有 API 聚合领域入口。
 - **领域**（slice）：世界下按入口/职责划分（如 `main-world/chat-helper/`、`isolated-world/jd-listener/`），领域命名与 `entrypoints/` 的入口文件对应；未来新增功能并列新领域目录。
 - 领域内部沿用 segment 约定（`model/` 等），入口文件只做薄装配（`defineContentScript` + 调 startXxx）。
-- **rpc/** 是世界共享目录（非业务 slice）：两世界之间的 RPC 传输与方法类型，**允许被 `isolated-world` 与 `main-world` 导入**（同层禁互导的唯一例外）；涉及后台的扩展消息仍走 `@/shared/messaging`。
+- **rpc/** 是世界共享目录（非业务 slice）：两世界之间的 RPC 传输与方法类型，**允许被 `isolated-world` 与 `main-world` 导入**（同层禁互导的唯一例外）；涉及后台的扩展消息仍走 `@/shared/infra/messaging`。
 
 世界约束：
 
 - 主世界脚本拿不到 chrome API，需要扩展 API 的调用经两世界 RPC（`@/pages/world/rpc`）交给隔离世界转发后台。
-- 两世界通信的传输与方法类型放 `pages/world/rpc/`（如 `window-rpc.ts`），跨更多环境（含后台）的协议放 `shared/messaging/`，禁止在 slice 内重复定义。
+- 两世界通信的传输与方法类型放 `pages/world/rpc/`（如 `window-rpc.ts`），跨更多环境（含后台）的协议放 `shared/infra/messaging/`，禁止在 slice 内重复定义。
 - 读取页面 Vue 实例等私有对象统一用 `@/shared/lib/page-property` 的 `readProperty` / `stringOf`。

@@ -1,11 +1,11 @@
 // # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、AI 回复生成）
 import { generateReply } from '@/shared/infra/ai';
+import { onMessage } from '@/shared/infra/messaging';
 import {
   aiVendorStore,
   friendMarkStore,
   jdStore,
 } from '@/shared/infra/storage';
-import { onMessage } from '@/shared/messaging';
 import type { ReplyInput } from '@/shared/zod';
 import {
   friendMarkInputSchema,

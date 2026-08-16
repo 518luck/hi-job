@@ -1,4 +1,4 @@
-import { sendMessage } from '@/shared/messaging';
+import { sendMessage } from '@/shared/infra/messaging';
 
 import { parseSelectedJd } from './parse-jd';
 

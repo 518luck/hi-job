@@ -1,11 +1,11 @@
 // # 聊天页辅助（主世界）：会话总数、HR 失败标记、AI 生成回复
 //
 // 主世界才能安全读取页面 Vue 实例（__vue__）数据；主世界拿不到 chrome API，
-// 扩展协议调用经 postMessage 桥（shared/messaging）交给隔离世界转发后台。
+// 扩展协议调用经 postMessage 桥（shared/infra/messaging）交给隔离世界转发后台。
 
 import { createWindowRpcClient } from '@/pages/world/rpc';
+import type { ProtocolMap } from '@/shared/infra/messaging';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
-import type { ProtocolMap } from '@/shared/messaging';
 import type {
   FriendMark,
   FriendMarkInput,
