@@ -87,6 +87,7 @@ const generateReply = async ({
     source: 'reply',
     promptTask: task,
     promptRequirement: requirement,
+    resumeText: resume?.content,
     requestPermission,
   });
 };

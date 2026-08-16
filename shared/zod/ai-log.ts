@@ -17,6 +17,7 @@ const aiLogSchema = z.object({
   prompt: z.string().optional(), // 用户提示（本次任务内容），完整记录
   promptTask: z.string().optional(), // 提示词任务描述（打招呼生成时记录），旧记录缺省
   promptRequirement: z.string().optional(), // 提示词生成要求（打招呼生成时记录），旧记录缺省
+  resume: z.string().optional(), // 用户简历文本，未上传时为空串
   ok: z.boolean(), // 调用是否成功
   durationMs: z.number(), // 调用耗时（毫秒）
   output: z.string().optional(), // 成功时的返回文本，失败时缺省

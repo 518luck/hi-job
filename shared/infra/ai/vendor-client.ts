@@ -116,6 +116,7 @@ const chatWithVendor = async ({
   source,
   promptTask,
   promptRequirement,
+  resumeText,
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
@@ -126,6 +127,7 @@ const chatWithVendor = async ({
   source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
   promptTask?: string; // 提示词任务描述（打招呼生成时记录日志）
   promptRequirement?: string; // 提示词生成要求（打招呼生成时记录日志）
+  resumeText?: string; // 用户简历文本（记录日志用），未上传时缺省
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
   const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
@@ -173,6 +175,7 @@ const chatWithVendor = async ({
       prompt,
       promptTask,
       promptRequirement,
+      resume: resumeText ?? '',
       startedAt,
       ok: false,
       error: finalError.message,
@@ -189,6 +192,7 @@ const chatWithVendor = async ({
     prompt,
     promptTask,
     promptRequirement,
+    resume: resumeText ?? '',
     startedAt,
     ok: true,
     output: result,

@@ -118,6 +118,10 @@ const friendOf = (item: HTMLElement): Record<string, unknown> | null => {
   return null;
 };
 
+// 竞争者 PK 卡片特征文本：页面组件混入消息区时需剔除，防止污染聊天记录
+const isPkCardText = (text: string): boolean =>
+  text.includes('竞争者PK') || text.includes('查看详细分析');
+
 // 从 DOM 提取聊天记录：item-friend 为招聘者，item-self 为求职者，取最近 30 条
 const readMessagesFromDom = (): ReplyMessage[] => {
   const messages: ReplyMessage[] = [];
@@ -132,11 +136,16 @@ const readMessagesFromDom = (): ReplyMessage[] => {
     if (role === null) {
       continue;
     }
+    // 只取消息正文容器文本：匹配不到说明该元素是页面组件（如竞争者 PK 卡片），跳过
     const content = item.querySelector<HTMLElement>(MESSAGE_CONTENT_SELECTOR);
-    const text = (content?.innerText ?? item.innerText).trim();
-    if (text !== '') {
-      messages.push({ role, text });
+    if (content === null) {
+      continue;
     }
+    const text = content.innerText.trim();
+    if (text === '' || isPkCardText(text)) {
+      continue;
+    }
+    messages.push({ role, text });
   }
   return messages.slice(-30);
 };

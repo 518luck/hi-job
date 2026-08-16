@@ -83,6 +83,7 @@ const generateFollowUp = async ({
     source: 'followUp',
     promptTask: task,
     promptRequirement: requirement,
+    resumeText: resume?.content,
     requestPermission,
   });
 };

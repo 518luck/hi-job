@@ -75,6 +75,7 @@ const generateGreeting = async ({
     source: 'greeting',
     promptTask: task,
     promptRequirement: requirement,
+    resumeText: resume?.content,
     requestPermission,
   });
 };

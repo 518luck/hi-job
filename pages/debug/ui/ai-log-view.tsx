@@ -175,7 +175,14 @@ function AiLogView({ onBack }: AiLogViewProps) {
                       <span className="text-xs text-muted-foreground">
                         {formatLogTime(log.createdAt)}
                       </span>
-                      <Badge variant={log.ok ? 'secondary' : 'destructive'}>
+                      <Badge
+                        variant={log.ok ? 'outline' : 'destructive'}
+                        className={
+                          log.ok
+                            ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+                            : undefined
+                        }
+                      >
                         {log.ok ? '成功' : '失败'}
                       </Badge>
                     </div>
@@ -195,7 +202,7 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     {log.system !== undefined && log.system !== '' && (
                       <>
                         <span className="text-xs font-medium text-muted-foreground">
-                          系统提示
+                          系统提示词
                         </span>
                         <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                           {log.system}
@@ -205,7 +212,7 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     {log.prompt !== undefined && log.prompt !== '' && (
                       <>
                         <span className="text-xs font-medium text-muted-foreground">
-                          用户提示
+                          用户提示词
                         </span>
                         <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                           {log.prompt}
@@ -233,6 +240,16 @@ function AiLogView({ onBack }: AiLogViewProps) {
                           </pre>
                         </>
                       )}
+                    {log.resume !== undefined && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          简历
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {log.resume}
+                        </pre>
+                      </>
+                    )}
                     <span className="text-xs font-medium text-muted-foreground">
                       实际传递参数
                     </span>
@@ -242,7 +259,7 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     {log.output !== undefined && log.output !== '' && (
                       <>
                         <span className="text-xs font-medium text-muted-foreground">
-                          返回内容
+                          AI 回复
                         </span>
                         <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                           {log.output}
