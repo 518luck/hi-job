@@ -1,12 +1,12 @@
-// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，生成回复与提醒问候
+// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/提醒/回复/复制
 import { stringOf } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
 import { HIJOB_PREFIX } from './style';
 import {
   hrOf,
-  readCurrentBoss,
-  readMessagesFromDom,
+  readCurrentBossWithRetry,
+  readMessagesWithRetry,
   replyJdOf,
 } from './vue-reader';
 
@@ -19,14 +19,14 @@ const handleGenerateReply = async (
   bodyEl: HTMLElement,
   generateButton: HTMLButtonElement,
 ): Promise<void> => {
-  const boss = readCurrentBoss();
+  const boss = await readCurrentBossWithRetry();
   if (boss === null) {
     bodyEl.textContent = '未找到当前会话信息';
     return;
   }
-  const messages = readMessagesFromDom();
+  const messages = await readMessagesWithRetry();
   if (messages.length === 0) {
-    bodyEl.textContent = '暂无聊天记录';
+    bodyEl.textContent = '暂无聊天记录（页面可能还在加载）';
     return;
   }
   // 生成中禁用按钮并提示，结束后恢复
@@ -55,7 +55,7 @@ const handleGreeting = async (
   bodyEl: HTMLElement,
   greetingButton: HTMLButtonElement,
 ): Promise<void> => {
-  const boss = readCurrentBoss();
+  const boss = await readCurrentBossWithRetry();
   if (boss === null) {
     bodyEl.textContent = '未找到当前会话信息';
     return;
@@ -84,16 +84,16 @@ const handleFollowUp = async (
   bodyEl: HTMLElement,
   followUpButton: HTMLButtonElement,
 ): Promise<void> => {
-  const boss = readCurrentBoss();
+  const boss = await readCurrentBossWithRetry();
   if (boss === null) {
     bodyEl.textContent = '未找到当前会话信息';
     return;
   }
-  const greeting = readMessagesFromDom().find(
-    (message) => message.role === 'self',
-  )?.text;
+  const messages = await readMessagesWithRetry();
+  const greeting = messages.find((message) => message.role === 'self')?.text;
   if (greeting === undefined || greeting === '') {
-    bodyEl.textContent = '未找到已发送的打招呼消息';
+    bodyEl.textContent =
+      '未找到自己发送的消息：请先向上滚动聊天记录加载更多，再点提醒';
     return;
   }
   followUpButton.disabled = true;

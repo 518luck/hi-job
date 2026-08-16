@@ -5,7 +5,7 @@ import type { HrInfo, ReplyJd, ReplyMessage } from '@/shared/zod';
 // 聊天页根组件挂载点：探测确认 .main-wrap 持有 Chat 根实例
 const VUE_ROOT_SELECTOR = '.main-wrap';
 
-// 聊天记录 DOM 选择器：消息项与正文
+// 聊天记录 DOM 选择器：消息项在 .chat-message > .im-list 内，仍为 .message-item
 const MESSAGE_ITEM_SELECTOR = '.chat-record .message-item';
 const MESSAGE_CONTENT_SELECTOR = '.message-content';
 
@@ -73,6 +73,21 @@ const readCurrentBoss = (): Record<string, unknown> | null => {
   return boss as Record<string, unknown>;
 };
 
+// 带重试的当前会话读取：SPA 切换后 Vue 树异步重建，短窗口内可能为空
+const readCurrentBossWithRetry = async (): Promise<Record<
+  string,
+  unknown
+> | null> => {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const boss = readCurrentBoss();
+    if (boss !== null) {
+      return boss;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  return null;
+};
+
 // 从元素沿祖先找最近的 Vue 实例：__vue__ 只挂在组件根元素上，限制层数防爬到列表级组件
 const vueOfElement = (el: HTMLElement): unknown => {
   for (
@@ -122,32 +137,48 @@ const friendOf = (item: HTMLElement): Record<string, unknown> | null => {
 const isPkCardText = (text: string): boolean =>
   text.includes('竞争者PK') || text.includes('查看详细分析');
 
-// 从 DOM 提取聊天记录：item-friend 为招聘者，item-self 为求职者，取最近 30 条
+// 消息状态词：抓取文本时剔除单独成行的状态标记（送达/已读/未读）
+const MESSAGE_STATUS_WORDS = ['送达', '已读', '未读'];
+
+// 清理消息文本：去空白行与状态词行
+const cleanMessageText = (text: string): string =>
+  text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !MESSAGE_STATUS_WORDS.includes(line))
+    .join('\n');
+
+// 从 DOM 提取聊天记录：含 item-friend 的为招聘者，其余消息项按自己处理，取最近 100 条
 const readMessagesFromDom = (): ReplyMessage[] => {
   const messages: ReplyMessage[] = [];
   for (const item of document.querySelectorAll<HTMLElement>(
     MESSAGE_ITEM_SELECTOR,
   )) {
-    const role = item.classList.contains('item-friend')
-      ? 'friend'
-      : item.classList.contains('item-self')
-        ? 'self'
-        : null;
-    if (role === null) {
-      continue;
-    }
-    // 只取消息正文容器文本：匹配不到说明该元素是页面组件（如竞争者 PK 卡片），跳过
+    // 优先取消息正文容器文本；容器缺失时回退消息项全文本后清理状态词
     const content = item.querySelector<HTMLElement>(MESSAGE_CONTENT_SELECTOR);
-    if (content === null) {
-      continue;
-    }
-    const text = content.innerText.trim();
+    const text = cleanMessageText(
+      (content?.innerText ?? item.innerText).trim(),
+    );
     if (text === '' || isPkCardText(text)) {
       continue;
     }
+    // 消息只有自己/招聘者两方：非 item-friend 即自己（页面已无 item-self 标记）
+    const role = item.classList.contains('item-friend') ? 'friend' : 'self';
     messages.push({ role, text });
   }
-  return messages.slice(-30);
+  return messages.slice(-100);
+};
+
+// 带重试的聊天记录读取：消息异步渲染，短窗口内 DOM 可能为空
+const readMessagesWithRetry = async (): Promise<ReplyMessage[]> => {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const messages = readMessagesFromDom();
+    if (messages.length > 0) {
+      return messages;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  return [];
 };
 
 // 由当前会话信息拼回复生成的最小职位信息
@@ -175,7 +206,9 @@ export {
   friendOf,
   hrOf,
   readCurrentBoss,
+  readCurrentBossWithRetry,
   readFriendCount,
   readMessagesFromDom,
+  readMessagesWithRetry,
   replyJdOf,
 };

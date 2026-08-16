@@ -130,7 +130,99 @@ const findInstanceByName = (
   return undefined;
 };
 
-// 深挖已知数据持有组件：会话列表首项、当前 boss、消息数组首条
+// 探测聊天页消息 DOM 结构：消息区容器、消息项数量、最近消息文本的归属元素与祖先链
+const probeMessageDom = (lastText: string): Record<string, unknown> => {
+  const chatRecord = document.querySelector('.chat-record');
+  const firstMessage = document.querySelector('.chat-record .chat-message');
+  const ownerOf = (text: string): unknown => {
+    if (text === '') {
+      return null;
+    }
+    const candidates = Array.from(
+      document.querySelectorAll<HTMLElement>('.chat-record *, .message-item'),
+    );
+    const owner = candidates.find((el) => el.textContent?.includes(text));
+    if (owner === undefined) {
+      return null;
+    }
+    const ancestors: string[] = [];
+    for (
+      let node: HTMLElement | null = owner, depth = 0;
+      node !== null && depth < 6;
+      node = node.parentElement, depth += 1
+    ) {
+      ancestors.push(String(node.className || node.tagName));
+    }
+    return { className: String(owner.className), ancestors };
+  };
+  return {
+    chatRecordExists: chatRecord !== null,
+    messageItemCount: document.querySelectorAll('.message-item').length,
+    chatMessageCount: document.querySelectorAll('.chat-record .chat-message')
+      .length,
+    selfItemCount: document.querySelectorAll('.item-self').length,
+    friendItemCount: document.querySelectorAll('.item-friend').length,
+    chatRecordChildren:
+      chatRecord === null
+        ? []
+        : Array.from(chatRecord.children)
+            .slice(0, 8)
+            .map((el) => String(el.className || el.tagName)),
+    // 首条消息项的 class 与子元素结构：用于确认 role 判定方式
+    chatMessageShape:
+      firstMessage === null
+        ? null
+        : {
+            className: String(firstMessage.className),
+            childrenClasses: Array.from(firstMessage.children).map((el) =>
+              String(el.className || el.tagName),
+            ),
+          },
+    lastTextOwner: ownerOf(lastText),
+  };
+};
+
+// 扫描疑似消息数组：$data 各字段中，元素含消息特征键的数组
+const scanMessageArrays = (msgData: unknown): Record<string, unknown>[] => {
+  const out: Record<string, unknown>[] = [];
+  if (msgData === null || typeof msgData !== 'object') {
+    return out;
+  }
+  const MESSAGE_KEYS = [
+    'msgId',
+    'content',
+    'msgType',
+    'type',
+    'text',
+    'isSelf',
+    'fromType',
+    'toType',
+  ];
+  for (const key of Object.keys(msgData)) {
+    const value = readProperty(msgData, key);
+    if (!Array.isArray(value)) {
+      continue;
+    }
+    if (value.length === 0) {
+      out.push({ key, length: 0 });
+      continue;
+    }
+    const first = value[0];
+    if (first === null || typeof first !== 'object') {
+      continue;
+    }
+    const firstKeys = Object.keys(first);
+    out.push({
+      key,
+      length: value.length,
+      looksLikeMessage: firstKeys.some((k) => MESSAGE_KEYS.includes(k)),
+      firstKeys: firstKeys.slice(0, 20),
+    });
+  }
+  return out;
+};
+
+// 深挖已知数据持有组件：会话列表首项、当前 boss、消息数组扫描、消息 DOM 结构
 const deepDive = (root: unknown): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
   const labelInstance = findInstanceByName(root, 'boss-list-label', 0);
@@ -149,17 +241,30 @@ const deepDive = (root: unknown): Record<string, unknown> => {
   if (msgInstance !== undefined) {
     const msgData = readProperty(msgInstance, '$data');
     result.boss = fieldsOf(readProperty(msgData, 'boss'));
-    // 消息数据：$data 中所有非空数组字段的首条结构
-    const messageArrays: Record<string, unknown>[] = [];
-    if (msgData !== null && typeof msgData === 'object') {
-      for (const key of Object.keys(msgData)) {
-        const value = readProperty(msgData, key);
-        if (Array.isArray(value) && value.length > 0) {
-          messageArrays.push({ key, first: fieldsOf(value[0]) });
-        }
-      }
-    }
-    result.messageArrays = messageArrays;
+    // $data 字段形状：数组记长度，对象记键，定位消息数据可能的位置
+    result.dataShape =
+      msgData !== null && typeof msgData === 'object'
+        ? Object.keys(msgData).map((key) => {
+            const value = readProperty(msgData, key);
+            return {
+              key,
+              type: Array.isArray(value)
+                ? `array[${value.length}]`
+                : value === null
+                  ? 'null'
+                  : typeof value,
+            };
+          })
+        : [];
+    // 疑似消息数组扫描：找出含消息特征键的数组字段
+    result.messageArrays = scanMessageArrays(msgData);
+    // 消息 DOM 结构：用最近消息文本定位归属元素
+    const boss = readProperty(msgData, 'boss');
+    const lastText =
+      boss !== null && typeof boss === 'object'
+        ? String(readProperty(boss, 'lastText') ?? '')
+        : '';
+    result.messageDom = probeMessageDom(lastText);
   }
   return result;
 };
