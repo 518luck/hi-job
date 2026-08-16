@@ -1,6 +1,4 @@
 // # 工作台页：最近记录的职位与 AI 打招呼
-import { useState } from 'react';
-
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
 import {
@@ -14,6 +12,7 @@ import {
 import type { NavKey } from '@/widgets/nav-bar';
 
 import { useJds } from '../model/use-jds';
+import { usePersistedVendorSelection } from '../model/use-persisted-vendor-selection';
 import { useVendors } from '../model/use-vendors';
 import { JdCard } from './jd-card';
 
@@ -26,20 +25,14 @@ interface WorkbenchPageProps {
 function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
   const { jds, loading } = useJds();
   const { vendors } = useVendors();
-  const [vendorId, setVendorId] = useState<string | null>(null);
-  const [modelId, setModelId] = useState<string | null>(null);
+  const { vendorId, modelId, selectVendor, selectModel } =
+    usePersistedVendorSelection();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
   const vendor =
     vendors.find((item) => item.vendorId === vendorId) ?? vendors[0];
   const activeModelId =
     vendor?.models.find((model) => model === modelId) ?? vendor?.models[0];
-
-  // 切换厂商时清空模型选择，由回退逻辑自动选中该厂商第一个模型
-  const handleVendorChange = (next: string | null) => {
-    setVendorId(next);
-    setModelId(null);
-  };
 
   // 渲染厂商/模型选择器：未配置厂商时给出引导提示
   const renderVendorPicker = () => {
@@ -73,7 +66,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
         <Select
           items={vendorItems}
           value={vendor?.vendorId ?? null}
-          onValueChange={handleVendorChange}
+          onValueChange={selectVendor}
         >
           <SelectTrigger className="w-full">
             <SelectValue />
@@ -91,7 +84,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
         <Select
           items={modelItems}
           value={activeModelId ?? null}
-          onValueChange={setModelId}
+          onValueChange={selectModel}
         >
           <SelectTrigger className="w-full">
             <SelectValue />
