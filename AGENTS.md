@@ -19,7 +19,7 @@ hi-job/
 │   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
 │       ├── rpc/            # 两世界共享 RPC：window-rpc 传输与方法表（Vue DTO 在 shared/zod）
 │       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、runtime-bridge 桥转发
-│       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe
+│       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe、jd-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn、page-property 等）

@@ -2,4 +2,5 @@
 
 export { startChatHelper } from './chat-helper';
 export { startChatProbe } from './chat-probe';
+export { startJdProbe } from './jd-probe';
 export { startVueJobDataProvider } from './vue-job-data';
