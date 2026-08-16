@@ -3,7 +3,9 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
 
-import type { AiVendorRecord, ThinkingMode } from '@/shared/zod';
+import type { AiLogSource, AiVendorRecord, ThinkingMode } from '@/shared/zod';
+
+import { recordAiLog, type ThinkingArgs } from './ai-log';
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
@@ -83,20 +85,12 @@ const fetchVendorModels = async ({
     .filter((id) => id !== '');
 };
 
-// openai 兼容的思考关闭参数：DeepSeek 官方 API 的 thinking 开关字段
-type ThinkingProviderOptions = {
-  'openai-compatible': { thinking: { type: 'disabled' } };
-};
-
 // 思考档位 → AI SDK 调用参数：默认不传任何参数；关闭对 openai 兼容补传 thinking disabled
 // （DeepSeek 思考默认开启，SDK 的 reasoning:'none' 只做到不传 effort，关不掉）；低/中/高走 SDK 统一 reasoning
 const resolveThinkingArgs = (
   apiFormat: 'openai' | 'anthropic',
   mode: ThinkingMode,
-): {
-  reasoning?: 'none' | 'low' | 'medium' | 'high';
-  providerOptions?: ThinkingProviderOptions;
-} => {
+): ThinkingArgs => {
   if (mode === 'default') {
     return {};
   }
@@ -119,6 +113,7 @@ const chatWithVendor = async ({
   system,
   prompt,
   thinkingMode = 'default',
+  source,
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
@@ -126,37 +121,71 @@ const chatWithVendor = async ({
   system: string; // 系统提示
   prompt: string; // 用户提示
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
+  source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
-  if (requestPermission) {
-    const granted = await ensureOriginPermission({ baseUrl: vendor.baseUrl });
-    if (!granted) {
-      throw new Error('未授权访问该厂商地址');
-    }
-  }
-  const provider = createVendorClient({
-    name: vendor.name,
-    baseUrl: vendor.baseUrl,
-    apiKey: vendor.apiKey,
-    apiFormat: vendor.apiFormat,
-  });
+  const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
+  const startedAt = Date.now();
+  let result: string;
   try {
+    // 权限申请失败也算一次失败调用：与生成失败统一进日志
+    if (requestPermission) {
+      const granted = await ensureOriginPermission({ baseUrl: vendor.baseUrl });
+      if (!granted) {
+        throw new Error('未授权访问该厂商地址');
+      }
+    }
+    const provider = createVendorClient({
+      name: vendor.name,
+      baseUrl: vendor.baseUrl,
+      apiKey: vendor.apiKey,
+      apiFormat: vendor.apiFormat,
+    });
     const { text } = await generateText({
       model: provider(modelId),
       system,
       prompt,
-      ...resolveThinkingArgs(vendor.apiFormat, thinkingMode),
+      ...resolvedArgs,
     });
-    return text.trim();
+    result = text.trim();
   } catch (error) {
+    const rawMessage = error instanceof Error ? error.message : '生成失败';
     // 思考档位下失败多为模型不支持思考参数：追加可读提示，便于切回默认档
-    if (thinkingMode !== 'default') {
-      throw new Error(
-        `${error instanceof Error ? error.message : '生成失败'}（该模型可能不支持思考参数，可尝试切回「默认」档）`,
-      );
-    }
-    throw error;
+    const finalError =
+      thinkingMode !== 'default'
+        ? new Error(
+            `${rawMessage}（该模型可能不支持思考参数，可尝试切回「默认」档）`,
+          )
+        : error instanceof Error
+          ? error
+          : new Error(rawMessage);
+    await recordAiLog({
+      source,
+      vendor,
+      modelId,
+      thinkingMode,
+      resolvedArgs,
+      system,
+      prompt,
+      startedAt,
+      ok: false,
+      error: finalError.message,
+    });
+    throw finalError;
   }
+  await recordAiLog({
+    source,
+    vendor,
+    modelId,
+    thinkingMode,
+    resolvedArgs,
+    system,
+    prompt,
+    startedAt,
+    ok: true,
+    output: result,
+  });
+  return result;
 };
 
 export { chatWithVendor, createVendorClient, fetchVendorModels };

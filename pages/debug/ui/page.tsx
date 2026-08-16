@@ -1,6 +1,11 @@
+import { useState } from 'react';
+
+import { Button } from '@/shared/ui/button';
+import { Icons } from '@/shared/ui/icons';
 import { Switch } from '@/shared/ui/switch';
 
 import { useDebugSettings } from '../model/use-debug-settings';
+import { AiLogView } from './ai-log-view';
 
 // 单个调试开关行的 props
 interface ToggleRowProps {
@@ -32,10 +37,22 @@ function ToggleRow({
   );
 }
 
-// 调试页：控制聊天页/职位页探测按钮的显示开关
+// 调试页视图：首页（开关 + 日志入口）与各日志列表
+type DebugView = 'home' | 'aiLog';
+
+// 调试页：控制探测按钮开关，日志入口按钮后续扩展程序日志
 function DebugPage() {
   const { settings, setChatProbeEnabled, setJdProbeEnabled } =
     useDebugSettings();
+  const [view, setView] = useState<DebugView>('home');
+
+  if (view === 'aiLog') {
+    return (
+      <div className="flex flex-1 flex-col p-4">
+        <AiLogView onBack={() => setView('home')} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -53,6 +70,18 @@ function DebugPage() {
           checked={settings.jdProbeEnabled}
           onCheckedChange={setJdProbeEnabled}
         />
+      </div>
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">日志</h3>
+        <Button
+          variant="outline"
+          size="xs"
+          className="justify-start"
+          onClick={() => setView('aiLog')}
+        >
+          <Icons.history data-icon="inline-start" />
+          <span>AI 日志</span>
+        </Button>
       </div>
     </div>
   );

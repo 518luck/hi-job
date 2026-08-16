@@ -1,5 +1,19 @@
 // # zod 数据字典公有 API：一表一文件的聚合出口，上层统一从 '@/shared/zod' 导入
 
+// aiLog 表：AI 调用日志（调试用）
+export type { AiLog, AiLogInput, AiLogSource } from './ai-log';
+export { aiLogInputSchema, aiLogSchema } from './ai-log';
+// aiPreference 表：AI 调用全局偏好（厂商/模型选择 + 思考模式）+ 协议 DTO
+export type {
+  AiPreference,
+  AiPreferenceInput,
+  ThinkingMode,
+} from './ai-preference';
+export {
+  aiPreferenceInputSchema,
+  aiPreferenceSchema,
+  THINKING_MODES,
+} from './ai-preference';
 // aiVendor 表：落库实体 + 厂商表单派生
 export type {
   AiVendorRecord,
@@ -44,14 +58,3 @@ export {
 // reply 消息：聊天页请求 AI 生成下一条回复
 export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
 export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';
-// thinkingMode 表：AI 调用思考模式设置 + 协议 DTO
-export type {
-  ThinkingMode,
-  ThinkingModeInput,
-  ThinkingModeSetting,
-} from './thinking-mode';
-export {
-  THINKING_MODES,
-  thinkingModeInputSchema,
-  thinkingModeSchema,
-} from './thinking-mode';

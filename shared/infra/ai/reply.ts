@@ -60,6 +60,7 @@ const generateReply = async ({
     system: REPLY_SYSTEM,
     prompt: replyPromptOf(jd, messages),
     thinkingMode,
+    source: 'reply',
     requestPermission,
   });
 

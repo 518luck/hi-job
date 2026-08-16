@@ -5,13 +5,14 @@
 import Dexie, { type EntityTable } from 'dexie';
 
 import type {
+  AiLog,
+  AiPreference,
   AiVendorRecord,
   ChatSession,
   CompanyRecord,
   DebugSetting,
   FriendMark,
   RecordedJd,
-  ThinkingModeSetting,
 } from '@/shared/zod';
 
 // 全局数据库实例：各领域的表统一在此注册类型
@@ -22,7 +23,8 @@ const db = new Dexie('hi-job') as Dexie & {
   friendMark: EntityTable<FriendMark, 'encryptBossId'>; // HR 会话标记表
   chatSession: EntityTable<ChatSession, 'encryptBossId'>; // 聊天会话档案表
   debugSetting: EntityTable<DebugSetting, 'key'>; // 调试开关设置表
-  thinkingMode: EntityTable<ThinkingModeSetting, 'key'>; // 思考模式设置表
+  aiLog: EntityTable<AiLog, 'id'>; // AI 调用日志表
+  aiPreference: EntityTable<AiPreference, 'key'>; // AI 调用全局偏好表
 };
 
 // 全部表统一在 v1 一次声明（首字段为主键，其余为索引）；
@@ -34,7 +36,8 @@ db.version(1).stores({
   friendMark: 'encryptBossId, status, updatedAt',
   chatSession: 'encryptBossId, lastChatAt',
   debugSetting: 'key',
-  thinkingMode: 'key',
+  aiLog: '++id, createdAt',
+  aiPreference: 'key',
 });
 
 export { db };

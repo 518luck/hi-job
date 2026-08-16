@@ -2,12 +2,12 @@
 import { generateReply } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
+  aiPreferenceStore,
   aiVendorStore,
   chatSessionStore,
   debugSettingStore,
   friendMarkStore,
   jdStore,
-  thinkingModeStore,
 } from '@/shared/infra/storage';
 import type { ReplyInput } from '@/shared/zod';
 import {
@@ -19,11 +19,16 @@ import {
   selectedJdSchema,
 } from '@/shared/zod';
 
-// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，按全局思考模式档位生成
+// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，按全局偏好（厂商/模型/思考模式）生成
 const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   const vendors = await aiVendorStore.readAllVendors();
-  const vendor = vendors[0];
-  const modelId = vendor?.models[0];
+  // 优先用工作台全局选择的厂商与模型，无选择或选择失效时回退第一个厂商第一个模型
+  const preference = await aiPreferenceStore.readAiPreference();
+  const vendor =
+    vendors.find((item) => item.vendorId === preference.vendorId) ?? vendors[0];
+  const modelId =
+    vendor?.models.find((model) => model === preference.modelId) ??
+    vendor?.models[0];
   if (vendor === undefined || modelId === undefined) {
     throw new Error('未配置 AI 厂商：请先到侧边栏「AI 厂商」页添加并拉取模型');
   }
@@ -39,13 +44,12 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   }
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
-  const thinkingMode = await thinkingModeStore.readThinkingMode();
   return generateReply({
     jd,
     messages: input.messages,
     vendor,
     modelId,
-    thinkingMode,
+    thinkingMode: preference.thinkingMode,
     requestPermission: false,
   });
 };

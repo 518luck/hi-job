@@ -41,6 +41,7 @@ const generateGreeting = async ({
     system: GREETING_SYSTEM,
     prompt: greetingPromptOf(jd),
     thinkingMode,
+    source: 'greeting',
   });
 
 export { generateGreeting };

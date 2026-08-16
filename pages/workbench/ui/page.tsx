@@ -11,10 +11,9 @@ import {
 } from '@/shared/ui/select';
 import type { NavKey } from '@/widgets/nav-bar';
 
+import { useAiPreference } from '../model/use-ai-preference';
 import { useChatSession } from '../model/use-chat-session';
 import { useJds } from '../model/use-jds';
-import { usePersistedVendorSelection } from '../model/use-persisted-vendor-selection';
-import { useThinkingMode } from '../model/use-thinking-mode';
 import { useVendors } from '../model/use-vendors';
 import { ChatSessionCard } from './chat-session-card';
 import { JdCard } from './jd-card';
@@ -37,9 +36,14 @@ interface WorkbenchPageProps {
 function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
   const { jds, loading } = useJds();
   const { vendors } = useVendors();
-  const { vendorId, modelId, selectVendor, selectModel } =
-    usePersistedVendorSelection();
-  const { mode: thinkingMode, setMode: setThinkingMode } = useThinkingMode();
+  const {
+    vendorId,
+    modelId,
+    thinkingMode,
+    selectVendor,
+    selectModel,
+    setThinkingMode,
+  } = useAiPreference();
   const { view: chatView, toggleFailed } = useChatSession();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
