@@ -22,6 +22,8 @@ interface RecordAiLogInput {
   resolvedArgs: ThinkingArgs; // 实际传递的思考参数
   system: string; // 系统提示（角色设定）
   prompt: string; // 用户提示（本次任务内容）
+  promptTask?: string; // 提示词任务描述（打招呼生成时记录）
+  promptRequirement?: string; // 提示词生成要求（打招呼生成时记录）
   startedAt: number; // 调用开始时间戳（毫秒）
   ok: boolean; // 调用是否成功
   output?: string; // 成功时的返回文本
@@ -37,6 +39,8 @@ const recordAiLog = async ({
   resolvedArgs,
   system,
   prompt,
+  promptTask,
+  promptRequirement,
   startedAt,
   ok,
   output,
@@ -53,6 +57,8 @@ const recordAiLog = async ({
       resolvedArgs,
       system,
       prompt,
+      promptTask,
+      promptRequirement,
       ok,
       durationMs: Date.now() - startedAt,
       output,

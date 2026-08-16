@@ -7,7 +7,7 @@ import { THINKING_MODES } from './ai-preference';
 const aiLogSchema = z.object({
   id: z.number().optional(), // Dexie 自增主键，写入时自动生成
   createdAt: z.number(), // 调用结束时间戳（毫秒）
-  source: z.enum(['greeting', 'reply']), // 调用来源：打招呼或聊天页回复
+  source: z.enum(['greeting', 'reply', 'followUp']), // 调用来源：打招呼/聊天页回复/提醒问候
   vendorName: z.string(), // 厂商名称
   apiFormat: z.enum(['openai', 'anthropic']), // API 协议格式
   modelId: z.string(), // 模型 id
@@ -15,6 +15,8 @@ const aiLogSchema = z.object({
   resolvedArgs: z.unknown(), // 实际传递给 AI SDK 的思考参数
   system: z.string().optional(), // 系统提示（角色设定），完整记录
   prompt: z.string().optional(), // 用户提示（本次任务内容），完整记录
+  promptTask: z.string().optional(), // 提示词任务描述（打招呼生成时记录），旧记录缺省
+  promptRequirement: z.string().optional(), // 提示词生成要求（打招呼生成时记录），旧记录缺省
   ok: z.boolean(), // 调用是否成功
   durationMs: z.number(), // 调用耗时（毫秒）
   output: z.string().optional(), // 成功时的返回文本，失败时缺省

@@ -9,3 +9,4 @@ export { DEFAULT_DEBUG_SETTINGS, debugSettingStore } from './debug-setting';
 export { friendMarkStore } from './friend-mark';
 export type { CompanyRecord, RecordedJd } from './jd';
 export { jdStore } from './jd';
+export { resumeStore } from './resume';

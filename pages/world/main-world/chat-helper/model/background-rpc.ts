@@ -6,6 +6,7 @@ import {
 import type { ProtocolMap } from '@/shared/infra/messaging';
 import type {
   ChatSessionInput,
+  FollowUpInput,
   FriendMark,
   FriendMarkInput,
   ReplyInput,
@@ -36,6 +37,8 @@ const extensionApi = {
     callBackground('saveChatSession', data),
   getFriendMarks: (): Promise<FriendMark[]> =>
     callBackground('getFriendMarks', undefined),
+  followUp: (data: FollowUpInput): Promise<string> =>
+    callBackground('followUp', data),
   generateReply: (data: ReplyInput): Promise<string> =>
     callBackground('generateReply', data),
 };

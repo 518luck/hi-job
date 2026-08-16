@@ -10,8 +10,15 @@ const aiPreferenceSchema = z.object({
   vendorId: z.string().nullable(), // 工作台选择的厂商 id，null 表示未选择
   modelId: z.string().nullable(), // 工作台选择的模型 id，null 表示未选择
   thinkingMode: z.enum(THINKING_MODES), // 思考模式档位
+  greetingSystem: z.string().nullable(), // 打招呼系统提示文案，null 用默认
   greetingTask: z.string().nullable(), // 打招呼任务描述文案，null 用默认文案
   greetingRequirement: z.string().nullable(), // 打招呼生成要求文案，null 用默认文案
+  followUpSystem: z.string().nullable(), // 跟进问候系统提示文案，null 用默认
+  followUpTask: z.string().nullable(), // 跟进问候任务描述文案，null 用默认文案
+  followUpRequirement: z.string().nullable(), // 跟进问候生成要求文案，null 用默认文案
+  replySystem: z.string().nullable(), // 回复生成系统提示文案，null 用默认
+  replyTask: z.string().nullable(), // 回复生成任务描述文案，null 用默认文案
+  replyRequirement: z.string().nullable(), // 回复生成要求文案，null 用默认文案
 });
 
 // 协议传输的偏好：去掉存储主键

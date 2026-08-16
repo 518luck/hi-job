@@ -10,6 +10,7 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import type { AiLog } from '@/shared/zod';
 
 import { useAiLogs } from '../model/use-ai-logs';
@@ -25,7 +26,11 @@ const THINKING_MODE_LABELS: Record<AiLog['thinkingMode'], string> = {
 const SOURCE_LABELS: Record<AiLog['source'], string> = {
   greeting: '打招呼',
   reply: '回复',
+  followUp: '跟进',
 };
+
+// 日志分层筛选：全部或按来源
+type LogFilter = 'all' | AiLog['source'];
 
 // 时间格式化：MM-dd HH:mm:ss
 const formatLogTime = (timestamp: number): string => {
@@ -58,14 +63,19 @@ interface AiLogViewProps {
   onBack: () => void;
 }
 
-// AI 日志视图：手风琴列表展开详情，提供复制全部与清空入口
+// AI 日志视图：手风琴列表展开详情，提供来源分层筛选、复制全部与清空入口
 function AiLogView({ onBack }: AiLogViewProps) {
   const { logs, clear } = useAiLogs();
   const [copied, setCopied] = useState(false);
+  const [filter, setFilter] = useState<LogFilter>('all');
 
-  // 一键复制全部日志到剪贴板，短暂切换按钮文案
+  // 按来源分层过滤后的日志列表
+  const filteredLogs =
+    filter === 'all' ? logs : logs.filter((log) => log.source === filter);
+
+  // 一键复制当前列表日志到剪贴板，短暂切换按钮文案
   const handleCopyAll = async (): Promise<void> => {
-    await navigator.clipboard.writeText(logsTextOf(logs));
+    await navigator.clipboard.writeText(logsTextOf(filteredLogs));
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
@@ -112,11 +122,37 @@ function AiLogView({ onBack }: AiLogViewProps) {
           </div>
         )}
       </div>
-      {logs.length === 0 ? (
-        <p className="text-xs text-muted-foreground">暂无 AI 调用日志</p>
+      <ToggleGroup
+        variant="outline"
+        className="w-full"
+        value={[filter]}
+        onValueChange={(values) => {
+          const next = values[0];
+          if (next !== undefined) {
+            setFilter(next as LogFilter);
+          }
+        }}
+      >
+        <ToggleGroupItem value="all" className="flex-1">
+          全部
+        </ToggleGroupItem>
+        <ToggleGroupItem value="greeting" className="flex-1">
+          提示词
+        </ToggleGroupItem>
+        <ToggleGroupItem value="reply" className="flex-1">
+          回复
+        </ToggleGroupItem>
+        <ToggleGroupItem value="followUp" className="flex-1">
+          跟进
+        </ToggleGroupItem>
+      </ToggleGroup>
+      {filteredLogs.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {logs.length === 0 ? '暂无 AI 调用日志' : '该分类暂无日志'}
+        </p>
       ) : (
         <Accordion className="flex flex-col gap-1">
-          {logs.map((log) => (
+          {filteredLogs.map((log) => (
             <AccordionItem
               key={log.id}
               value={String(log.id)}
@@ -149,7 +185,7 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     <span className="text-xs font-medium text-muted-foreground">
                       系统提示
                     </span>
-                    <pre className="overflow-x-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                       {log.system}
                     </pre>
                   </>
@@ -159,15 +195,36 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     <span className="text-xs font-medium text-muted-foreground">
                       用户提示
                     </span>
-                    <pre className="overflow-x-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                       {log.prompt}
                     </pre>
                   </>
                 )}
+                {log.promptTask !== undefined && log.promptTask !== '' && (
+                  <>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      任务描述
+                    </span>
+                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                      {log.promptTask}
+                    </pre>
+                  </>
+                )}
+                {log.promptRequirement !== undefined &&
+                  log.promptRequirement !== '' && (
+                    <>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        生成要求
+                      </span>
+                      <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                        {log.promptRequirement}
+                      </pre>
+                    </>
+                  )}
                 <span className="text-xs font-medium text-muted-foreground">
                   实际传递参数
                 </span>
-                <pre className="overflow-x-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                   {JSON.stringify(log.resolvedArgs, null, 2)}
                 </pre>
                 {log.output !== undefined && log.output !== '' && (
@@ -175,7 +232,7 @@ function AiLogView({ onBack }: AiLogViewProps) {
                     <span className="text-xs font-medium text-muted-foreground">
                       返回内容
                     </span>
-                    <pre className="overflow-x-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                       {log.output}
                     </pre>
                   </>

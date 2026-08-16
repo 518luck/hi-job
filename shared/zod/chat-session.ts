@@ -17,9 +17,17 @@ const chatSessionSchema = z.object({
 // 上报输入：内容脚本从聊天页读取的会话信息，lastChatAt 由后台补齐
 const chatSessionInputSchema = chatSessionSchema.omit({ lastChatAt: true });
 
+// HR 信息：回复/跟进/打招呼生成的可选输入，从会话档案派生
+const hrInfoSchema = chatSessionSchema.pick({
+  bossName: true,
+  bossTitle: true,
+  brandName: true,
+});
+
 // 从 schema 派生类型，保持单一事实来源
 type ChatSession = z.infer<typeof chatSessionSchema>;
 type ChatSessionInput = z.infer<typeof chatSessionInputSchema>;
+type HrInfo = z.infer<typeof hrInfoSchema>;
 
-export type { ChatSession, ChatSessionInput };
-export { chatSessionInputSchema, chatSessionSchema };
+export type { ChatSession, ChatSessionInput, HrInfo };
+export { chatSessionInputSchema, chatSessionSchema, hrInfoSchema };

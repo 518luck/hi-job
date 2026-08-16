@@ -13,6 +13,7 @@ import type {
   DebugSetting,
   FriendMark,
   RecordedJd,
+  ResumeRecord,
 } from '@/shared/zod';
 
 // 全局数据库实例：各领域的表统一在此注册类型
@@ -25,6 +26,7 @@ const db = new Dexie('hi-job') as Dexie & {
   debugSetting: EntityTable<DebugSetting, 'key'>; // 调试开关设置表
   aiLog: EntityTable<AiLog, 'id'>; // AI 调用日志表
   aiPreference: EntityTable<AiPreference, 'key'>; // AI 调用全局偏好表
+  resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
 };
 
 // 全部表统一在 v1 一次声明（首字段为主键，其余为索引）；
@@ -38,6 +40,7 @@ db.version(1).stores({
   debugSetting: 'key',
   aiLog: '++id, createdAt',
   aiPreference: 'key',
+  resume: 'key',
 });
 
 export { db };

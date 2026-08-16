@@ -1,6 +1,6 @@
 // # 聊天页数据读取（主世界）：Vue 实例与 DOM 中的会话、消息数据
 import { readProperty, stringOf } from '@/shared/lib/page-property';
-import type { ReplyJd, ReplyMessage } from '@/shared/zod';
+import type { HrInfo, ReplyJd, ReplyMessage } from '@/shared/zod';
 
 // 聊天页根组件挂载点：探测确认 .main-wrap 持有 Chat 根实例
 const VUE_ROOT_SELECTOR = '.main-wrap';
@@ -151,8 +151,20 @@ const replyJdOf = (boss: Record<string, unknown>): ReplyJd => ({
   description: '',
 });
 
+// 由当前会话信息提取 HR 信息：姓名/头衔取别名，读不到时返回 undefined
+const hrOf = (boss: Record<string, unknown>): HrInfo | undefined => {
+  const bossName = stringOf(boss, 'name') || stringOf(boss, 'bossName');
+  const bossTitle = stringOf(boss, 'title') || stringOf(boss, 'bossTitle');
+  const brandName = stringOf(boss, 'brandName');
+  if (bossName === '' && brandName === '') {
+    return undefined;
+  }
+  return { bossName, bossTitle, brandName };
+};
+
 export {
   friendOf,
+  hrOf,
   readCurrentBoss,
   readFriendCount,
   readMessagesFromDom,

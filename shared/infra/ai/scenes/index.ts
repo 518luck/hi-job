@@ -1,23 +1,21 @@
-// # ai 域公有 API：厂商客户端与生成场景
+// # 生成场景域公有 API：三场景生成函数、默认文案与公共拼接段
 
 export {
   DEFAULT_FOLLOW_UP_REQUIREMENT,
   DEFAULT_FOLLOW_UP_SYSTEM,
   DEFAULT_FOLLOW_UP_TASK,
+  generateFollowUp,
+} from './follow-up';
+export {
   DEFAULT_GREETING_REQUIREMENT,
   DEFAULT_GREETING_SYSTEM,
   DEFAULT_GREETING_TASK,
+  generateGreeting,
+} from './greeting';
+export { hrSectionOf, resumeSectionOf } from './prompt-parts';
+export {
   DEFAULT_REPLY_REQUIREMENT,
   DEFAULT_REPLY_SYSTEM,
   DEFAULT_REPLY_TASK,
-  generateFollowUp,
-  generateGreeting,
   generateReply,
-  hrSectionOf,
-  resumeSectionOf,
-} from './scenes';
-export {
-  chatWithVendor,
-  createVendorClient,
-  fetchVendorModels,
-} from './vendor-client';
+} from './reply';

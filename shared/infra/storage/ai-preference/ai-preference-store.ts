@@ -6,13 +6,20 @@ import { db } from '../db';
 // 单行固定主键：AI 调用偏好只有一份
 const AI_PREFERENCE_KEY = 'global';
 
-// 默认偏好：未选择厂商/模型，思考模式默认档，打招呼文案用默认
+// 默认偏好：未选择厂商/模型，思考模式默认档，三场景系统提示与文案用默认
 const DEFAULT_AI_PREFERENCE: AiPreferenceInput = {
-  vendorId: null,
-  modelId: null,
-  thinkingMode: 'default',
-  greetingTask: null,
-  greetingRequirement: null,
+  vendorId: null, // 工作台所选厂商 id，null 未选择
+  modelId: null, // 工作台所选模型 id，null 未选择
+  thinkingMode: 'default', // 思考模式档位
+  greetingSystem: null, // 打招呼系统提示，null 用默认
+  greetingTask: null, // 打招呼任务描述，null 用默认
+  greetingRequirement: null, // 打招呼生成要求，null 用默认
+  followUpSystem: null, // 跟进系统提示，null 用默认
+  followUpTask: null, // 跟进任务描述，null 用默认
+  followUpRequirement: null, // 跟进生成要求，null 用默认
+  replySystem: null, // 回复系统提示，null 用默认
+  replyTask: null, // 回复任务描述，null 用默认
+  replyRequirement: null, // 回复生成要求，null 用默认
 };
 
 // 保存偏好：单行覆盖写入
@@ -33,8 +40,15 @@ const readAiPreference = async (): Promise<AiPreferenceInput> => {
     vendorId: record.vendorId,
     modelId: record.modelId,
     thinkingMode: record.thinkingMode,
+    greetingSystem: record.greetingSystem ?? null,
     greetingTask: record.greetingTask ?? null,
     greetingRequirement: record.greetingRequirement ?? null,
+    followUpSystem: record.followUpSystem ?? null,
+    followUpTask: record.followUpTask ?? null,
+    followUpRequirement: record.followUpRequirement ?? null,
+    replySystem: record.replySystem ?? null,
+    replyTask: record.replyTask ?? null,
+    replyRequirement: record.replyRequirement ?? null,
   };
 };
 

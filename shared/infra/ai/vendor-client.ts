@@ -114,6 +114,8 @@ const chatWithVendor = async ({
   prompt,
   thinkingMode = 'default',
   source,
+  promptTask,
+  promptRequirement,
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
@@ -122,6 +124,8 @@ const chatWithVendor = async ({
   prompt: string; // 用户提示
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
+  promptTask?: string; // 提示词任务描述（打招呼生成时记录日志）
+  promptRequirement?: string; // 提示词生成要求（打招呼生成时记录日志）
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
   const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
@@ -167,6 +171,8 @@ const chatWithVendor = async ({
       resolvedArgs,
       system,
       prompt,
+      promptTask,
+      promptRequirement,
       startedAt,
       ok: false,
       error: finalError.message,
@@ -181,6 +187,8 @@ const chatWithVendor = async ({
     resolvedArgs,
     system,
     prompt,
+    promptTask,
+    promptRequirement,
     startedAt,
     ok: true,
     output: result,

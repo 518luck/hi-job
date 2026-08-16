@@ -26,9 +26,13 @@ export {
   vendorDialogFormSchema,
   vendorFormSchema,
 } from './ai-vendor';
-// chatSession 表：聊天会话档案
-export type { ChatSession, ChatSessionInput } from './chat-session';
-export { chatSessionInputSchema, chatSessionSchema } from './chat-session';
+// chatSession 表：聊天会话档案 + HR 信息派生
+export type { ChatSession, ChatSessionInput, HrInfo } from './chat-session';
+export {
+  chatSessionInputSchema,
+  chatSessionSchema,
+  hrInfoSchema,
+} from './chat-session';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
@@ -39,6 +43,9 @@ export {
   debugSettingSchema,
   debugSettingsSchema,
 } from './debug-setting';
+// follow-up 消息：聊天页请求 AI 生成提醒问候
+export type { FollowUpInput } from './follow-up';
+export { followUpInputSchema } from './follow-up';
 // friend-mark 表：HR 会话状态标记 + 操作输入
 export type { FriendMark, FriendMarkInput } from './friend-mark';
 export {
@@ -58,3 +65,6 @@ export {
 // reply 消息：聊天页请求 AI 生成下一条回复
 export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
 export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';
+// resume 表：用户简历（单行，UI 上传入口预留）
+export type { ResumeInput, ResumeRecord } from './resume';
+export { resumeInputSchema, resumeSchema } from './resume';

@@ -1,5 +1,5 @@
-// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 回复生成）
-import { generateReply } from '@/shared/infra/ai';
+// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 生成）
+import { generateFollowUp, generateReply } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
   aiPreferenceStore,
@@ -9,18 +9,28 @@ import {
   friendMarkStore,
   jdStore,
 } from '@/shared/infra/storage';
-import type { ReplyInput } from '@/shared/zod';
+import type {
+  AiVendorRecord,
+  FollowUpInput,
+  ReplyInput,
+  ThinkingMode,
+} from '@/shared/zod';
 import {
   chatSessionInputSchema,
   debugSettingsSchema,
+  followUpInputSchema,
   friendMarkInputSchema,
   friendMarksResponseSchema,
   replyInputSchema,
   selectedJdSchema,
 } from '@/shared/zod';
 
-// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，按全局偏好（厂商/模型/思考模式）生成
-const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
+// 解析生成上下文：全局偏好选中的厂商/模型/思考档位 + 权限预检（无手势环境用 contains）
+const resolveGenerationContext = async (): Promise<{
+  vendor: AiVendorRecord;
+  modelId: string;
+  thinkingMode: ThinkingMode;
+}> => {
   const vendors = await aiVendorStore.readAllVendors();
   // 优先用工作台全局选择的厂商与模型，无选择或选择失效时回退第一个厂商第一个模型
   const preference = await aiPreferenceStore.readAiPreference();
@@ -42,6 +52,16 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
       '未授权访问 AI 厂商地址：请先在侧边栏「AI 厂商」页拉取一次模型完成授权',
     );
   }
+  return {
+    vendor,
+    modelId,
+    thinkingMode: preference.thinkingMode,
+  };
+};
+
+// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，带 HR 信息
+const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
+  const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
   return generateReply({
@@ -49,7 +69,24 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
     messages: input.messages,
     vendor,
     modelId,
-    thinkingMode: preference.thinkingMode,
+    thinkingMode,
+    hr: input.hr,
+    requestPermission: false,
+  });
+};
+
+// 生成提醒问候：已读不回/未读时，结合 JD、HR 信息与已发送的打招呼语句
+const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
+  const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
+  const recorded = await jdStore.readJdByJobId(input.jobId);
+  const jd = recorded ?? input.jd;
+  return generateFollowUp({
+    jd,
+    hr: input.hr,
+    greeting: input.greeting,
+    vendor,
+    modelId,
+    thinkingMode,
     requestPermission: false,
   });
 };
@@ -107,6 +144,13 @@ export default defineBackground(() => {
     await debugSettingStore.saveDebugSettings(parsed.data);
     // 广播到各标签页，探测脚本即时注入/移除按钮
     await broadcastNotify('debug-settings-changed');
+  });
+  onMessage('followUp', ({ data }) => {
+    const parsed = followUpInputSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('跟进参数不合法');
+    }
+    return handleFollowUp(parsed.data);
   });
   onMessage('generateReply', ({ data }) => {
     const parsed = replyInputSchema.safeParse(data);

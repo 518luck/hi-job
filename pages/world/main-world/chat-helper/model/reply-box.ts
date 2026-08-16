@@ -1,9 +1,14 @@
-// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，调后台生成下一条回复
+// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，生成回复与提醒问候
 import { stringOf } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
 import { HIJOB_PREFIX } from './style';
-import { readCurrentBoss, readMessagesFromDom, replyJdOf } from './vue-reader';
+import {
+  hrOf,
+  readCurrentBoss,
+  readMessagesFromDom,
+  replyJdOf,
+} from './vue-reader';
 
 // 聊天窗尺寸：与 style.ts 中 .hijob-chat-window 保持一致，用于定位计算
 const CHAT_WINDOW_WIDTH = 340;
@@ -33,6 +38,7 @@ const handleGenerateReply = async (
       jobId: stringOf(boss, 'encryptJobId'),
       jd: replyJdOf(boss),
       messages,
+      hr: hrOf(boss),
     });
     bodyEl.textContent = response;
   } catch (error) {
@@ -41,6 +47,43 @@ const handleGenerateReply = async (
   } finally {
     generateButton.disabled = false;
     generateButton.textContent = '生成回复';
+  }
+};
+
+// 生成提醒问候：已读不回/未读时，取已发送的打招呼语句经后台生成提醒
+const handleFollowUp = async (
+  bodyEl: HTMLElement,
+  followUpButton: HTMLButtonElement,
+): Promise<void> => {
+  const boss = readCurrentBoss();
+  if (boss === null) {
+    bodyEl.textContent = '未找到当前会话信息';
+    return;
+  }
+  const greeting = readMessagesFromDom().find(
+    (message) => message.role === 'self',
+  )?.text;
+  if (greeting === undefined || greeting === '') {
+    bodyEl.textContent = '未找到已发送的打招呼消息';
+    return;
+  }
+  followUpButton.disabled = true;
+  followUpButton.textContent = '生成中…';
+  bodyEl.textContent = '生成中…';
+  try {
+    const response = await extensionApi.followUp({
+      jobId: stringOf(boss, 'encryptJobId'),
+      jd: replyJdOf(boss),
+      greeting,
+      hr: hrOf(boss),
+    });
+    bodyEl.textContent = response;
+  } catch (error) {
+    bodyEl.textContent =
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+  } finally {
+    followUpButton.disabled = false;
+    followUpButton.textContent = '提醒问候';
   }
 };
 
@@ -193,6 +236,12 @@ const ensureReplyBox = (): void => {
 
   const footer = document.createElement('div');
   footer.className = `${HIJOB_PREFIX}-chat-footer`;
+  const followUp = document.createElement('button');
+  followUp.className = `${HIJOB_PREFIX}-copy-button`;
+  followUp.textContent = '提醒问候';
+  followUp.addEventListener('click', () => {
+    void handleFollowUp(body, followUp);
+  });
   const generate = document.createElement('button');
   generate.className = `${HIJOB_PREFIX}-reply-button`;
   generate.textContent = '生成回复';
@@ -205,7 +254,7 @@ const ensureReplyBox = (): void => {
   copy.addEventListener('click', () => {
     void copyReplyText(body, copy);
   });
-  footer.append(generate, copy);
+  footer.append(followUp, generate, copy);
 
   chatWindow.append(header, body, footer);
   document.body.append(chatWindow);
