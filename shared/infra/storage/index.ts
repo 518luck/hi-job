@@ -7,3 +7,4 @@ export { DEFAULT_DEBUG_SETTINGS, debugSettingStore } from './debug-setting';
 export { friendMarkStore } from './friend-mark';
 export type { CompanyRecord, RecordedJd } from './jd';
 export { jdStore } from './jd';
+export { DEFAULT_THINKING_MODE, thinkingModeStore } from './thinking-mode';

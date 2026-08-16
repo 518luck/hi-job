@@ -44,3 +44,14 @@ export {
 // reply 消息：聊天页请求 AI 生成下一条回复
 export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
 export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';
+// thinkingMode 表：AI 调用思考模式设置 + 协议 DTO
+export type {
+  ThinkingMode,
+  ThinkingModeInput,
+  ThinkingModeSetting,
+} from './thinking-mode';
+export {
+  THINKING_MODES,
+  thinkingModeInputSchema,
+  thinkingModeSchema,
+} from './thinking-mode';

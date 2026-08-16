@@ -1,5 +1,5 @@
 // # AI 打招呼生成：拼提示词并调用所选厂商模型，供侧边栏与后台共用
-import type { AiVendorRecord, RecordedJd } from '@/shared/zod';
+import type { AiVendorRecord, RecordedJd, ThinkingMode } from '@/shared/zod';
 
 import { chatWithVendor } from './vendor-client';
 
@@ -28,16 +28,19 @@ const generateGreeting = async ({
   jd,
   vendor,
   modelId,
+  thinkingMode = 'default',
 }: {
   jd: RecordedJd; // 目标职位
   vendor: AiVendorRecord; // 所选厂商配置
   modelId: string; // 所选模型 id
+  thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
 }): Promise<string> =>
   chatWithVendor({
     vendor,
     modelId,
     system: GREETING_SYSTEM,
     prompt: greetingPromptOf(jd),
+    thinkingMode,
   });
 
 export { generateGreeting };

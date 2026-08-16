@@ -1,5 +1,10 @@
 // # AI 回复生成：结合聊天记录与职位信息生成求职者的下一条回复
-import type { AiVendorRecord, ReplyJd, ReplyMessage } from '@/shared/zod';
+import type {
+  AiVendorRecord,
+  ReplyJd,
+  ReplyMessage,
+  ThinkingMode,
+} from '@/shared/zod';
 
 import { chatWithVendor } from './vendor-client';
 
@@ -39,12 +44,14 @@ const generateReply = async ({
   messages,
   vendor,
   modelId,
+  thinkingMode = 'default',
   requestPermission = true,
 }: {
   jd: ReplyJd; // 目标职位信息
   messages: ReplyMessage[]; // 聊天记录，按时间正序
   vendor: AiVendorRecord; // 所选厂商配置
   modelId: string; // 所选模型 id
+  thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> =>
   chatWithVendor({
@@ -52,6 +59,7 @@ const generateReply = async ({
     modelId,
     system: REPLY_SYSTEM,
     prompt: replyPromptOf(jd, messages),
+    thinkingMode,
     requestPermission,
   });
 

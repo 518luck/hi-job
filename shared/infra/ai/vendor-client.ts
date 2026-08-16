@@ -3,7 +3,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
 
-import type { AiVendorRecord } from '@/shared/zod';
+import type { AiVendorRecord, ThinkingMode } from '@/shared/zod';
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
@@ -83,18 +83,49 @@ const fetchVendorModels = async ({
     .filter((id) => id !== '');
 };
 
+// openai 兼容的思考关闭参数：DeepSeek 官方 API 的 thinking 开关字段
+type ThinkingProviderOptions = {
+  'openai-compatible': { thinking: { type: 'disabled' } };
+};
+
+// 思考档位 → AI SDK 调用参数：默认不传任何参数；关闭对 openai 兼容补传 thinking disabled
+// （DeepSeek 思考默认开启，SDK 的 reasoning:'none' 只做到不传 effort，关不掉）；低/中/高走 SDK 统一 reasoning
+const resolveThinkingArgs = (
+  apiFormat: 'openai' | 'anthropic',
+  mode: ThinkingMode,
+): {
+  reasoning?: 'none' | 'low' | 'medium' | 'high';
+  providerOptions?: ThinkingProviderOptions;
+} => {
+  if (mode === 'default') {
+    return {};
+  }
+  if (mode === 'off') {
+    return apiFormat === 'anthropic'
+      ? { reasoning: 'none' }
+      : {
+          providerOptions: {
+            'openai-compatible': { thinking: { type: 'disabled' } },
+          },
+        };
+  }
+  return { reasoning: mode };
+};
+
 // > 用厂商配置与指定模型跑一次文本生成：先申请跨域权限，须在用户手势（按钮点击）内调用
 const chatWithVendor = async ({
   vendor,
   modelId,
   system,
   prompt,
+  thinkingMode = 'default',
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
   modelId: string; // 本次调用使用的模型 id
   system: string; // 系统提示
   prompt: string; // 用户提示
+  thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
   if (requestPermission) {
@@ -109,12 +140,23 @@ const chatWithVendor = async ({
     apiKey: vendor.apiKey,
     apiFormat: vendor.apiFormat,
   });
-  const { text } = await generateText({
-    model: provider(modelId),
-    system,
-    prompt,
-  });
-  return text.trim();
+  try {
+    const { text } = await generateText({
+      model: provider(modelId),
+      system,
+      prompt,
+      ...resolveThinkingArgs(vendor.apiFormat, thinkingMode),
+    });
+    return text.trim();
+  } catch (error) {
+    // 思考档位下失败多为模型不支持思考参数：追加可读提示，便于切回默认档
+    if (thinkingMode !== 'default') {
+      throw new Error(
+        `${error instanceof Error ? error.message : '生成失败'}（该模型可能不支持思考参数，可尝试切回「默认」档）`,
+      );
+    }
+    throw error;
+  }
 };
 
 export { chatWithVendor, createVendorClient, fetchVendorModels };

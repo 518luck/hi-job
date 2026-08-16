@@ -7,6 +7,7 @@ import {
   debugSettingStore,
   friendMarkStore,
   jdStore,
+  thinkingModeStore,
 } from '@/shared/infra/storage';
 import type { ReplyInput } from '@/shared/zod';
 import {
@@ -18,7 +19,7 @@ import {
   selectedJdSchema,
 } from '@/shared/zod';
 
-// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息
+// 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，按全局思考模式档位生成
 const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   const vendors = await aiVendorStore.readAllVendors();
   const vendor = vendors[0];
@@ -38,11 +39,13 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   }
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
+  const thinkingMode = await thinkingModeStore.readThinkingMode();
   return generateReply({
     jd,
     messages: input.messages,
     vendor,
     modelId,
+    thinkingMode,
     requestPermission: false,
   });
 };

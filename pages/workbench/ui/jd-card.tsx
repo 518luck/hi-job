@@ -15,16 +15,18 @@ import {
 } from '@/shared/ui/card';
 import { Icons } from '@/shared/ui/icons';
 import { Textarea } from '@/shared/ui/textarea';
+import type { ThinkingMode } from '@/shared/zod';
 
-// 职位卡片的 props：vendor/modelId 为页面所选的生成配置，未配置厂商时为 undefined
+// 职位卡片的 props：vendor/modelId/thinkingMode 为页面所选的生成配置，未配置厂商时 vendor/modelId 为 undefined
 interface JdCardProps {
   jd: RecordedJd;
   vendor?: AiVendorRecord;
   modelId?: string;
+  thinkingMode: ThinkingMode;
 }
 
 // 职位卡片：概要信息与 AI 打招呼生成
-function JdCard({ jd, vendor, modelId }: JdCardProps) {
+function JdCard({ jd, vendor, modelId, thinkingMode }: JdCardProps) {
   const [greeting, setGreeting] = useState('');
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -39,7 +41,12 @@ function JdCard({ jd, vendor, modelId }: JdCardProps) {
     setGenerating(true);
     setMessage('');
     try {
-      const text = await generateGreeting({ jd, vendor, modelId });
+      const text = await generateGreeting({
+        jd,
+        vendor,
+        modelId,
+        thinkingMode,
+      });
       setGreeting(text);
       return text;
     } catch (error) {

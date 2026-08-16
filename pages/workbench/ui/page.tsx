@@ -14,9 +14,19 @@ import type { NavKey } from '@/widgets/nav-bar';
 import { useChatSession } from '../model/use-chat-session';
 import { useJds } from '../model/use-jds';
 import { usePersistedVendorSelection } from '../model/use-persisted-vendor-selection';
+import { useThinkingMode } from '../model/use-thinking-mode';
 import { useVendors } from '../model/use-vendors';
 import { ChatSessionCard } from './chat-session-card';
 import { JdCard } from './jd-card';
+
+// 思考模式档位选项：文案说明各档对生成参数的影响
+const THINKING_MODE_OPTIONS = [
+  { value: 'default', label: '思考：默认（不传任何参数）' },
+  { value: 'off', label: '思考：关闭（显式传禁用参数）' },
+  { value: 'low', label: '思考：低（传 reasoning: low）' },
+  { value: 'medium', label: '思考：中（传 reasoning: medium）' },
+  { value: 'high', label: '思考：高（传 reasoning: high）' },
+] as const;
 
 // 工作台页的 props：onNavigate 用于跳转到其他导航页
 interface WorkbenchPageProps {
@@ -29,6 +39,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
   const { vendors } = useVendors();
   const { vendorId, modelId, selectVendor, selectModel } =
     usePersistedVendorSelection();
+  const { mode: thinkingMode, setMode: setThinkingMode } = useThinkingMode();
   const { view: chatView, toggleFailed } = useChatSession();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
@@ -102,6 +113,30 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
             </SelectGroup>
           </SelectContent>
         </Select>
+        <div className="col-span-2">
+          <Select
+            items={THINKING_MODE_OPTIONS}
+            value={thinkingMode}
+            onValueChange={(value) => {
+              if (value !== null) {
+                void setThinkingMode(value);
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {THINKING_MODE_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     );
   };
@@ -126,6 +161,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
             jd={jd}
             vendor={vendor}
             modelId={activeModelId}
+            thinkingMode={thinkingMode}
           />
         ))}
       </div>
