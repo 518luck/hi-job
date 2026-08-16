@@ -8,6 +8,7 @@ import type {
   AiVendorRecord,
   ChatSession,
   CompanyRecord,
+  DebugSetting,
   FriendMark,
   RecordedJd,
 } from '@/shared/zod';
@@ -19,6 +20,7 @@ const db = new Dexie('hi-job') as Dexie & {
   aiVendor: EntityTable<AiVendorRecord, 'vendorId'>; // AI 厂商配置表
   friendMark: EntityTable<FriendMark, 'encryptBossId'>; // HR 会话标记表
   chatSession: EntityTable<ChatSession, 'encryptBossId'>; // 聊天会话档案表
+  debugSetting: EntityTable<DebugSetting, 'key'>; // 调试开关设置表
 };
 
 // 全部表统一在 v1 一次声明（首字段为主键，其余为索引）；
@@ -29,6 +31,7 @@ db.version(1).stores({
   aiVendor: 'vendorId, name, updatedAt',
   friendMark: 'encryptBossId, status, updatedAt',
   chatSession: 'encryptBossId, lastChatAt',
+  debugSetting: 'key',
 });
 
 export { db };

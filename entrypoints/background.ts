@@ -1,15 +1,17 @@
-// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、AI 回复生成）
+// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 回复生成）
 import { generateReply } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
   aiVendorStore,
   chatSessionStore,
+  debugSettingStore,
   friendMarkStore,
   jdStore,
 } from '@/shared/infra/storage';
 import type { ReplyInput } from '@/shared/zod';
 import {
   chatSessionInputSchema,
+  debugSettingsSchema,
   friendMarkInputSchema,
   friendMarksResponseSchema,
   replyInputSchema,
@@ -45,16 +47,14 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   });
 };
 
-// 广播标记变更：通知各 Boss直聘 标签页的桥转发给主世界重拉标记
-const broadcastMarksChanged = async (): Promise<void> => {
+// 广播通知：向各 Boss直聘 标签页的桥推送指定类型，由桥转发给主世界
+const broadcastNotify = async (type: string): Promise<void> => {
   const tabs = await browser.tabs.query({ url: '*://*.zhipin.com/*' });
   await Promise.all(
     tabs.map(({ id }) =>
       id === undefined
         ? undefined
-        : browser.tabs
-            .sendMessage(id, { hiJobNotify: 'marks-changed' })
-            .catch(() => {}),
+        : browser.tabs.sendMessage(id, { hiJobNotify: type }).catch(() => {}),
     ),
   );
 };
@@ -90,7 +90,17 @@ export default defineBackground(() => {
     }
     await chatSessionStore.saveChatSession(parsed.data);
   });
-  onMessage('marksChanged', () => broadcastMarksChanged());
+  onMessage('marksChanged', () => broadcastNotify('marks-changed'));
+  onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
+  onMessage('saveDebugSettings', async ({ data }) => {
+    const parsed = debugSettingsSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: 调试设置参数不合法');
+    }
+    await debugSettingStore.saveDebugSettings(parsed.data);
+    // 广播到各标签页，探测脚本即时注入/移除按钮
+    await broadcastNotify('debug-settings-changed');
+  });
   onMessage('generateReply', ({ data }) => {
     const parsed = replyInputSchema.safeParse(data);
     if (!parsed.success) {

@@ -6,7 +6,6 @@
 import {
   type BackgroundCallInput,
   createWindowRpcServer,
-  WINDOW_NOTIFY_MARKS_CHANGED,
   WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,
 } from '@/pages/world/rpc';
@@ -31,13 +30,14 @@ const startRuntimeBridge = (): void => {
         sendMessage(method, data as never),
     },
   });
-  // 反向通知：后台广播的标记变更经 tabs 消息到达，转成页面 window 通知给主世界
+  // 反向通知：后台广播的任意 hiJobNotify 消息经 tabs 送达，转成页面 window 通知给主世界
   browser.runtime.onMessage.addListener((message: unknown) => {
-    if (readProperty(message, 'hiJobNotify') !== 'marks-changed') {
+    const notifyType = readProperty(message, 'hiJobNotify');
+    if (typeof notifyType !== 'string') {
       return;
     }
     window.postMessage(
-      { namespace: WINDOW_NOTIFY_NAMESPACE, type: WINDOW_NOTIFY_MARKS_CHANGED },
+      { namespace: WINDOW_NOTIFY_NAMESPACE, type: notifyType },
       location.origin,
     );
   });

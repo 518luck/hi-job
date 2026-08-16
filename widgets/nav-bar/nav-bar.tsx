@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { key: 'favorites', label: '收藏', icon: Icons.favorites },
   { key: 'aiVendors', label: 'AI 厂商', icon: Icons.aiVendors },
   { key: 'settings', label: '设置', icon: Icons.settings },
+  { key: 'debug', label: '调试', icon: Icons.debug },
 ] as const;
 
 // 导航项的唯一标识

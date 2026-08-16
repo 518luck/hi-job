@@ -3,8 +3,14 @@
 // 目标：确认职位列表/详情页 Vue 实例的挂载点与职位数据结构，
 // 为采集字段定来源，并排查「薪资/公司信息抓不到」类问题。
 
+import {
+  WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
+  WINDOW_NOTIFY_NAMESPACE,
+} from '@/pages/world/rpc';
 import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
+
+import { extensionApi } from './background-rpc';
 
 // 探测的 Vue 挂载点：职位详情面板与列表主容器
 const DETAIL_SELECTOR = '.job-detail-box';
@@ -232,15 +238,19 @@ const showProbePanel = (): void => {
   renderLogs(panel);
 };
 
-// 启动探测：仅职位页激活，右下角注入悬浮按钮，点击显示数据面板
-const startJdProbe = (): void => {
-  if (
-    !location.pathname.includes('/web/geek/job') &&
-    !location.pathname.includes('/job_detail/') &&
-    document.querySelector(`${MAIN_SELECTOR}, ${DETAIL_SELECTOR}`) === null
-  ) {
-    return;
-  }
+// 判定隔离世界桥转发来的调试开关变更通知
+const isDebugSettingsChangedNotify = (data: unknown): boolean =>
+  readProperty(data, 'namespace') === WINDOW_NOTIFY_NAMESPACE &&
+  readProperty(data, 'type') === WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED;
+
+// 移除探测按钮与面板：开关关闭时清理页面残留
+const removeProbeButton = (): void => {
+  document.querySelector(`[${PROBE_BUTTON_FLAG}]`)?.remove();
+  document.querySelector(`[${PROBE_PANEL_FLAG}]`)?.remove();
+};
+
+// 注入探测按钮：右下角悬浮按钮，点击切换数据面板
+const injectProbeButton = (): void => {
   if (document.querySelector(`[${PROBE_BUTTON_FLAG}]`) !== null) {
     return;
   }
@@ -258,6 +268,37 @@ const startJdProbe = (): void => {
     showProbePanel();
   });
   document.body.append(button);
+};
+
+// 按调试开关应用探测按钮：开启注入，关闭移除
+const applyJdProbe = async (): Promise<void> => {
+  const settings = await extensionApi.getDebugSettings();
+  if (!settings.jdProbeEnabled) {
+    removeProbeButton();
+    return;
+  }
+  injectProbeButton();
+};
+
+// 启动探测：仅职位页激活，注册调试开关通知并首次应用按钮
+const startJdProbe = (): void => {
+  if (
+    !location.pathname.includes('/web/geek/job') &&
+    !location.pathname.includes('/job_detail/') &&
+    document.querySelector(`${MAIN_SELECTOR}, ${DETAIL_SELECTOR}`) === null
+  ) {
+    return;
+  }
+  // 调试开关变更时即时注入/移除按钮
+  window.addEventListener('message', (event) => {
+    if (event.source !== window || event.origin !== location.origin) {
+      return;
+    }
+    if (isDebugSettingsChangedNotify(event.data)) {
+      void applyJdProbe();
+    }
+  });
+  void applyJdProbe();
 };
 
 export { startJdProbe };

@@ -3,6 +3,7 @@ import { defineExtensionMessaging } from '@webext-core/messaging';
 
 import type {
   ChatSessionInput,
+  DebugSettings,
   FriendMark,
   FriendMarkInput,
   ReplyInput,
@@ -16,6 +17,8 @@ interface ProtocolMap {
   getFriendMarks(): FriendMark[]; // 隔离世界脚本	后台	获取 HR 标记
   saveChatSession(data: ChatSessionInput): void; // 主世界脚本（经桥）	后台	上报当前聊天会话档案
   marksChanged(): void; // 侧边栏	后台	通知 HR 标记已变更（后台广播到聊天页重拉）
+  getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
+  saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
   generateReply(data: ReplyInput): string; // 隔离世界脚本	后台	调 AI 生成回复
 }
 

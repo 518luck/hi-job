@@ -18,6 +18,13 @@ export { chatSessionInputSchema, chatSessionSchema } from './chat-session';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
+// debugSetting 表：调试功能开关设置 + 协议 DTO
+export type { DebugSetting, DebugSettings } from './debug-setting';
+export {
+  DEBUG_SETTING_KEY,
+  debugSettingSchema,
+  debugSettingsSchema,
+} from './debug-setting';
 // friend-mark 表：HR 会话状态标记 + 操作输入
 export type { FriendMark, FriendMarkInput } from './friend-mark';
 export {

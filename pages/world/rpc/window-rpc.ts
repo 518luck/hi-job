@@ -11,6 +11,9 @@ const WINDOW_NOTIFY_NAMESPACE = 'hi-job/window-notify';
 // 通知类型：HR 标记已变更，主世界收到后重拉标记
 const WINDOW_NOTIFY_MARKS_CHANGED = 'marks-changed';
 
+// 通知类型：调试开关已变更，主世界收到后重新应用探测按钮
+const WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED = 'debug-settings-changed';
+
 // Window RPC 信封协议版本
 const WINDOW_RPC_VERSION = 1;
 
@@ -227,6 +230,7 @@ export type { WindowRpcRequest, WindowRpcResponse };
 export {
   createWindowRpcClient,
   createWindowRpcServer,
+  WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
   WINDOW_NOTIFY_MARKS_CHANGED,
   WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,

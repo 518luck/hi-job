@@ -1,8 +1,14 @@
 // # 聊天页数据探测（主世界，临时工具）：注入 test 按钮，dump 聊天页 Vue 数据
 //
 // 目标：确认聊天页 Vue 实例的挂载点与会话/消息数据结构，为 HR badge 与 AI 问答功能定字段。
+import {
+  WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
+  WINDOW_NOTIFY_NAMESPACE,
+} from '@/pages/world/rpc';
 import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
+
+import { extensionApi } from './background-rpc';
 
 // 候选 Vue 挂载点：按优先级逐个探测
 const MOUNT_CANDIDATES = [
@@ -246,14 +252,19 @@ const showProbePanel = (): void => {
   renderLogs(panel);
 };
 
-// 启动探测：仅聊天页激活，右下角注入悬浮按钮，点击显示数据面板
-const startChatProbe = (): void => {
-  if (
-    !location.pathname.includes('/chat') &&
-    document.querySelector('.chat-container') === null
-  ) {
-    return;
-  }
+// 判定隔离世界桥转发来的调试开关变更通知
+const isDebugSettingsChangedNotify = (data: unknown): boolean =>
+  readProperty(data, 'namespace') === WINDOW_NOTIFY_NAMESPACE &&
+  readProperty(data, 'type') === WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED;
+
+// 移除探测按钮与面板：开关关闭时清理页面残留
+const removeProbeButton = (): void => {
+  document.querySelector(`[${PROBE_BUTTON_FLAG}]`)?.remove();
+  document.querySelector(`[${PROBE_PANEL_FLAG}]`)?.remove();
+};
+
+// 注入探测按钮：右下角悬浮按钮，点击切换数据面板
+const injectProbeButton = (): void => {
   if (document.querySelector(`[${PROBE_BUTTON_FLAG}]`) !== null) {
     return;
   }
@@ -271,6 +282,36 @@ const startChatProbe = (): void => {
     showProbePanel();
   });
   document.body.append(button);
+};
+
+// 按调试开关应用探测按钮：开启注入，关闭移除
+const applyChatProbe = async (): Promise<void> => {
+  const settings = await extensionApi.getDebugSettings();
+  if (!settings.chatProbeEnabled) {
+    removeProbeButton();
+    return;
+  }
+  injectProbeButton();
+};
+
+// 启动探测：仅聊天页激活，注册调试开关通知并首次应用按钮
+const startChatProbe = (): void => {
+  if (
+    !location.pathname.includes('/chat') &&
+    document.querySelector('.chat-container') === null
+  ) {
+    return;
+  }
+  // 调试开关变更时即时注入/移除按钮
+  window.addEventListener('message', (event) => {
+    if (event.source !== window || event.origin !== location.origin) {
+      return;
+    }
+    if (isDebugSettingsChangedNotify(event.data)) {
+      void applyChatProbe();
+    }
+  });
+  void applyChatProbe();
 };
 
 export { startChatProbe };

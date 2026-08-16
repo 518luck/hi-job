@@ -5,6 +5,7 @@ export type { WindowRpcRequest, WindowRpcResponse } from './window-rpc';
 export {
   createWindowRpcClient,
   createWindowRpcServer,
+  WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
   WINDOW_NOTIFY_MARKS_CHANGED,
   WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,

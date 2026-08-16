@@ -1,5 +1,6 @@
 import {
   Bot,
+  Bug,
   Building2,
   ChevronDown,
   Copy,
@@ -32,6 +33,7 @@ const Icons = {
   exportData: Download,
   clearData: Trash2,
   aiVendors: Bot,
+  debug: Bug,
   add: Plus,
   edit: Pencil,
   remove: Trash2,

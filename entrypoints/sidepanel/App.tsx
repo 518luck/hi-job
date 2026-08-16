@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { AiVendorsPage } from '@/pages/ai-vendors';
+import { DebugPage } from '@/pages/debug';
 import { FavoritesPage } from '@/pages/favorites';
 import { SettingsPage } from '@/pages/settings';
 import { WorkbenchPage } from '@/pages/workbench';
@@ -19,6 +20,7 @@ function App() {
         {activeKey === 'favorites' && <FavoritesPage />}
         {activeKey === 'aiVendors' && <AiVendorsPage />}
         {activeKey === 'settings' && <SettingsPage />}
+        {activeKey === 'debug' && <DebugPage />}
       </main>
       <NavBar activeKey={activeKey} onSelect={setActiveKey} />
     </div>
