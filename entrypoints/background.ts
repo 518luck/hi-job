@@ -45,6 +45,20 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   });
 };
 
+// 广播标记变更：通知各 Boss直聘 标签页的桥转发给主世界重拉标记
+const broadcastMarksChanged = async (): Promise<void> => {
+  const tabs = await browser.tabs.query({ url: '*://*.zhipin.com/*' });
+  await Promise.all(
+    tabs.map(({ id }) =>
+      id === undefined
+        ? undefined
+        : browser.tabs
+            .sendMessage(id, { hiJobNotify: 'marks-changed' })
+            .catch(() => {}),
+    ),
+  );
+};
+
 export default defineBackground(() => {
   // 点击工具栏图标直接打开侧边栏面板（Chrome 专属 API，Firefox 自动跳过）
   browser.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
@@ -76,6 +90,7 @@ export default defineBackground(() => {
     }
     await chatSessionStore.saveChatSession(parsed.data);
   });
+  onMessage('marksChanged', () => broadcastMarksChanged());
   onMessage('generateReply', ({ data }) => {
     const parsed = replyInputSchema.safeParse(data);
     if (!parsed.success) {

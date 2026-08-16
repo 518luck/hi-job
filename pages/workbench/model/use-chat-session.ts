@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 
+import { sendMessage } from '@/shared/infra/messaging';
 import {
   chatSessionStore,
   friendMarkStore,
@@ -36,7 +37,7 @@ const useChatSession = (): {
     return { session, jd, failed };
   }, []);
 
-  // 切换失败标记：已标记则清除，未标记则写入
+  // 切换失败标记：已标记则清除，未标记则写入；写完通知后台广播给聊天页
   const toggleFailed = async (): Promise<void> => {
     if (view === undefined) {
       return;
@@ -45,6 +46,7 @@ const useChatSession = (): {
       encryptBossId: view.session.encryptBossId,
       status: view.failed ? null : 'failed',
     });
+    await sendMessage('marksChanged', undefined);
   };
 
   return { view, toggleFailed };

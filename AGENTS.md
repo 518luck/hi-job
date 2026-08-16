@@ -93,7 +93,7 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 | Window RPC | 主世界 | 隔离世界 | `pages/world/rpc/window-rpc.ts` |
 | Window RPC | 隔离世界 | 主世界 | `pages/world/rpc/window-rpc.ts` |
 
-Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔离世界不逐方法登记，任何 ProtocolMap 消息原样转发后台，类型由调用处泛型与后台 handler 两端约束；`vue.*` 表示请求主世界读取页面 Vue 数据。所有 Window RPC 统一使用 namespace、version、request/response、request id、超时和错误结构；**两条通道各用独立 namespace（vue 数据服务 / 后台桥），服务端只应答本通道请求，同窗多服务端靠 namespace 区分，禁止共用**；业务代码不得直接拼接 `postMessage` 信封。
+Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔离世界不逐方法登记，任何 ProtocolMap 消息原样转发后台，类型由调用处泛型与后台 handler 两端约束；`vue.*` 表示请求主世界读取页面 Vue 数据。所有 Window RPC 统一使用 namespace、version、request/response、request id、超时和错误结构；**两条通道各用独立 namespace（vue 数据服务 / 后台桥），服务端只应答本通道请求，同窗多服务端靠 namespace 区分，禁止共用**；业务代码不得直接拼接 `postMessage` 信封。另有单向通知通道（`hi-job/window-notify`）：后台推送经隔离世界桥转发主世界，用于标记变更等事件驱动同步，禁止用轮询替代。
 
 两条铁律：
 

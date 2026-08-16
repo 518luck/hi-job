@@ -57,7 +57,16 @@ function ChatSessionCard({
           <Badge variant="secondary">
             {sinceChatText(session.lastMsgAt || session.lastChatAt)}
           </Badge>
-          <Button variant="destructive" size="xs" onClick={onToggleFailed}>
+          <Button
+            variant="destructive"
+            size="xs"
+            className={
+              failed
+                ? 'bg-green-600/10 text-green-600 hover:bg-green-600/20 focus-visible:border-green-600/40 focus-visible:ring-green-600/20 dark:bg-green-500/20 dark:text-green-400 dark:hover:bg-green-500/30'
+                : undefined
+            }
+            onClick={onToggleFailed}
+          >
             {failed ? '恢复' : 'Pass'}
           </Button>
         </CardAction>

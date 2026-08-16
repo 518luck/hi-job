@@ -6,9 +6,12 @@
 import {
   type BackgroundCallInput,
   createWindowRpcServer,
+  WINDOW_NOTIFY_MARKS_CHANGED,
+  WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,
 } from '@/pages/world/rpc';
 import { sendMessage } from '@/shared/infra/messaging';
+import { readProperty } from '@/shared/lib/page-property';
 
 let runtimeBridgeStarted = false;
 
@@ -27,6 +30,16 @@ const startRuntimeBridge = (): void => {
         // > 动态消息名的转发接缝：类型由两端约束，此处断言放行
         sendMessage(method, data as never),
     },
+  });
+  // 反向通知：后台广播的标记变更经 tabs 消息到达，转成页面 window 通知给主世界
+  browser.runtime.onMessage.addListener((message: unknown) => {
+    if (readProperty(message, 'hiJobNotify') !== 'marks-changed') {
+      return;
+    }
+    window.postMessage(
+      { namespace: WINDOW_NOTIFY_NAMESPACE, type: WINDOW_NOTIFY_MARKS_CHANGED },
+      location.origin,
+    );
   });
 };
 

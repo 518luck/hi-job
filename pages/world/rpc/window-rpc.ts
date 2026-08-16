@@ -5,6 +5,12 @@ import { z } from 'zod';
 const WINDOW_RPC_NAMESPACE_VUE = 'hi-job/window-rpc/vue';
 const WINDOW_RPC_NAMESPACE_BACKGROUND = 'hi-job/window-rpc/background';
 
+// 页面内单向通知：后台推送经隔离世界桥转发给主世界，无请求响应结构
+const WINDOW_NOTIFY_NAMESPACE = 'hi-job/window-notify';
+
+// 通知类型：HR 标记已变更，主世界收到后重拉标记
+const WINDOW_NOTIFY_MARKS_CHANGED = 'marks-changed';
+
 // Window RPC 信封协议版本
 const WINDOW_RPC_VERSION = 1;
 
@@ -221,6 +227,8 @@ export type { WindowRpcRequest, WindowRpcResponse };
 export {
   createWindowRpcClient,
   createWindowRpcServer,
+  WINDOW_NOTIFY_MARKS_CHANGED,
+  WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,
   WINDOW_RPC_NAMESPACE_VUE,
   WINDOW_RPC_VERSION,
