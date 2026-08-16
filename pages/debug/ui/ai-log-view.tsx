@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import type { AiLog } from '@/shared/zod';
 
 import { useAiLogs } from '../model/use-ai-logs';
@@ -31,6 +31,15 @@ const SOURCE_LABELS: Record<AiLog['source'], string> = {
 
 // 日志分层筛选：全部或按来源
 type LogFilter = 'all' | AiLog['source'];
+
+// 各分类的说明文字：Tab 下方展示
+const FILTER_DESCRIPTIONS: Record<LogFilter, string> = {
+  all: '所有来源的 AI 调用日志，按时间倒序。',
+  greeting:
+    '首次联系招聘者时生成的打招呼语句（工作台「生成问候」/ 聊天窗「问候」）。',
+  reply: '招聘者回复后生成的下一条回复（聊天窗「回复」）。',
+  followUp: '已读不回或未读时生成的提醒问候（聊天窗「提醒」）。',
+};
 
 // 时间格式化：MM-dd HH:mm:ss
 const formatLogTime = (timestamp: number): string => {
@@ -122,131 +131,136 @@ function AiLogView({ onBack }: AiLogViewProps) {
           </div>
         )}
       </div>
-      <ToggleGroup
-        variant="outline"
+      <Tabs
         className="w-full"
-        value={[filter]}
-        onValueChange={(values) => {
-          const next = values[0];
-          if (next !== undefined) {
+        value={filter}
+        onValueChange={(next) => {
+          if (next !== null) {
             setFilter(next as LogFilter);
           }
         }}
       >
-        <ToggleGroupItem value="all" className="flex-1">
-          全部
-        </ToggleGroupItem>
-        <ToggleGroupItem value="greeting" className="flex-1">
-          提示词
-        </ToggleGroupItem>
-        <ToggleGroupItem value="reply" className="flex-1">
-          回复
-        </ToggleGroupItem>
-        <ToggleGroupItem value="followUp" className="flex-1">
-          跟进
-        </ToggleGroupItem>
-      </ToggleGroup>
-      {filteredLogs.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          {logs.length === 0 ? '暂无 AI 调用日志' : '该分类暂无日志'}
-        </p>
-      ) : (
-        <Accordion className="flex flex-col gap-1">
-          {filteredLogs.map((log) => (
-            <AccordionItem
-              key={log.id}
-              value={String(log.id)}
-              className="rounded-lg border"
-            >
-              <AccordionTrigger className="flex-col items-start gap-1 px-2 py-2 hover:no-underline">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">
-                    {formatLogTime(log.createdAt)}
-                  </span>
-                  <Badge variant={log.ok ? 'secondary' : 'destructive'}>
-                    {log.ok ? '成功' : '失败'}
-                  </Badge>
-                </div>
-                <div className="flex w-full items-center gap-1 text-xs">
-                  <span>{SOURCE_LABELS[log.source]}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="truncate">{log.vendorName}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="truncate">{log.modelId}</span>
-                </div>
-                <div className="w-full text-xs text-muted-foreground">
-                  思考：{THINKING_MODE_LABELS[log.thinkingMode]} · 耗时{' '}
-                  {log.durationMs}ms
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">
-                {log.system !== undefined && log.system !== '' && (
-                  <>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      系统提示
-                    </span>
-                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                      {log.system}
-                    </pre>
-                  </>
-                )}
-                {log.prompt !== undefined && log.prompt !== '' && (
-                  <>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      用户提示
-                    </span>
-                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                      {log.prompt}
-                    </pre>
-                  </>
-                )}
-                {log.promptTask !== undefined && log.promptTask !== '' && (
-                  <>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      任务描述
-                    </span>
-                    <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                      {log.promptTask}
-                    </pre>
-                  </>
-                )}
-                {log.promptRequirement !== undefined &&
-                  log.promptRequirement !== '' && (
-                    <>
-                      <span className="text-xs font-medium text-muted-foreground">
-                        生成要求
+        <TabsList className="w-full">
+          <TabsTrigger value="all" className="flex-1">
+            全部
+          </TabsTrigger>
+          <TabsTrigger value="greeting" className="flex-1">
+            打招呼
+          </TabsTrigger>
+          <TabsTrigger value="reply" className="flex-1">
+            回复
+          </TabsTrigger>
+          <TabsTrigger value="followUp" className="flex-1">
+            跟进
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value={filter} className="flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground">
+            {FILTER_DESCRIPTIONS[filter]}
+          </p>
+          {filteredLogs.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {logs.length === 0 ? '暂无 AI 调用日志' : '该分类暂无日志'}
+            </p>
+          ) : (
+            <Accordion className="flex flex-col gap-1">
+              {filteredLogs.map((log) => (
+                <AccordionItem
+                  key={log.id}
+                  value={String(log.id)}
+                  className="rounded-lg border"
+                >
+                  <AccordionTrigger className="flex-col items-start gap-1 px-2 py-2 hover:no-underline">
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatLogTime(log.createdAt)}
                       </span>
-                      <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                        {log.promptRequirement}
-                      </pre>
-                    </>
-                  )}
-                <span className="text-xs font-medium text-muted-foreground">
-                  实际传递参数
-                </span>
-                <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                  {JSON.stringify(log.resolvedArgs, null, 2)}
-                </pre>
-                {log.output !== undefined && log.output !== '' && (
-                  <>
+                      <Badge variant={log.ok ? 'secondary' : 'destructive'}>
+                        {log.ok ? '成功' : '失败'}
+                      </Badge>
+                    </div>
+                    <div className="flex w-full items-center gap-1 text-xs">
+                      <span>{SOURCE_LABELS[log.source]}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="truncate">{log.vendorName}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="truncate">{log.modelId}</span>
+                    </div>
+                    <div className="w-full text-xs text-muted-foreground">
+                      思考：{THINKING_MODE_LABELS[log.thinkingMode]} · 耗时{' '}
+                      {log.durationMs}ms
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">
+                    {log.system !== undefined && log.system !== '' && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          系统提示
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {log.system}
+                        </pre>
+                      </>
+                    )}
+                    {log.prompt !== undefined && log.prompt !== '' && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          用户提示
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {log.prompt}
+                        </pre>
+                      </>
+                    )}
+                    {log.promptTask !== undefined && log.promptTask !== '' && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          任务描述
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {log.promptTask}
+                        </pre>
+                      </>
+                    )}
+                    {log.promptRequirement !== undefined &&
+                      log.promptRequirement !== '' && (
+                        <>
+                          <span className="text-xs font-medium text-muted-foreground">
+                            生成要求
+                          </span>
+                          <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                            {log.promptRequirement}
+                          </pre>
+                        </>
+                      )}
                     <span className="text-xs font-medium text-muted-foreground">
-                      返回内容
+                      实际传递参数
                     </span>
                     <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
-                      {log.output}
+                      {JSON.stringify(log.resolvedArgs, null, 2)}
                     </pre>
-                  </>
-                )}
-                {log.error !== undefined && (
-                  <p className="text-xs break-all text-destructive">
-                    {log.error}
-                  </p>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      )}
+                    {log.output !== undefined && log.output !== '' && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          返回内容
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {log.output}
+                        </pre>
+                      </>
+                    )}
+                    {log.error !== undefined && (
+                      <p className="text-xs break-all text-destructive">
+                        {log.error}
+                      </p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
