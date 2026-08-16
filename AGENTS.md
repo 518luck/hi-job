@@ -14,10 +14,14 @@ hi-job/
 │   ├── app.css             # 全局样式：Tailwind + shadcn 主题变量（明/暗两套）
 │   └── providers/          # 全局 Provider 组合根（AppProvider）
 ├── pages/                  # 页面 slice 层，结构/命名/导入边界规范见 pages/AGENTS.md
-│   └── favorites/          # ui=页面与展示组件，model=JD 解析/存储/自动记录，index.ts=公有 API
+│   ├── favorites/          # ui=页面与展示组件，model=JD 解析/存储/自动记录，index.ts=公有 API
+│   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
+│       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、runtime-bridge 桥转发
+│       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
-│   ├── lib/                # 工具函数（cn 等）
+│   ├── lib/                # 工具函数（cn、page-property 等）
+│   ├── messaging/          # 跨环境消息协议：ProtocolMap 收发、桥信封、vue-job-data 桥协议
 │   ├── ui/                 # shadcn/ui 组件（CLI 生成源码，可自由修改）
 │   └── zod/                # zod 数据字典：一表一文件 + index.ts 聚合出口（实体基座 + 派生）
 ├── infra/                  # 基础设施层，规范见 infra/AGENTS.md

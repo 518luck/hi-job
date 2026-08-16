@@ -1,5 +1,5 @@
 // # Boss直聘 内容脚本（主世界）：向隔离世界脚本提供页面 Vue 原始数据
-import { startVueJobDataProvider } from '@/pages/recorder';
+import { startVueJobDataProvider } from '@/pages/world/main-world';
 
 export default defineContentScript({
   matches: ['*://*.zhipin.com/*'],

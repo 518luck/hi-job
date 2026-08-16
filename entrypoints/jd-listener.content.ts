@@ -3,7 +3,7 @@ import {
   startJdRecorder,
   startJobCardDecorator,
   startRuntimeBridge,
-} from '@/pages/recorder';
+} from '@/pages/world/isolated-world';
 
 export default defineContentScript({
   matches: ['*://*.zhipin.com/*'],

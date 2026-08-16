@@ -142,3 +142,17 @@ import { FavoritesPage } from '@/pages/favorites/ui/page';
 - 禁止绕过公有 API 深层导入其他 slice 内部文件。
 - 禁止把具体业务逻辑放进 shared。
 - 禁止把只用一次的页面局部 UI 过早抽到 widgets。
+
+## 内容脚本 slice（world）
+
+`pages/world/` 收纳全部内容脚本业务逻辑，按「世界 → 领域」两级组织：
+
+- **世界**（slice）：`isolated-world/`（隔离世界）、`main-world/`（主世界），各自提供 `index.ts` 公有 API 聚合领域入口。
+- **领域**（slice）：世界下按入口/职责划分（如 `main-world/chat-helper/`、`isolated-world/jd-listener/`），领域命名与 `entrypoints/` 的入口文件对应；未来新增功能并列新领域目录。
+- 领域内部沿用 segment 约定（`model/` 等），入口文件只做薄装配（`defineContentScript` + 调 startXxx）。
+
+世界约束：
+
+- 主世界脚本拿不到 chrome API，需要扩展 API 的调用经 postMessage 桥（`shared/messaging` 的 bridge 协议）交给隔离世界转发。
+- 桥协议常量与数据结构放 `shared/messaging/`（如 `vue-job-data.ts`），两世界共用，禁止在 slice 内重复定义。
+- 读取页面 Vue 实例等私有对象统一用 `@/shared/lib/page-property` 的 `readProperty` / `stringOf`。
