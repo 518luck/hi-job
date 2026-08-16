@@ -89,13 +89,70 @@ const briefList = (jobList: unknown): unknown => {
   };
 };
 
+// 单个实例的组件名：$options.name 优先，回退 $vnode.tag
+const componentNameOf = (instance: unknown): string => {
+  const options = readProperty(instance, '$options');
+  const name =
+    typeof options === 'object' && options !== null
+      ? readProperty(options, 'name')
+      : undefined;
+  if (typeof name === 'string' && name !== '') {
+    return name;
+  }
+  const tag = readProperty(readProperty(instance, '$vnode'), 'tag');
+  return typeof tag === 'string' ? tag : '';
+};
+
+// 子组件数据概览：组件名 + data/props 字段
+interface ChildOverview {
+  depth: number;
+  name: string;
+  dataKeys: Record<string, string>;
+  propsKeys: Record<string, string>;
+}
+
+// 收集子树中携带数据的组件：定位 jobInfo/brandComInfo 等数据的真实挂载位置
+const collectDataChildren = (
+  instance: unknown,
+  depth: number,
+  out: ChildOverview[],
+): void => {
+  if (depth > 3) {
+    return;
+  }
+  const children = readProperty(instance, '$children');
+  if (!Array.isArray(children)) {
+    return;
+  }
+  for (const child of children) {
+    if (child === null || typeof child !== 'object') {
+      continue;
+    }
+    const dataKeys = fieldsOf(readProperty(child, '$data'));
+    const propsKeys = fieldsOf(readProperty(child, '$props'));
+    if (Object.keys(dataKeys).length > 0 || Object.keys(propsKeys).length > 0) {
+      out.push({ depth, name: componentNameOf(child), dataKeys, propsKeys });
+    }
+    collectDataChildren(child, depth + 1, out);
+  }
+};
+
 // 探测职位页 Vue 数据：详情面板数据展开两层，列表根的 currentJob 与 jobList 概览
 const probeJdData = (): Record<string, unknown> => {
   const detailVue = vueOf(DETAIL_SELECTOR);
   const mainVue = vueOf(MAIN_SELECTOR);
+  const detailChildren: ChildOverview[] = [];
+  if (detailVue !== undefined) {
+    collectDataChildren(detailVue, 0, detailChildren);
+  }
   return {
     'job-detail-box.__vue__.data':
       detailVue === undefined ? '元素不存在' : deepFieldsOf(dataOf(detailVue)),
+    'job-detail-box.__vue__.$props':
+      detailVue === undefined
+        ? '元素不存在'
+        : fieldsOf(readProperty(detailVue, '$props')),
+    'job-detail-box 子组件数据': detailChildren.slice(0, 30),
     'page-jobs-main.__vue__.currentJob':
       mainVue === undefined
         ? '元素不存在'
