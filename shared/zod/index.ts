@@ -24,8 +24,13 @@ export {
   friendMarksResponseSchema,
 } from './friend-mark';
 // jd 表：落库实体 + 传输 DTO
-export type { RecordedJd, SelectedJd } from './jd';
-export { recordedJdSchema, selectedJdSchema } from './jd';
+export type { RecordedJd, SelectedJd, VueJobCard, VueJobData } from './jd';
+export {
+  recordedJdSchema,
+  selectedJdSchema,
+  vueJobCardSchema,
+  vueJobDataSchema,
+} from './jd';
 // reply 消息：聊天页请求 AI 生成下一条回复
 export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
 export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';

@@ -1,12 +1,8 @@
 // # Vue 职位数据请求（隔离世界）：通过 Window RPC 请求主世界读取原始职位数据
 
-import {
-  createWindowRpcClient,
-  type VueJobCard,
-  type VueJobData,
-  type WindowMethodMap,
-} from '@/pages/world/rpc';
+import { createWindowRpcClient, type WindowMethodMap } from '@/pages/world/rpc';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
+import type { VueJobCard, VueJobData } from '@/shared/zod';
 
 // 主世界 Vue 数据请求客户端：调用层只接触方法名与返回值
 const vueRpc = createWindowRpcClient<

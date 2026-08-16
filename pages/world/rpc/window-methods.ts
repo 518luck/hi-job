@@ -1,8 +1,7 @@
 // # Window RPC 方法表：主世界与隔离世界之间的远程调用类型
 
 import type { ProtocolMap } from '@/shared/infra/messaging';
-
-import type { VueJobCard, VueJobData } from './vue-job-data';
+import type { VueJobCard, VueJobData } from '@/shared/zod';
 
 // 后台直通调用：method 为扩展消息名，桥不逐方法登记、原样转发
 interface BackgroundCallInput {

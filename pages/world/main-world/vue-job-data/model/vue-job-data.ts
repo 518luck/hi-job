@@ -1,12 +1,8 @@
 // # Vue 职位数据服务（主世界）：提供页面 Vue 原始职位数据
 
-import {
-  createWindowRpcServer,
-  type VueJobCard,
-  type VueJobData,
-  type WindowMethodMap,
-} from '@/pages/world/rpc';
+import { createWindowRpcServer, type WindowMethodMap } from '@/pages/world/rpc';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
+import type { VueJobCard, VueJobData } from '@/shared/zod';
 
 // 从 currentJob 原始对象提取所需字段（主世界侧，字段名与页面数据源一致）
 const extractJobData = (currentJob: unknown): VueJobData => ({
@@ -25,8 +21,8 @@ const extractJobCards = (jobList: unknown): Record<string, VueJobCard> => {
         continue;
       }
       cards[jobId] = {
-        scale: stringOf(item, 'brandScaleName'),
-        industry: stringOf(item, 'brandIndustry'),
+        companyScale: stringOf(item, 'brandScaleName'),
+        companyIndustry: stringOf(item, 'brandIndustry'),
       };
     }
   }

@@ -28,9 +28,29 @@ const selectedJdSchema = recordedJdSchema.omit({
   seenCount: true,
 });
 
+// 传输 DTO：主世界从页面 Vue 实例读取的当前职位数据，公司字段从落库实体派生
+const vueJobDataSchema = recordedJdSchema
+  .pick({ companyIndustry: true, companyScale: true })
+  .extend({
+    salaryDesc: z.string(), // 原始薪资描述（如 10-15K），读不到为空串
+  });
+
+// 传输 DTO：列表卡片的规模与行业，字段语义与落库实体一致
+const vueJobCardSchema = recordedJdSchema.pick({
+  companyIndustry: true,
+  companyScale: true,
+});
+
 // 从 schema 派生类型，保持单一事实来源
 type RecordedJd = z.infer<typeof recordedJdSchema>;
 type SelectedJd = z.infer<typeof selectedJdSchema>;
+type VueJobData = z.infer<typeof vueJobDataSchema>;
+type VueJobCard = z.infer<typeof vueJobCardSchema>;
 
-export type { RecordedJd, SelectedJd };
-export { recordedJdSchema, selectedJdSchema };
+export type { RecordedJd, SelectedJd, VueJobCard, VueJobData };
+export {
+  recordedJdSchema,
+  selectedJdSchema,
+  vueJobCardSchema,
+  vueJobDataSchema,
+};

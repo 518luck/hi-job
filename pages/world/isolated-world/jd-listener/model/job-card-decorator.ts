@@ -42,10 +42,10 @@ const decorateOnce = async ({ doc }: { doc: Document }): Promise<void> => {
       continue;
     }
     const info = cards[jobIdOfCard(card)];
-    if (info === undefined || info.scale === '') {
+    if (info === undefined || info.companyScale === '') {
       continue;
     }
-    decorateCard({ card, scale: info.scale });
+    decorateCard({ card, scale: info.companyScale });
   }
 };
 

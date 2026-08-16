@@ -16,7 +16,7 @@ hi-job/
 ├── pages/                  # 页面 slice 层，结构/命名/导入边界规范见 pages/AGENTS.md
 │   ├── favorites/          # ui=页面与展示组件，model=JD 解析/存储/自动记录，index.ts=公有 API
 │   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
-│       ├── rpc/            # 两世界共享 RPC：window-rpc 传输、方法表、Vue 数据类型
+│       ├── rpc/            # 两世界共享 RPC：window-rpc 传输与方法表（Vue DTO 在 shared/zod）
 │       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、runtime-bridge 桥转发
 │       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
