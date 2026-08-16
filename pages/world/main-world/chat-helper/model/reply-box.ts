@@ -14,6 +14,28 @@ import {
 const CHAT_WINDOW_WIDTH = 340;
 const CHAT_WINDOW_HEIGHT = 420;
 
+// 正文区显示生成中的旋转加载图标，替代文本提示避免换行撑高
+const showLoading = (bodyEl: HTMLElement): void => {
+  bodyEl.replaceChildren();
+  const spinner = document.createElement('span');
+  spinner.className = `${HIJOB_PREFIX}-loading-spinner`;
+  bodyEl.append(spinner);
+};
+
+// 按钮内容切换为旋转加载图标：生成中不显示文字，避免换行撑高
+const showButtonLoading = (button: HTMLButtonElement): void => {
+  button.replaceChildren();
+  const spinner = document.createElement('span');
+  spinner.className = `${HIJOB_PREFIX}-button-spinner`;
+  button.append(spinner);
+};
+
+// 恢复按钮文字
+const restoreButtonText = (button: HTMLButtonElement, text: string): void => {
+  button.replaceChildren();
+  button.textContent = text;
+};
+
 // 生成下一条回复：收集当前会话信息与聊天记录，经后台生成后展示在聊天窗正文
 const handleGenerateReply = async (
   bodyEl: HTMLElement,
@@ -29,10 +51,10 @@ const handleGenerateReply = async (
     bodyEl.textContent = '暂无聊天记录（页面可能还在加载）';
     return;
   }
-  // 生成中禁用按钮并提示，结束后恢复
+  // 生成中禁用按钮并显示加载图标，结束后恢复
   generateButton.disabled = true;
-  generateButton.textContent = '生成中…';
-  bodyEl.textContent = '生成中…';
+  showButtonLoading(generateButton);
+  showLoading(bodyEl);
   try {
     const response = await extensionApi.generateReply({
       jobId: stringOf(boss, 'encryptJobId'),
@@ -46,7 +68,7 @@ const handleGenerateReply = async (
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
   } finally {
     generateButton.disabled = false;
-    generateButton.textContent = '回复';
+    restoreButtonText(generateButton, '回复');
   }
 };
 
@@ -61,8 +83,8 @@ const handleGreeting = async (
     return;
   }
   greetingButton.disabled = true;
-  greetingButton.textContent = '生成中…';
-  bodyEl.textContent = '生成中…';
+  showButtonLoading(greetingButton);
+  showLoading(bodyEl);
   try {
     const response = await extensionApi.greeting({
       jobId: stringOf(boss, 'encryptJobId'),
@@ -75,7 +97,7 @@ const handleGreeting = async (
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
   } finally {
     greetingButton.disabled = false;
-    greetingButton.textContent = '问候';
+    restoreButtonText(greetingButton, '问候');
   }
 };
 
@@ -97,8 +119,8 @@ const handleFollowUp = async (
     return;
   }
   followUpButton.disabled = true;
-  followUpButton.textContent = '生成中…';
-  bodyEl.textContent = '生成中…';
+  showButtonLoading(followUpButton);
+  showLoading(bodyEl);
   try {
     const response = await extensionApi.followUp({
       jobId: stringOf(boss, 'encryptJobId'),
@@ -112,7 +134,7 @@ const handleFollowUp = async (
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
   } finally {
     followUpButton.disabled = false;
-    followUpButton.textContent = '提醒';
+    restoreButtonText(followUpButton, '提醒');
   }
 };
 

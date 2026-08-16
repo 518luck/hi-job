@@ -53,6 +53,12 @@ const ensureStyle = (): void => {
     `.hijob-chat-close{padding:2px 8px;border:none;border-radius:0;background:transparent;color:var(--hijob-muted-fg);font-size:16px;line-height:1;cursor:pointer;transition:background .15s,color .15s;}`,
     `.hijob-chat-close:hover{background:var(--hijob-border);color:var(--hijob-danger);}`,
     `.hijob-chat-body{flex:1;overflow-y:auto;padding:12px 14px;font-size:13px;line-height:1.8;color:var(--hijob-fg);white-space:pre-wrap;word-break:break-all;}`,
+    // 生成中的旋转加载图标：不占文本空间，避免换行撑高；出现时正文居中
+    `.hijob-loading-spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--hijob-border);border-top-color:var(--hijob-primary);border-radius:50%;animation:hijob-spin .8s linear infinite;}`,
+    `@keyframes hijob-spin{to{transform:rotate(360deg);}}`,
+    `.hijob-chat-body:has(.hijob-loading-spinner){display:flex;align-items:center;justify-content:center;}`,
+    // 按钮内的旋转加载图标：颜色跟随按钮文字，不占宽度
+    `.hijob-button-spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;opacity:.8;animation:hijob-spin .8s linear infinite;vertical-align:middle;}`,
     `.hijob-chat-body::-webkit-scrollbar{width:6px;}`,
     `.hijob-chat-body::-webkit-scrollbar-thumb{background:var(--hijob-border);border-radius:3px;}`,
     `.hijob-chat-body::-webkit-scrollbar-thumb:hover{background:var(--hijob-muted-fg);}`,
