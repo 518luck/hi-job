@@ -3,7 +3,10 @@
 // 主世界才能安全读取页面 Vue 实例（__vue__）数据；主世界拿不到 chrome API，
 // 扩展协议调用经 postMessage 桥（shared/infra/messaging）交给隔离世界转发后台。
 
-import { createWindowRpcClient } from '@/pages/world/rpc';
+import {
+  createWindowRpcClient,
+  WINDOW_RPC_NAMESPACE_BACKGROUND,
+} from '@/pages/world/rpc';
 import type { ProtocolMap } from '@/shared/infra/messaging';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
 import type {
@@ -21,7 +24,7 @@ const backgroundRpc = createWindowRpcClient<{
     input: { method: keyof ProtocolMap; data: unknown };
     output: unknown;
   };
-}>();
+}>({ namespace: WINDOW_RPC_NAMESPACE_BACKGROUND });
 
 // 直通调用后台：方法名与参数类型由 ProtocolMap 派生，编译期即校验
 const callBackground = <K extends keyof ProtocolMap>(

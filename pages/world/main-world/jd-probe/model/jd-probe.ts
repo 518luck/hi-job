@@ -3,6 +3,7 @@
 // 目标：确认职位列表/详情页 Vue 实例的挂载点与职位数据结构，
 // 为采集字段定来源，并排查「薪资/公司信息抓不到」类问题。
 
+import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
 
 // 探测的 Vue 挂载点：职位详情面板与列表主容器
@@ -180,6 +181,30 @@ const renderResult = (panel: HTMLElement, result: unknown): void => {
   panel.append(pre);
 };
 
+// 渲染采集日志区：debugLog 写入隐藏节点的日志，作为无 DevTools 环境的日志出口
+const renderLogs = (panel: HTMLElement): void => {
+  const logs = readDebugLogs();
+  if (logs.length === 0) {
+    return;
+  }
+  const label = document.createElement('div');
+  label.textContent = '采集日志（点击全选复制）';
+  label.style.cssText =
+    'padding:8px 12px 0;font-size:12px;font-weight:600;color:#666;border-top:1px solid #eee;';
+  const pre = document.createElement('pre');
+  pre.textContent = logs.join('\n');
+  pre.style.cssText =
+    'margin:4px 0 0;padding:12px;font:12px/1.5 monospace;color:#333;background:#fff;white-space:pre-wrap;word-break:break-all;';
+  pre.addEventListener('click', () => {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+  panel.append(label, pre);
+};
+
 // 创建探测面板：固定定位，展示最近一次探测结果
 const showProbePanel = (): void => {
   if (document.querySelector(`[${PROBE_PANEL_FLAG}]`) !== null) {
@@ -204,6 +229,7 @@ const showProbePanel = (): void => {
   panel.append(header);
   document.body.append(panel);
   renderResult(panel, probeJdData());
+  renderLogs(panel);
 };
 
 // 启动探测：仅职位页激活，右下角注入悬浮按钮，点击显示数据面板

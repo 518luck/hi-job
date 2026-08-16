@@ -1,3 +1,4 @@
+import { debugLog } from '@/shared/lib/debug-log';
 import type { SelectedJd } from '@/shared/zod';
 
 import { requestVueJobData } from './vue-job-data';
@@ -63,6 +64,13 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
 
   // 请求主世界的 Vue 原始数据：公司规模/行业直接取用；薪资读不到时回退 DOM 文本
   const vueJobData = await requestVueJobData();
+  const salary =
+    vueJobData.salaryDesc || textOf(detailBox, '.job-detail-info .job-salary');
+  debugLog(
+    '记录薪资',
+    salary,
+    vueJobData.salaryDesc !== '' ? '来源 Vue' : '来源 DOM 回退',
+  );
 
   return {
     jobId: jobIdOfUrl(url),
@@ -71,9 +79,7 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
     companyIndustry: vueJobData.companyIndustry,
     companyScale: vueJobData.companyScale,
     title: textOf(detailBox, '.job-detail-info .job-name'),
-    salary:
-      vueJobData.salaryDesc ||
-      textOf(detailBox, '.job-detail-info .job-salary'),
+    salary,
     tags: collectTags(detailBox),
     recruiter: textOf(detailBox, '.boss-info-attr'),
     recruiterActive: textOf(detailBox, '.job-boss-info .boss-active-time'),

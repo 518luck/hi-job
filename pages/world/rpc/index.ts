@@ -5,7 +5,8 @@ export type { WindowRpcRequest, WindowRpcResponse } from './window-rpc';
 export {
   createWindowRpcClient,
   createWindowRpcServer,
-  WINDOW_RPC_NAMESPACE,
+  WINDOW_RPC_NAMESPACE_BACKGROUND,
+  WINDOW_RPC_NAMESPACE_VUE,
   WINDOW_RPC_VERSION,
   windowRpcRequestSchema,
   windowRpcResponseSchema,

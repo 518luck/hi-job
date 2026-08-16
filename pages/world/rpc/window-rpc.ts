@@ -1,13 +1,16 @@
 // # Window RPC 传输层：统一主世界与隔离世界的请求、响应、超时与错误
 import { z } from 'zod';
 
-// Window RPC 信封命名空间与版本
-const WINDOW_RPC_NAMESPACE = 'hi-job/window-rpc';
+// RPC 通道命名空间：vue 数据服务与后台桥各自独立，同窗多服务端靠 namespace 区分，避免误应答
+const WINDOW_RPC_NAMESPACE_VUE = 'hi-job/window-rpc/vue';
+const WINDOW_RPC_NAMESPACE_BACKGROUND = 'hi-job/window-rpc/background';
+
+// Window RPC 信封协议版本
 const WINDOW_RPC_VERSION = 1;
 
 // Window RPC 信封类型
 const windowRpcRequestSchema = z.object({
-  namespace: z.literal(WINDOW_RPC_NAMESPACE), // 协议命名空间
+  namespace: z.string().min(1), // 协议命名空间
   version: z.literal(WINDOW_RPC_VERSION), // 协议版本
   kind: z.literal('request'), // 请求类型
   id: z.string().min(1), // 请求唯一 id
@@ -17,7 +20,7 @@ const windowRpcRequestSchema = z.object({
 
 const windowRpcResponseSchema = z.discriminatedUnion('ok', [
   z.object({
-    namespace: z.literal(WINDOW_RPC_NAMESPACE), // 协议命名空间
+    namespace: z.string().min(1), // 协议命名空间
     version: z.literal(WINDOW_RPC_VERSION), // 协议版本
     kind: z.literal('response'), // 响应类型
     id: z.string().min(1), // 对应请求 id
@@ -25,7 +28,7 @@ const windowRpcResponseSchema = z.discriminatedUnion('ok', [
     result: z.unknown(), // 方法返回值
   }),
   z.object({
-    namespace: z.literal(WINDOW_RPC_NAMESPACE), // 协议命名空间
+    namespace: z.string().min(1), // 协议命名空间
     version: z.literal(WINDOW_RPC_VERSION), // 协议版本
     kind: z.literal('response'), // 响应类型
     id: z.string().min(1), // 对应请求 id
@@ -40,13 +43,17 @@ const windowRpcResponseSchema = z.discriminatedUnion('ok', [
 type WindowRpcRequest = z.infer<typeof windowRpcRequestSchema>;
 type WindowRpcResponse = z.infer<typeof windowRpcResponseSchema>;
 
+// 客户端选项：namespace 必填，绑定唯一通道
 type WindowRpcClientOptions = {
+  namespace: string;
   timeoutMs?: number;
 };
 
+// 服务端选项：namespace 必填，只应答本通道请求
 type WindowRpcServerOptions<
   TMethods extends Record<string, { input: unknown; output: unknown }>,
 > = {
+  namespace: string;
   methods: {
     [TMethod in keyof TMethods]: (
       input: TMethods[TMethod]['input'],
@@ -64,8 +71,9 @@ interface PendingRequest {
 const createWindowRpcClient = <
   TMethods extends Record<string, { input: unknown; output: unknown }>,
 >({
+  namespace,
   timeoutMs = 30_000,
-}: WindowRpcClientOptions = {}) => {
+}: WindowRpcClientOptions) => {
   const pending = new Map<string, PendingRequest>();
 
   const onMessage = (event: MessageEvent): void => {
@@ -74,6 +82,9 @@ const createWindowRpcClient = <
     }
     const parsed = windowRpcResponseSchema.safeParse(event.data);
     if (!parsed.success) {
+      return;
+    }
+    if (parsed.data.namespace !== namespace) {
       return;
     }
     const request = pending.get(parsed.data.id);
@@ -106,7 +117,7 @@ const createWindowRpcClient = <
       pending.set(id, { resolve, reject, timer });
       window.postMessage(
         {
-          namespace: WINDOW_RPC_NAMESPACE,
+          namespace,
           version: WINDOW_RPC_VERSION,
           kind: 'request',
           id,
@@ -129,10 +140,11 @@ const createWindowRpcClient = <
   return { call, close };
 };
 
-// 创建 Window RPC 服务端：按方法白名单处理请求并统一返回错误
+// 创建 Window RPC 服务端：只应答本通道请求，按方法白名单处理并统一返回错误
 const createWindowRpcServer = <
   TMethods extends Record<string, { input: unknown; output: unknown }>,
 >({
+  namespace,
   methods,
 }: WindowRpcServerOptions<TMethods>) => {
   const onMessage = (event: MessageEvent): void => {
@@ -143,10 +155,13 @@ const createWindowRpcServer = <
     if (!parsed.success) {
       return;
     }
+    if (parsed.data.namespace !== namespace) {
+      return;
+    }
     if (!Object.hasOwn(methods, parsed.data.method)) {
       window.postMessage(
         {
-          namespace: WINDOW_RPC_NAMESPACE,
+          namespace,
           version: WINDOW_RPC_VERSION,
           kind: 'response',
           id: parsed.data.id,
@@ -164,7 +179,7 @@ const createWindowRpcServer = <
         (result) => {
           window.postMessage(
             {
-              namespace: WINDOW_RPC_NAMESPACE,
+              namespace,
               version: WINDOW_RPC_VERSION,
               kind: 'response',
               id: parsed.data.id,
@@ -177,7 +192,7 @@ const createWindowRpcServer = <
         (error: unknown) => {
           window.postMessage(
             {
-              namespace: WINDOW_RPC_NAMESPACE,
+              namespace,
               version: WINDOW_RPC_VERSION,
               kind: 'response',
               id: parsed.data.id,
@@ -206,7 +221,8 @@ export type { WindowRpcRequest, WindowRpcResponse };
 export {
   createWindowRpcClient,
   createWindowRpcServer,
-  WINDOW_RPC_NAMESPACE,
+  WINDOW_RPC_NAMESPACE_BACKGROUND,
+  WINDOW_RPC_NAMESPACE_VUE,
   WINDOW_RPC_VERSION,
   windowRpcRequestSchema,
   windowRpcResponseSchema,

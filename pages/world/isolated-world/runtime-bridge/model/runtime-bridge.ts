@@ -6,6 +6,7 @@
 import {
   type BackgroundCallInput,
   createWindowRpcServer,
+  WINDOW_RPC_NAMESPACE_BACKGROUND,
 } from '@/pages/world/rpc';
 import { sendMessage } from '@/shared/infra/messaging';
 
@@ -20,6 +21,7 @@ const startRuntimeBridge = (): void => {
   createWindowRpcServer<{
     'background.call': { input: BackgroundCallInput; output: unknown };
   }>({
+    namespace: WINDOW_RPC_NAMESPACE_BACKGROUND,
     methods: {
       'background.call': ({ method, data }) =>
         // > 动态消息名的转发接缝：类型由两端约束，此处断言放行

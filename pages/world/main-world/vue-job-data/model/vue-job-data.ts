@@ -1,6 +1,11 @@
 // # Vue 职位数据服务（主世界）：提供页面 Vue 原始职位数据
 
-import { createWindowRpcServer, type WindowMethodMap } from '@/pages/world/rpc';
+import {
+  createWindowRpcServer,
+  WINDOW_RPC_NAMESPACE_VUE,
+  type WindowMethodMap,
+} from '@/pages/world/rpc';
+import { debugLog } from '@/shared/lib/debug-log';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
 import type { VueJobCard, VueJobData } from '@/shared/zod';
 
@@ -50,11 +55,26 @@ const startVueJobDataProvider = (): void => {
   createWindowRpcServer<
     Pick<WindowMethodMap, 'vue.getCurrentJob' | 'vue.getJobCards'>
   >({
+    namespace: WINDOW_RPC_NAMESPACE_VUE,
     methods: {
-      'vue.getCurrentJob': () => extractJobData(readVueState('currentJob')),
-      'vue.getJobCards': () => extractJobCards(readVueState('jobList')),
+      'vue.getCurrentJob': () => {
+        const currentJob = readVueState('currentJob');
+        const data = extractJobData(currentJob);
+        debugLog(
+          'vue.getCurrentJob',
+          currentJob === undefined ? 'currentJob 不存在' : '已读取',
+          data,
+        );
+        return data;
+      },
+      'vue.getJobCards': () => {
+        const cards = extractJobCards(readVueState('jobList'));
+        debugLog('vue.getJobCards', `共 ${Object.keys(cards).length} 张卡片`);
+        return cards;
+      },
     },
   });
+  debugLog('vue-job-data 服务已注册');
 };
 
 export { startVueJobDataProvider };
