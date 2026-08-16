@@ -163,11 +163,9 @@ function GreetingPromptView({ onBack }: GreetingPromptViewProps) {
         </div>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="xs" onClick={handleReset}>
-            <Icons.refresh data-icon="inline-start" />
             <span>恢复默认</span>
           </Button>
           <Button size="xs" onClick={handleSave}>
-            <Icons.edit data-icon="inline-start" />
             <span>{saved ? '已保存' : '保存'}</span>
           </Button>
         </div>

@@ -1,5 +1,9 @@
 // # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 生成）
-import { generateFollowUp, generateReply } from '@/shared/infra/ai';
+import {
+  generateFollowUp,
+  generateGreeting,
+  generateReply,
+} from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
   aiPreferenceStore,
@@ -12,6 +16,7 @@ import {
 import type {
   AiVendorRecord,
   FollowUpInput,
+  GreetingInput,
   ReplyInput,
   ThinkingMode,
 } from '@/shared/zod';
@@ -21,6 +26,7 @@ import {
   followUpInputSchema,
   friendMarkInputSchema,
   friendMarksResponseSchema,
+  greetingInputSchema,
   replyInputSchema,
   selectedJdSchema,
 } from '@/shared/zod';
@@ -91,6 +97,21 @@ const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
   });
 };
 
+// 生成打招呼语句：首次联系时，结合 JD 与 HR 信息
+const handleGreeting = async (input: GreetingInput): Promise<string> => {
+  const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
+  const recorded = await jdStore.readJdByJobId(input.jobId);
+  const jd = recorded ?? input.jd;
+  return generateGreeting({
+    jd,
+    hr: input.hr,
+    vendor,
+    modelId,
+    thinkingMode,
+    requestPermission: false,
+  });
+};
+
 // 广播通知：向各 Boss直聘 标签页的桥推送指定类型，由桥转发给主世界
 const broadcastNotify = async (type: string): Promise<void> => {
   const tabs = await browser.tabs.query({ url: '*://*.zhipin.com/*' });
@@ -144,6 +165,13 @@ export default defineBackground(() => {
     await debugSettingStore.saveDebugSettings(parsed.data);
     // 广播到各标签页，探测脚本即时注入/移除按钮
     await broadcastNotify('debug-settings-changed');
+  });
+  onMessage('greeting', ({ data }) => {
+    const parsed = greetingInputSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('打招呼参数不合法');
+    }
+    return handleGreeting(parsed.data);
   });
   onMessage('followUp', ({ data }) => {
     const parsed = followUpInputSchema.safeParse(data);

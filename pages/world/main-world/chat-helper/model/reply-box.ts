@@ -46,7 +46,36 @@ const handleGenerateReply = async (
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
   } finally {
     generateButton.disabled = false;
-    generateButton.textContent = '生成回复';
+    generateButton.textContent = '回复';
+  }
+};
+
+// 生成打招呼语句：首次联系时，结合 JD 与 HR 信息经后台生成
+const handleGreeting = async (
+  bodyEl: HTMLElement,
+  greetingButton: HTMLButtonElement,
+): Promise<void> => {
+  const boss = readCurrentBoss();
+  if (boss === null) {
+    bodyEl.textContent = '未找到当前会话信息';
+    return;
+  }
+  greetingButton.disabled = true;
+  greetingButton.textContent = '生成中…';
+  bodyEl.textContent = '生成中…';
+  try {
+    const response = await extensionApi.greeting({
+      jobId: stringOf(boss, 'encryptJobId'),
+      jd: replyJdOf(boss),
+      hr: hrOf(boss),
+    });
+    bodyEl.textContent = response;
+  } catch (error) {
+    bodyEl.textContent =
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+  } finally {
+    greetingButton.disabled = false;
+    greetingButton.textContent = '问候';
   }
 };
 
@@ -83,7 +112,7 @@ const handleFollowUp = async (
       error instanceof Error ? `生成失败：${error.message}` : '生成失败';
   } finally {
     followUpButton.disabled = false;
-    followUpButton.textContent = '提醒问候';
+    followUpButton.textContent = '提醒';
   }
 };
 
@@ -236,15 +265,21 @@ const ensureReplyBox = (): void => {
 
   const footer = document.createElement('div');
   footer.className = `${HIJOB_PREFIX}-chat-footer`;
+  const greeting = document.createElement('button');
+  greeting.className = `${HIJOB_PREFIX}-copy-button`;
+  greeting.textContent = '问候';
+  greeting.addEventListener('click', () => {
+    void handleGreeting(body, greeting);
+  });
   const followUp = document.createElement('button');
   followUp.className = `${HIJOB_PREFIX}-copy-button`;
-  followUp.textContent = '提醒问候';
+  followUp.textContent = '提醒';
   followUp.addEventListener('click', () => {
     void handleFollowUp(body, followUp);
   });
   const generate = document.createElement('button');
   generate.className = `${HIJOB_PREFIX}-reply-button`;
-  generate.textContent = '生成回复';
+  generate.textContent = '回复';
   generate.addEventListener('click', () => {
     void handleGenerateReply(body, generate);
   });
@@ -254,7 +289,7 @@ const ensureReplyBox = (): void => {
   copy.addEventListener('click', () => {
     void copyReplyText(body, copy);
   });
-  footer.append(followUp, generate, copy);
+  footer.append(greeting, followUp, generate, copy);
 
   chatWindow.append(header, body, footer);
   document.body.append(chatWindow);

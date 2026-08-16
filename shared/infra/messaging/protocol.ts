@@ -7,6 +7,7 @@ import type {
   FollowUpInput,
   FriendMark,
   FriendMarkInput,
+  GreetingInput,
   ReplyInput,
   SelectedJd,
 } from '@/shared/zod';
@@ -20,6 +21,7 @@ interface ProtocolMap {
   marksChanged(): void; // 侧边栏	后台	通知 HR 标记已变更（后台广播到聊天页重拉）
   getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
   saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
+  greeting(data: GreetingInput): string; // 主世界脚本（经桥）	后台	生成打招呼语句
   followUp(data: FollowUpInput): string; // 主世界脚本（经桥）	后台	生成提醒问候
   generateReply(data: ReplyInput): string; // 隔离世界脚本	后台	调 AI 生成回复
 }

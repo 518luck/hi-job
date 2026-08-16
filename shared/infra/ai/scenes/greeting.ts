@@ -3,7 +3,7 @@ import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
   HrInfo,
-  RecordedJd,
+  ReplyJd,
   ThinkingMode,
 } from '@/shared/zod';
 
@@ -22,7 +22,7 @@ const DEFAULT_GREETING_REQUIREMENT =
 
 // 由职位信息拼用户提示：配置的任务/要求文案 + 职位字段 + HR 信息与简历（有则带上）
 const greetingPromptOf = (
-  jd: RecordedJd,
+  jd: ReplyJd,
   task: string,
   requirement: string,
   hr?: HrInfo,
@@ -51,12 +51,14 @@ const generateGreeting = async ({
   modelId,
   thinkingMode = 'default',
   hr,
+  requestPermission = true,
 }: {
-  jd: RecordedJd; // 目标职位
+  jd: ReplyJd; // 目标职位（完整或最小字段均可）
   vendor: AiVendorRecord; // 所选厂商配置
   modelId: string; // 所选模型 id
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   hr?: HrInfo; // HR 信息，工作台场景通常没有
+  requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
@@ -73,6 +75,7 @@ const generateGreeting = async ({
     source: 'greeting',
     promptTask: task,
     promptRequirement: requirement,
+    requestPermission,
   });
 };
 

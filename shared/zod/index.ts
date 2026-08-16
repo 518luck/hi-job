@@ -54,6 +54,9 @@ export {
   friendMarkSchema,
   friendMarksResponseSchema,
 } from './friend-mark';
+// greeting 消息：聊天页请求 AI 生成打招呼语句
+export type { GreetingInput } from './greeting';
+export { greetingInputSchema } from './greeting';
 // jd 表：落库实体 + 传输 DTO
 export type { RecordedJd, SelectedJd, VueJobCard, VueJobData } from './jd';
 export {

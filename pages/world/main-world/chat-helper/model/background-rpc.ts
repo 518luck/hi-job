@@ -9,6 +9,7 @@ import type {
   FollowUpInput,
   FriendMark,
   FriendMarkInput,
+  GreetingInput,
   ReplyInput,
 } from '@/shared/zod';
 
@@ -37,6 +38,8 @@ const extensionApi = {
     callBackground('saveChatSession', data),
   getFriendMarks: (): Promise<FriendMark[]> =>
     callBackground('getFriendMarks', undefined),
+  greeting: (data: GreetingInput): Promise<string> =>
+    callBackground('greeting', data),
   followUp: (data: FollowUpInput): Promise<string> =>
     callBackground('followUp', data),
   generateReply: (data: ReplyInput): Promise<string> =>
