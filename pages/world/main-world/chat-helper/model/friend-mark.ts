@@ -10,7 +10,10 @@ import { friendOf, readFriendCount } from './vue-reader';
 // 本地标记缓存：encryptBossId -> status，页面加载时从后台拉取
 const marks = new Map<string, string>();
 
-// 注入会话总数标签：label-list 区域追加「共 N 位」
+// 上次日志记录的标记数：数量变化才打日志，避免轮询刷屏
+let lastLoggedMarksCount = -1;
+
+// 注入会话总数标签：label-list 区域追加「共 N 位」；文本不变不写，避免触发自身观察者
 const syncFriendCount = (): void => {
   const count = readFriendCount();
   const list = document.querySelector('.label-list ul');
@@ -23,7 +26,10 @@ const syncFriendCount = (): void => {
     label.className = `${HIJOB_PREFIX}-friend-count`;
     list.append(label);
   }
-  label.textContent = `共 ${count} 位`;
+  const next = `共 ${count} 位`;
+  if (label.textContent !== next) {
+    label.textContent = next;
+  }
 };
 
 // 距上次沟通的时长文案：刚刚 / N 分钟 / N 小时 / N 天
@@ -70,11 +76,15 @@ const syncItem = (item: HTMLElement): void => {
       label.className = `${HIJOB_PREFIX}-since-chat`;
       timeRow.append(label);
     }
-    label.textContent = sinceChatText(lastTS);
+    // 文本不变不写，避免自身的 DOM 写入触发页面观察者形成同步循环
+    const next = sinceChatText(lastTS);
+    if (label.textContent !== next) {
+      label.textContent = next;
+    }
   }
 };
 
-// 同步全部会话项：列表滚动加载后调用，附识别计数便于排查
+// 同步全部会话项：列表滚动加载后调用；识别不全时打日志便于排查
 const syncAllItems = (): void => {
   let total = 0;
   let identified = 0;
@@ -87,7 +97,9 @@ const syncAllItems = (): void => {
     }
     syncItem(item);
   }
-  debugLog('会话列表同步', `${total} 项 / 识别 ${identified} 个`);
+  if (identified !== total) {
+    debugLog('会话列表同步', `${total} 项 / 识别 ${identified} 个`);
+  }
 };
 
 // 从后台拉取全部标记并渲染
@@ -104,7 +116,10 @@ const loadMarks = async (): Promise<void> => {
   } catch {
     // 后台不可达时保持空标记，不阻塞页面其他功能
   }
-  debugLog('拉取标记', `${marks.size} 条`);
+  if (marks.size !== lastLoggedMarksCount) {
+    debugLog('拉取标记', `${marks.size} 条`);
+    lastLoggedMarksCount = marks.size;
+  }
   syncAllItems();
 };
 

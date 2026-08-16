@@ -58,7 +58,7 @@ function ChatSessionCard({
             {sinceChatText(session.lastMsgAt || session.lastChatAt)}
           </Badge>
           <Button variant="destructive" size="xs" onClick={onToggleFailed}>
-            {failed ? '已 Pass' : '移出候选'}
+            {failed ? '恢复' : 'Pass'}
           </Button>
         </CardAction>
       </CardHeader>
