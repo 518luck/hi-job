@@ -2,4 +2,5 @@
 
 export { startJobCardDecorator } from './model/job-card-decorator';
 export { startJdRecorder } from './model/record-observer';
+export { startRuntimeBridge } from './model/runtime-bridge';
 export { startVueJobDataProvider } from './model/vue-job-data';

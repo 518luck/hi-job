@@ -89,15 +89,19 @@ const chatWithVendor = async ({
   modelId,
   system,
   prompt,
+  requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
   modelId: string; // 本次调用使用的模型 id
   system: string; // 系统提示
   prompt: string; // 用户提示
+  requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
-  const granted = await ensureOriginPermission({ baseUrl: vendor.baseUrl });
-  if (!granted) {
-    throw new Error('未授权访问该厂商地址');
+  if (requestPermission) {
+    const granted = await ensureOriginPermission({ baseUrl: vendor.baseUrl });
+    if (!granted) {
+      throw new Error('未授权访问该厂商地址');
+    }
   }
   const provider = createVendorClient({
     name: vendor.name,

@@ -86,6 +86,10 @@ const freshOr = (fresh: string, stale: string): string =>
 const readAllRecordedJds = (): Promise<RecordedJd[]> =>
   db.jd.orderBy('lastSeenAt').reverse().toArray();
 
+// 按职位 id 读取单条记录，查不到返回 undefined
+const readJdByJobId = (jobId: string): Promise<RecordedJd | undefined> =>
+  db.jd.get(jobId);
+
 // 读取全部公司记录，按最近出现时间倒序
 const readAllCompanyRecords = (): Promise<CompanyRecord[]> =>
   db.company.orderBy('lastSeenAt').reverse().toArray();
@@ -102,6 +106,7 @@ const clearAll = async (): Promise<void> => {
 const jdStore = {
   saveSelectedJd, // 记录一次选中的 JD：按主键 upsert 并同步公司聚合
   readAllRecordedJds, // 读取全部职位，按最近出现时间倒序
+  readJdByJobId, // 按职位 id 读取单条记录
   readAllCompanyRecords, // 读取全部公司，按最近出现时间倒序
   clearAll, // 清空职位与公司两张表
 };
