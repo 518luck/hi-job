@@ -73,9 +73,24 @@ const readCurrentBoss = (): Record<string, unknown> | null => {
   return boss as Record<string, unknown>;
 };
 
-// 从会话项元素的 Vue 实例提取会话对象（props/data 一层内找 encryptBossId）
+// 从元素沿祖先找最近的 Vue 实例：__vue__ 只挂在组件根元素上，限制层数防爬到列表级组件
+const vueOfElement = (el: HTMLElement): unknown => {
+  for (
+    let node: HTMLElement | null = el, depth = 0;
+    node !== null && depth < 3;
+    node = node.parentElement, depth += 1
+  ) {
+    const vue = readProperty(node, '__vue__');
+    if (vue !== undefined) {
+      return vue;
+    }
+  }
+  return undefined;
+};
+
+// 从会话项元素提取会话对象：沿祖先找 Vue 实例，props/data 一层内找 encryptBossId
 const friendOf = (item: HTMLElement): Record<string, unknown> | null => {
-  const instance = readProperty(item, '__vue__');
+  const instance = vueOfElement(item);
   if (instance === undefined) {
     return null;
   }

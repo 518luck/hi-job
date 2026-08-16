@@ -22,6 +22,11 @@ const startChatHelper = (): void => {
   syncChatSession();
   void loadMarks();
 
+  // 定期拉取标记：工作台切换「移出候选」后，聊天页遮盖层及时跟随
+  window.setInterval(() => {
+    void loadMarks();
+  }, 2000);
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   const observer = new MutationObserver(() => {
     clearTimeout(timer);
