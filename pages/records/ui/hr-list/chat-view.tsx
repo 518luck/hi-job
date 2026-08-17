@@ -71,7 +71,7 @@ function HrChatView({ encryptBossId }: HrChatViewProps) {
             )}
             <span
               className={cn(
-                'max-w-[75%] rounded px-2 py-1 break-words whitespace-pre-line',
+                'max-w-[75%] rounded px-2 py-1 wrap-break-wor whitespace-pre-line',
                 message.role === 'self'
                   ? 'bg-primary/10 text-foreground'
                   : 'bg-muted text-foreground',

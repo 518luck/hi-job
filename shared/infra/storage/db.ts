@@ -29,21 +29,8 @@ const db = new Dexie('hi-job') as Dexie & {
   resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
 };
 
-// 版本 1：早期表集合（会话档案与标记表已退出版本线，仅保留升级路径）
+// 开发环境不做版本迁移：只声明当前表集合，历史版本数据直接清库重建
 db.version(1).stores({
-  jd: 'jobId, companyId, lastSeenAt',
-  company: 'companyId, lastSeenAt',
-  aiVendor: 'vendorId, name, updatedAt',
-  friendMark: 'encryptBossId, status, updatedAt',
-  chatSession: 'encryptBossId, lastChatAt',
-  debugSetting: 'key',
-  aiLog: '++id, createdAt',
-  aiPreference: 'key',
-  resume: 'key',
-});
-
-// 版本 2：HR 档案底表 + 聊天消息流水，未列出的旧表（chatSession/friendMark）自动删除
-db.version(2).stores({
   jd: 'jobId, companyId, lastSeenAt',
   company: 'companyId, lastSeenAt',
   aiVendor: 'vendorId, name, updatedAt',

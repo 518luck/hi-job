@@ -10,15 +10,26 @@ import {
   AccordionTrigger,
 } from '@/shared/ui/accordion';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Icons } from '@/shared/ui/icons';
 import type { Hr } from '@/shared/zod';
 
 import type { features } from '../data-table';
 import { HrChatView } from './chat-view';
 
+// 构造职位详情跳转链接：路径段即 encryptJobId，securityId 为空时省略参数
+const jobUrlOf = (hr: Hr): string => {
+  const base = `https://www.zhipin.com/job_detail/${hr.encryptJobId}.html`;
+  return hr.securityId === ''
+    ? base
+    : `${base}?securityId=${encodeURIComponent(hr.securityId)}`;
+};
+
 // 手风琴展开状态上下文：由列表组件持有，列定义保持静态避免表格重建
 interface HrAccordionContextValue {
   openBossId: string | null;
   onOpenChange: (bossId: string | null) => void;
+  onToggleExcluded: (hr: Hr) => void;
 }
 
 const HrAccordionContext = createContext<HrAccordionContextValue | null>(null);
@@ -81,10 +92,9 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
     header: 'HR',
     enableSorting: false,
     cell: ({ row }) => {
-      const { openBossId, onOpenChange } = useHrAccordion();
+      const { openBossId, onOpenChange, onToggleExcluded } = useHrAccordion();
       const hr = row.original;
-      const { bossName, bossTitle, brandName, lastText, status, lastIsSelf } =
-        hr;
+      const { bossName, bossTitle, brandName, status, lastIsSelf } = hr;
       return (
         <Accordion
           value={openBossId === null ? [] : [openBossId]}
@@ -116,11 +126,8 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
                       {brandName}
                     </p>
                   )}
-                  {lastText !== '' && (
-                    <p className="truncate text-muted-foreground">{lastText}</p>
-                  )}
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                <div className="flex shrink-0 flex-col items-end gap-1 text-right">
                   <span className={toneOf(hr.lastMsgAt)}>
                     {sinceChatText(hr.lastMsgAt)}
                   </span>
@@ -133,6 +140,34 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
                         等你回复
                       </Badge>
                     )}
+                  </div>
+                  {/* 行内操作：按钮用 span 渲染避免嵌套在展开触发器内 */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      render={<span />}
+                      size="xs"
+                      variant={
+                        status === 'excluded' ? 'outline' : 'destructive'
+                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleExcluded(hr);
+                      }}
+                    >
+                      {status === 'excluded' ? '恢复' : 'Pass'}
+                    </Button>
+                    <Button
+                      render={<span />}
+                      size="icon-xs"
+                      variant="ghost"
+                      title="打开职位"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        window.open(jobUrlOf(hr), '_blank');
+                      }}
+                    >
+                      <Icons.externalLink />
+                    </Button>
                   </div>
                 </div>
               </div>

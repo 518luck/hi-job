@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import { sendMessage } from '@/shared/infra/messaging';
 import { hrStore } from '@/shared/infra/storage';
 import {
   AlertDialog,
@@ -67,6 +68,12 @@ const shortLabelOf = (filter: TimeFilter): string =>
 // 判断 HR 是否在 N 天内有过沟通：无时间戳视为不在范围内
 const withinDays = (lastMsgAt: number, days: number): boolean =>
   lastMsgAt > 0 && Date.now() - lastMsgAt <= days * 86_400_000;
+
+// 切换排除标记：写入 hr 表并广播通知聊天页重拉遮罩
+const toggleExcluded = async (hr: Hr): Promise<void> => {
+  await hrStore.toggleExcluded(hr.encryptBossId);
+  await sendMessage('hrsChanged', undefined);
+};
 
 // HR 列表：时间筛选 + 排序 + 手风琴展开聊天记录，表格虚拟滚动展示
 function HrList({ hrList }: HrListProps) {
@@ -199,7 +206,13 @@ function HrList({ hrList }: HrListProps) {
         <p className="text-xs text-muted-foreground">该时间范围内没有 HR</p>
       ) : (
         <HrAccordionContext.Provider
-          value={{ openBossId, onOpenChange: setOpenBossId }}
+          value={{
+            openBossId,
+            onOpenChange: setOpenBossId,
+            onToggleExcluded: (hr) => {
+              void toggleExcluded(hr);
+            },
+          }}
         >
           <DataTable
             columns={hrColumns}

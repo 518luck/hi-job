@@ -13,6 +13,7 @@ const hrSchema = z.object({
   brandName: z.string(), // 公司名称
   avatar: z.string(), // 招聘者头像 URL，读不到为空串
   city: z.string(), // 招聘者所在城市，读不到为空串
+  securityId: z.string(), // 职位详情页安全参数，构造跳转链接用，读不到为空串
   lastText: z.string(), // 会话最后一条消息文本
   lastMsgAt: z.number(), // 最后一条消息时间戳（毫秒），读不到为 0
   lastIsSelf: z.boolean(), // 最后一条消息是否为自己发出，false 表示 HR 发的最后一条
