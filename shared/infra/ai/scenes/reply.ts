@@ -9,6 +9,7 @@ import type {
 } from '@/shared/zod';
 
 import { chatWithVendor } from '../vendor-client';
+import { transcriptOf } from './prompt-parts';
 
 // 回复系统提示默认文案：以求职者本人身份延续对话，未配置时使用
 const DEFAULT_REPLY_SYSTEM =
@@ -19,12 +20,6 @@ const DEFAULT_REPLY_TASK =
   '根据职位信息和下面的聊天记录，生成求职者下一条回复。';
 const DEFAULT_REPLY_REQUIREMENT =
   '要求：结合职位匹配点与对话上下文自然回应；招聘者有明确问题时直接作答；对话尚无招聘者回复时，礼貌追问以推进沟通；80~150 字。';
-
-// 聊天记录的结构化文本：逐条标注说话方
-const transcriptOf = (messages: ReplyMessage[]): string =>
-  messages
-    .map(({ role, text }) => `${role === 'friend' ? '招聘者' : '我'}：${text}`)
-    .join('\n');
 
 // 用所选厂商与模型生成下一条回复：读取全局提示词配置与简历，未配置时用默认文案
 const generateReply = async ({

@@ -1,5 +1,5 @@
-// # 提示词公共片段：HR/简历段与场景提示词的统一拼接
-import type { HrInfo, ScenePrompt } from '@/shared/zod';
+// # 提示词公共片段：HR/简历段、聊天记录转写与场景提示词的统一拼接
+import type { HrInfo, ReplyMessage, ScenePrompt } from '@/shared/zod';
 
 // HR 信息段：有值时拼入提示词，标题为空时省略括号
 const hrSectionOf = (hr?: HrInfo): string => {
@@ -13,8 +13,16 @@ const hrSectionOf = (hr?: HrInfo): string => {
 // 简历段：有简历时拼入提示词
 const resumeSectionOf = (resumeText?: string): string =>
   resumeText !== undefined && resumeText !== ''
-    ? `用户简历：\n${resumeText}`
+    ? `求职者简历：\n${resumeText}`
     : '';
+
+// 聊天记录的结构化文本：逐条标注说话方
+const transcriptOf = (messages: ReplyMessage[]): string =>
+  messages
+    .map(
+      ({ role, text }) => `${role === 'friend' ? '招聘者' : '求职者'}：${text}`,
+    )
+    .join('\n');
 
 // 统一拼提示词文本：任务/要求 + 完整职位字段 + HR/简历 + 差异段，空段剔除
 const assemblePromptText = ({
@@ -42,4 +50,4 @@ const assemblePromptText = ({
     .filter((line) => line !== '')
     .join('\n');
 
-export { assemblePromptText, hrSectionOf, resumeSectionOf };
+export { assemblePromptText, hrSectionOf, resumeSectionOf, transcriptOf };

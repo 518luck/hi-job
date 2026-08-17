@@ -91,7 +91,7 @@ const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
   return generateFollowUp({
     jd,
     hr: input.hr,
-    greeting: input.greeting,
+    messages: input.messages,
     vendor,
     modelId,
     thinkingMode,

@@ -34,7 +34,18 @@ function DetailField({
   );
 }
 
-// 单条 AI 日志手风琴项目：触发头带职位摘要，展开区展示原始提示词对象与结果详情
+// 由上下文段首行推断字段名：以「聊天记录」「已发送」开头分别命名，其余归为上下文片段
+const sectionLabelOf = (section: string): string => {
+  if (section.startsWith('聊天记录')) {
+    return '聊天记录';
+  }
+  if (section.startsWith('已发送')) {
+    return '打招呼语';
+  }
+  return '上下文片段';
+};
+
+// 单条 AI 日志手风琴项目：触发头带职位摘要，展开区展示提示词素材与结果详情
 function LogCard({ log }: { log: AiLog }) {
   const prompt = log.prompt;
   const promptText = log.promptText;
@@ -80,8 +91,11 @@ function LogCard({ log }: { log: AiLog }) {
       </AccordionTrigger>
       <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">
         <Accordion className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-muted-foreground">
+            系统提示词
+          </span>
           {log.system !== undefined && log.system !== '' && (
-            <DetailField value="system" label="系统提示词" text={log.system} />
+            <DetailField value="system" label="角色描述" text={log.system} />
           )}
           {prompt !== undefined && (
             <>
@@ -120,6 +134,14 @@ function LogCard({ log }: { log: AiLog }) {
                   text={prompt.resumeText}
                 />
               )}
+              {(prompt.sections ?? []).map((section) => (
+                <DetailField
+                  key={section}
+                  value={section}
+                  label={sectionLabelOf(section)}
+                  text={section}
+                />
+              ))}
             </>
           )}
           <DetailField

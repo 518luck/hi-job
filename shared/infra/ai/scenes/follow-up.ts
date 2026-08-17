@@ -1,29 +1,31 @@
-// # AI 跟进问候生成：已读不回/未读时，结合 JD、HR、简历与已发送的打招呼语生成提醒问候
+// # AI 跟进问候生成：聊过一段时间后对方突然不回复时，结合 JD、HR、简历与聊天记录生成提醒
 import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
   HrInfo,
   ReplyJd,
+  ReplyMessage,
   ThinkingMode,
 } from '@/shared/zod';
 
 import { chatWithVendor } from '../vendor-client';
+import { transcriptOf } from './prompt-parts';
 
-// 跟进问候系统提示默认文案：限定角色与输出形态，未配置时使用
+// 跟进问候系统提示默认文案：明确这是一条「提醒」、承接最近对话，未配置时使用
 const DEFAULT_FOLLOW_UP_SYSTEM =
-  '你是资深求职教练，帮求职者给已读不回或尚未查看消息的招聘者发送一句礼貌的提醒问候。只输出消息正文本身，不要解释、不要引号。';
+  '你是资深求职教练。招聘者与求职者聊了一段时间后突然不再回复，你帮求职者写一句自然的提醒，把对话重新拉回正轨。只输出消息正文本身，不要解释、不要引号。';
 
 // 提示词默认文案：未在「AI 厂商 → 提示词」配置时使用
 const DEFAULT_FOLLOW_UP_TASK =
-  '根据职位信息、招聘者信息和已发送的打招呼消息，写一段提醒招聘者的问候。';
+  '根据职位信息、招聘者信息和下方聊天记录，提醒招聘者继续沟通。';
 const DEFAULT_FOLLOW_UP_REQUIREMENT =
-  '要求：礼貌提醒自己此前已打招呼，表达对岗位的持续兴趣，自然引出进一步沟通，80~120 字。';
+  '要求：自然承接最近一次对话（不要重复已经说过的内容），温和表达还在等对方回应、希望继续推进沟通，80~120 字。';
 
 // 用所选厂商与模型生成提醒问候：读取全局提示词配置与简历，未配置时用默认文案
 const generateFollowUp = async ({
   jd,
   hr,
-  greeting,
+  messages,
   vendor,
   modelId,
   thinkingMode = 'default',
@@ -31,7 +33,7 @@ const generateFollowUp = async ({
 }: {
   jd: ReplyJd; // 会话关联职位信息
   hr?: HrInfo; // 当前会话的 HR 信息
-  greeting: string; // 已发送的打招呼语句
+  messages: ReplyMessage[]; // 最近聊天记录（含已发送的打招呼语）
   vendor: AiVendorRecord; // 所选厂商配置
   modelId: string; // 所选模型 id
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
@@ -46,7 +48,7 @@ const generateFollowUp = async ({
     system: preference.followUpSystem ?? DEFAULT_FOLLOW_UP_SYSTEM,
     thinkingMode,
     requestPermission,
-    // 结构化提示词：完整职位字段 + HR/简历 + 打招呼语，文本与日志字段由 chatWithVendor 内部推导
+    // 结构化提示词：完整职位字段 + HR/简历 + 完整聊天记录（含打招呼），提醒承接最近对话
     prompt: {
       task: preference.followUpTask ?? DEFAULT_FOLLOW_UP_TASK,
       requirement:
@@ -54,7 +56,7 @@ const generateFollowUp = async ({
       jd,
       hr,
       resumeText: resume?.content,
-      sections: [`已发送的打招呼消息：\n${greeting}`],
+      sections: [`聊天记录：\n${transcriptOf(messages)}`],
     },
   });
 };

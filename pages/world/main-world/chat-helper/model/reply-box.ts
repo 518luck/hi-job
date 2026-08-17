@@ -112,10 +112,13 @@ const handleFollowUp = async (
     return;
   }
   const messages = await readMessagesWithRetry();
-  const greeting = messages.find((message) => message.role === 'self')?.text;
-  if (greeting === undefined || greeting === '') {
-    bodyEl.textContent =
-      '未找到自己发送的消息：请先向上滚动聊天记录加载更多，再点提醒';
+  if (messages.length === 0) {
+    bodyEl.textContent = '暂无聊天记录（页面可能还在加载）';
+    return;
+  }
+  // 提醒要求自己已发送过消息：还没发过话的会话不该提醒
+  if (!messages.some((message) => message.role === 'self')) {
+    bodyEl.textContent = '还没有发送过消息：请先打招呼，之后才能使用提醒';
     return;
   }
   followUpButton.disabled = true;
@@ -125,7 +128,7 @@ const handleFollowUp = async (
     const response = await extensionApi.followUp({
       jobId: stringOf(boss, 'encryptJobId'),
       jd: replyJdOf(boss),
-      greeting,
+      messages,
       hr: hrOf(boss),
     });
     bodyEl.textContent = response;
