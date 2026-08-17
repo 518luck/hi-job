@@ -6,6 +6,7 @@ import { RecordsPage } from '@/pages/records';
 import type { SettingsSection } from '@/pages/settings';
 import { SettingsPage } from '@/pages/settings';
 import { WorkbenchPage } from '@/pages/workbench';
+import { DisclaimerDialog } from '@/widgets/disclaimer-dialog';
 import { NavBar, type NavKey } from '@/widgets/nav-bar';
 
 // 侧边栏主界面：左侧内容区 + 右侧菜单栏
@@ -48,6 +49,8 @@ function App() {
         {activeKey === 'debug' && <DebugPage />}
       </main>
       <NavBar activeKey={activeKey} onSelect={navigate} />
+      {/* 首次启动免责声明：未确认时阻塞整个界面，确认落库后不再弹出 */}
+      <DisclaimerDialog />
     </div>
   );
 }

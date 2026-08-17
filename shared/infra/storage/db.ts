@@ -11,6 +11,7 @@ import type {
   BlockedCompany,
   ChatMessage,
   CompanyRecord,
+  ConsentRecord,
   DebugSetting,
   Hr,
   RecordedJd,
@@ -29,6 +30,7 @@ const db = new Dexie('hi-job') as Dexie & {
   aiLog: EntityTable<AiLog, 'id'>; // AI 调用日志表
   aiPreference: EntityTable<AiPreference, 'key'>; // AI 调用全局偏好表
   resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
+  consent: EntityTable<ConsentRecord, 'key'>; // 用户确认记录表（单行）
 };
 
 // 开发环境不做版本迁移：只声明当前表集合，历史版本数据直接清库重建
@@ -43,6 +45,7 @@ db.version(1).stores({
   aiLog: '++id, createdAt',
   aiPreference: 'key',
   resume: 'key',
+  consent: 'key',
 });
 
 export { db };

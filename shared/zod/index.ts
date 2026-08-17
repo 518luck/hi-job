@@ -39,6 +39,9 @@ export { chatMessageInputSchema, chatMessageSchema } from './chat-message';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
+// consent 表：用户一次性确认记录（免责声明）
+export type { ConsentRecord } from './consent';
+export { CONSENT_KEY, consentRecordSchema } from './consent';
 // debug-log 消息：页面采集日志查询 DTO
 export type { DebugLogLines } from './debug-log';
 export { debugLogLinesSchema } from './debug-log';

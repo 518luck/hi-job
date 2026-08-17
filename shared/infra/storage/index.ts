@@ -6,6 +6,7 @@ export type { AiVendorRecord } from './ai-vendor';
 export { aiVendorStore } from './ai-vendor';
 export { blockedCompanyStore } from './blocked-company';
 export { chatMessageStore } from './chat-message';
+export { consentStore } from './consent';
 export { DEFAULT_DEBUG_SETTINGS, debugSettingStore } from './debug-setting';
 export { hrStore } from './hr';
 export type { CompanyRecord, RecordedJd } from './jd';

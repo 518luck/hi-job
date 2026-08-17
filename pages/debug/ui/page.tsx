@@ -109,7 +109,7 @@ function AiRateStats() {
       <AiRateCell
         title="总 Token 数"
         value={intText(totalTokens)}
-        caption="最多 200 次调用"
+        caption="累计最近 200 次调用"
       />
       <AiRateCell
         title="平均 TPM"
@@ -122,6 +122,10 @@ function AiRateStats() {
 
 // 调试页视图：首页（开关 + 日志入口）与各日志列表
 type DebugView = 'home' | 'aiLog' | 'pageLog';
+
+// Bug 记录文档地址：语雀协作者邀请链接，点击加入并跳转编辑页
+const BUG_DOC_URL =
+  'https://www.yuque.com/g/duoyun-eifpl/aqri0y/pfs7g9kldoiambuq/collaborator/join?token=09Inq0Hc1yCIfFVb&source=doc_collaborator&goto=%2Fduoyun-eifpl%2Faqri0y%2Fpfs7g9kldoiambuq%2Fedit';
 
 // 调试页：页面探测开关的安静清单 + 日志入口的控制台菜单
 function DebugPage() {
@@ -199,6 +203,16 @@ function DebugPage() {
           />
         </div>
       </section>
+      {/* Bug 反馈外链：固定在调试页底部，新标签页打开语雀记录文档 */}
+      <a
+        href={BUG_DOC_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-auto flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
+      >
+        <Icons.externalLink className="size-3.5 shrink-0" />
+        发现 Bug？点此提交到记录文档
+      </a>
     </div>
   );
 }
