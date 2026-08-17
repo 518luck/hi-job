@@ -20,7 +20,6 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/shared/ui/select';
 import type { Hr } from '@/shared/zod';
 
@@ -61,6 +60,10 @@ const isTimeFilter = (value: string): value is TimeFilter =>
 const isSortBy = (value: string): value is SortBy =>
   value === 'latest' || value === 'oldest';
 
+// 筛选档位的短文案：trigger 上只显示少量信息
+const shortLabelOf = (filter: TimeFilter): string =>
+  filter === 'all' ? '全部' : `${filter} 天`;
+
 // 判断 HR 是否在 N 天内有过沟通：无时间戳视为不在范围内
 const withinDays = (lastMsgAt: number, days: number): boolean =>
   lastMsgAt > 0 && Date.now() - lastMsgAt <= days * 86_400_000;
@@ -95,7 +98,7 @@ function HrList({ hrList }: HrListProps) {
   }
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Select
           items={TIME_FILTER_OPTIONS}
           value={filter}
@@ -105,8 +108,9 @@ function HrList({ hrList }: HrListProps) {
             }
           }}
         >
-          <SelectTrigger size="sm" className="w-28">
-            <SelectValue />
+          <SelectTrigger size="sm" className="w-fit gap-1" title="时间筛选">
+            <Icons.history className="size-3.5" />
+            <span>{shortLabelOf(filter)}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -127,8 +131,12 @@ function HrList({ hrList }: HrListProps) {
             }
           }}
         >
-          <SelectTrigger size="sm" className="w-32">
-            <SelectValue />
+          <SelectTrigger size="sm" className="w-fit" title="排序方式">
+            {sortBy === 'latest' ? (
+              <Icons.arrowDown className="size-3.5" />
+            ) : (
+              <Icons.arrowUp className="size-3.5" />
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -143,20 +151,25 @@ function HrList({ hrList }: HrListProps) {
         <div className="ml-auto flex gap-1">
           <Button
             variant="outline"
-            size="xs"
+            size="icon-sm"
+            title="导出 HR 数据"
             onClick={() => {
               void exportHrsData();
             }}
           >
-            <Icons.exportData data-icon="inline-start" />
-            <span>导出 HR</span>
+            <Icons.exportData />
           </Button>
           <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
             <AlertDialogTrigger
-              render={<Button variant="destructive" size="xs" />}
+              render={
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  title="清空 HR 档案"
+                />
+              }
             >
-              <Icons.clearData data-icon="inline-start" />
-              <span>清空 HR</span>
+              <Icons.clearData />
             </AlertDialogTrigger>
             <AlertDialogContent size="sm">
               <AlertDialogHeader>

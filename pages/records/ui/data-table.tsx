@@ -78,8 +78,9 @@ function DataTable<TData extends RowData>({
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
     getItemKey: (index) => rows[index]?.id ?? String(index),
-    overscan: 8,
+    overscan: 5,
   });
+  const virtualItems = rowVirtualizer.getVirtualItems();
 
   return (
     <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
@@ -113,27 +114,34 @@ function DataTable<TData extends RowData>({
           className="relative block"
           style={{ height: rowVirtualizer.getTotalSize() }}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const row = rows[virtualRow.index];
-            if (row === undefined) {
-              return null;
-            }
-            return (
-              <TableRow
-                key={row.id}
-                data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
-                className={cn('absolute flex w-full', getRowClassName?.(row))}
-                style={{ transform: `translateY(${virtualRow.start}px)` }}
-              >
-                {row.getAllCells().map((cell) => (
-                  <TableCell key={cell.id} className="min-w-0 flex-1 p-2">
-                    <table.FlexRender cell={cell} />
-                  </TableCell>
-                ))}
-              </TableRow>
-            );
-          })}
+          {/* 块平移：整块按首行偏移定位，行内正常流，平滑滚动时测量跳过的行不错位 */}
+          <div
+            className="absolute inset-x-0 top-0"
+            style={{
+              transform: `translateY(${virtualItems[0]?.start ?? 0}px)`,
+            }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (row === undefined) {
+                return null;
+              }
+              return (
+                <TableRow
+                  key={row.id}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  className={cn('flex w-full', getRowClassName?.(row))}
+                >
+                  {row.getAllCells().map((cell) => (
+                    <TableCell key={cell.id} className="min-w-0 flex-1 p-2">
+                      <table.FlexRender cell={cell} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
+          </div>
         </TableBody>
       </Table>
     </div>
