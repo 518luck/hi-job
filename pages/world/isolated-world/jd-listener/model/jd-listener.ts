@@ -1,6 +1,6 @@
 import { sendMessage } from '@/shared/infra/messaging';
 
-import { parseSelectedJd } from './parse-jd';
+import { currentJobIdOf, parseSelectedJd } from './parse-jd';
 
 // 防抖等待时长：等详情面板渲染稳定后再解析
 const DEBOUNCE_MS = 500;
@@ -13,6 +13,11 @@ const record = async ({
   doc: Document;
   lastJobId: string;
 }): Promise<string> => {
+  // 快速判断：职位 id 未变化时直接跳过，省掉整轮解析与 Vue 请求（来源与解析完全一致）
+  const jobId = currentJobIdOf(doc);
+  if (jobId === '' || jobId === lastJobId) {
+    return lastJobId;
+  }
   const jd = await parseSelectedJd(doc);
   if (jd === null || jd.jobId === '' || jd.jobId === lastJobId) {
     return lastJobId;

@@ -20,6 +20,27 @@ const jobIdOfUrl = (url: string): string => {
   return match?.[1] ?? '';
 };
 
+// 详情容器兼容多套结构：列表页详情面板、独立详情页 banner、独立详情页正文区（banner 缺失时）
+const detailBoxOf = (doc: Document): HTMLElement | null =>
+  doc.querySelector<HTMLElement>('.job-detail-box') ??
+  doc.querySelector<HTMLElement>('.job-primary.detail-box') ??
+  doc.querySelector<HTMLElement>('.job-detail');
+
+// 职位详情链接：查看更多信息按钮可唯一定位职位，回退为当前页地址
+const jobUrlOf = (detailBox: HTMLElement, doc: Document): string =>
+  detailBox.querySelector<HTMLAnchorElement>('.more-job-btn')?.href ||
+  doc.location?.href ||
+  '';
+
+// 读取当前选中职位的唯一 id：来源与解析流程共用同一提取逻辑，供记录器快速判断职位是否变化
+const currentJobIdOf = (doc: Document): string => {
+  const detailBox = detailBoxOf(doc);
+  if (detailBox === null) {
+    return '';
+  }
+  return jobIdOfUrl(jobUrlOf(detailBox, doc));
+};
+
 // 解析公司标识与名称：列表页取选中卡片，独立详情页取侧栏公司信息，匿名时按名称聚合
 const parseCompany = (
   doc: Document,
@@ -78,20 +99,13 @@ const siderValueOf = (doc: Document, iconClass: string): string =>
 
 // 从 Boss直聘 页面解析当前选中的职位（JD）；未选中任何职位时返回 null
 const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
-  // 容器兼容多套结构：列表页详情面板、独立详情页 banner、独立详情页正文区（banner 缺失时）
-  const detailBox =
-    doc.querySelector<HTMLElement>('.job-detail-box') ??
-    doc.querySelector<HTMLElement>('.job-primary.detail-box') ??
-    doc.querySelector<HTMLElement>('.job-detail');
+  const detailBox = detailBoxOf(doc);
   if (detailBox === null) {
     return null;
   }
 
   // > 详情链接取自"查看更多信息"按钮，可唯一定位职位；回退为当前页地址
-  const url =
-    detailBox.querySelector<HTMLAnchorElement>('.more-job-btn')?.href ||
-    doc.location?.href ||
-    '';
+  const url = jobUrlOf(detailBox, doc);
 
   const { companyId, companyName } = parseCompany(doc);
 
@@ -155,4 +169,4 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
   };
 };
 
-export { parseSelectedJd };
+export { currentJobIdOf, parseSelectedJd };

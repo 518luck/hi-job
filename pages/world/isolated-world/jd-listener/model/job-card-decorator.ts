@@ -41,11 +41,15 @@ const decorateOnce = async ({ doc }: { doc: Document }): Promise<void> => {
   if (cardElements.length === 0) {
     return;
   }
+  // 全部卡片已装饰时直接跳过，不发数据请求（避免挂机时的空转取数）
+  const undecorated = [...cardElements].filter(
+    (card) => card.getAttribute(DECORATED_FLAG) !== '1',
+  );
+  if (undecorated.length === 0) {
+    return;
+  }
   const cards = await requestJobCards();
-  for (const card of cardElements) {
-    if (card.getAttribute(DECORATED_FLAG) === '1') {
-      continue;
-    }
+  for (const card of undecorated) {
     const info = cards[jobIdOfCard(card)];
     if (info === undefined || info.companyScale === '') {
       continue;
