@@ -11,6 +11,10 @@ export default defineConfig({
     // AI 厂商地址由用户自定义：声明可选 host 权限，拉取模型时按 origin 逐个申请
     optional_host_permissions: ['*://*/*'],
   },
+  // 不自动打开隔离 Chrome 实例：扩展由日常 Chrome 手动加载，数据存日常 profile，重启不丢
+  webExt: {
+    disabled: true,
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),
