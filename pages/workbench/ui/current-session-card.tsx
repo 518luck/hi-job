@@ -1,6 +1,8 @@
 // 当前会话卡片：最近打开的 HR 信息 + 关联 JD 手风琴，无 JD 时提供抓取跳转
 import { useState } from 'react';
 
+import { sendMessage } from '@/shared/infra/messaging';
+import { hrStore } from '@/shared/infra/storage';
 import { jobUrlOf } from '@/shared/lib/boss-url';
 import { sinceChatText, toneOf } from '@/shared/lib/chat-time';
 import { cn } from '@/shared/lib/cn';
@@ -80,6 +82,15 @@ function CurrentSessionCard() {
   const { view } = useCurrentSession();
   const [jdOpen, setJdOpen] = useState(false);
 
+  // 切换当前 HR 的排除标记并广播聊天页重拉遮罩
+  const togglePass = async (): Promise<void> => {
+    if (view === undefined) {
+      return;
+    }
+    await hrStore.toggleExcluded(view.hr.encryptBossId);
+    await sendMessage('hrsChanged', undefined);
+  };
+
   if (view === undefined) {
     return (
       <Card size="sm">
@@ -100,13 +111,20 @@ function CurrentSessionCard() {
               {hr.bossTitle}
             </span>
           )}
-          <span
-            className={cn(
-              'ml-auto shrink-0 text-xs font-normal',
-              toneOf(hr.lastMsgAt),
-            )}
-          >
-            {sinceChatText(hr.lastMsgAt)}
+          <span className="ml-auto flex shrink-0 items-center gap-2">
+            <span className={cn('text-xs font-normal', toneOf(hr.lastMsgAt))}>
+              {sinceChatText(hr.lastMsgAt)}
+            </span>
+            {/* // > Pass 红色警示、恢复中性：排除标记已开显示恢复，未开显示 Pass */}
+            <Button
+              variant={hr.status === 'excluded' ? 'outline' : 'destructive'}
+              size="xs"
+              onClick={() => {
+                void togglePass();
+              }}
+            >
+              {hr.status === 'excluded' ? '恢复' : 'Pass'}
+            </Button>
           </span>
         </CardTitle>
       </CardHeader>
