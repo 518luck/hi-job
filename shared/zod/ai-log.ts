@@ -11,7 +11,7 @@ const scenePromptSchema = z.object({
   requirement: z.string(), // 提示词生成要求
   jd: replyJdSchema, // 目标职位信息
   hr: hrInfoSchema.optional(), // HR 信息，无则缺省
-  resumeText: z.string().optional(), // 用户简历文本，未上传缺省
+  resumeText: z.string().optional(), // 求职者简历文本，未上传缺省
   sections: z.array(z.string()).optional(), // 场景差异段（聊天记录/打招呼语）
 });
 
@@ -19,7 +19,7 @@ const scenePromptSchema = z.object({
 const aiLogSchema = z.object({
   id: z.number().optional(), // Dexie 自增主键，写入时自动生成
   createdAt: z.number(), // 调用结束时间戳（毫秒）
-  source: z.enum(['greeting', 'reply', 'followUp']), // 调用来源：打招呼/聊天页回复/提醒问候
+  source: z.enum(['greeting', 'reply', 'followUp']), // 调用来源：打招呼/聊天页回复/跟进消息
   vendorName: z.string(), // 厂商名称
   apiFormat: z.enum(['openai', 'anthropic']), // API 协议格式
   modelId: z.string(), // 模型 id

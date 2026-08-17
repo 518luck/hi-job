@@ -39,7 +39,7 @@ export {
   debugSettingSchema,
   debugSettingsSchema,
 } from './debug-setting';
-// follow-up 消息：聊天页请求 AI 生成提醒问候
+// follow-up 消息：聊天页请求 AI 生成跟进消息
 export type { FollowUpInput } from './follow-up';
 export { followUpInputSchema } from './follow-up';
 // greeting 消息：聊天页请求 AI 生成打招呼语句

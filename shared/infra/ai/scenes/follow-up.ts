@@ -1,4 +1,4 @@
-// # AI 跟进问候生成：聊过一段时间后对方突然不回复时，结合 JD、HR、简历与聊天记录生成提醒
+// # AI 跟进消息生成：招聘沟通暂时中断时，结合 JD、HR、简历与聊天记录自然续聊
 import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
@@ -9,19 +9,19 @@ import type {
 } from '@/shared/zod';
 
 import { chatWithVendor } from '../vendor-client';
-import { transcriptOf } from './prompt-parts';
+import { transcriptSectionOf } from './prompt-parts';
 
-// 跟进问候系统提示默认文案：明确这是一条「提醒」、承接最近对话，未配置时使用
+// 跟进系统提示默认文案：承接中断的招聘沟通，未配置时使用
 const DEFAULT_FOLLOW_UP_SYSTEM =
-  '你是资深求职教练。招聘者与求职者聊了一段时间后突然不再回复，你帮求职者写一句自然的提醒，把对话重新拉回正轨。只输出消息正文本身，不要解释、不要引号。';
+  '你是求职者本人的求职沟通助手。请代求职者以第一人称撰写一条可直接发送的跟进消息，让暂时中断的招聘沟通自然继续。只输出消息正文，不输出标题、解释、分析过程、引号、称呼前缀或占位符。';
 
 // 提示词默认文案：未在「AI 厂商 → 提示词」配置时使用
 const DEFAULT_FOLLOW_UP_TASK =
-  '根据职位信息、招聘者信息和下方聊天记录，提醒招聘者继续沟通。';
+  '结合目标职位和当前聊天记录，生成求职者下一条跟进消息。';
 const DEFAULT_FOLLOW_UP_REQUIREMENT =
-  '要求：自然承接最近一次对话（不要重复已经说过的内容），温和表达还在等对方回应、希望继续推进沟通，80~120 字。';
+  '优先承接聊天中最近一个仍待招聘者回应的具体问题、材料或下一步；没有明确待回应事项时，简短询问岗位进展或后续安排。不要重复此前的打招呼、自我介绍或已表达的信息，不提“已读”“未读”“怎么没回复”，不责备、不催促。语气自然、克制、礼貌，控制在 40～80 字。';
 
-// 用所选厂商与模型生成提醒问候：读取全局提示词配置与简历，未配置时用默认文案
+// 用所选厂商与模型生成跟进消息：读取全局提示词配置与简历，未配置时用默认文案
 const generateFollowUp = async ({
   jd,
   hr,
@@ -33,7 +33,7 @@ const generateFollowUp = async ({
 }: {
   jd: ReplyJd; // 会话关联职位信息
   hr?: HrInfo; // 当前会话的 HR 信息
-  messages: ReplyMessage[]; // 最近聊天记录（含已发送的打招呼语）
+  messages: ReplyMessage[]; // 当前页面已加载的最近聊天记录，按时间正序
   vendor: AiVendorRecord; // 所选厂商配置
   modelId: string; // 所选模型 id
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
@@ -48,7 +48,7 @@ const generateFollowUp = async ({
     system: preference.followUpSystem ?? DEFAULT_FOLLOW_UP_SYSTEM,
     thinkingMode,
     requestPermission,
-    // 结构化提示词：完整职位字段 + HR/简历 + 完整聊天记录（含打招呼），提醒承接最近对话
+    // 结构化提示词：完整职位字段 + HR/简历 + 当前页面最近聊天记录，跟进最近对话
     prompt: {
       task: preference.followUpTask ?? DEFAULT_FOLLOW_UP_TASK,
       requirement:
@@ -56,7 +56,7 @@ const generateFollowUp = async ({
       jd,
       hr,
       resumeText: resume?.content,
-      sections: [`聊天记录：\n${transcriptOf(messages)}`],
+      sections: [transcriptSectionOf(messages)],
     },
   });
 };

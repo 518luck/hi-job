@@ -83,7 +83,7 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
   });
 };
 
-// 生成提醒问候：已读不回/未读时，结合 JD、HR 信息与已发送的打招呼语句
+// 生成跟进消息：沟通暂时中断时，结合 JD、HR、简历与当前聊天记录
 const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
   const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);

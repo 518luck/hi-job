@@ -46,7 +46,7 @@ const SCENE_CONFIGS: Record<
   greeting: {
     label: '打招呼',
     description:
-      '首次联系招聘者：结合职位、HR 信息与用户简历，生成打招呼语句。',
+      '首次联系招聘者：结合职位、招聘者信息与求职者简历，生成打招呼消息。',
     systemKey: 'greetingSystem',
     taskKey: 'greetingTask',
     requirementKey: 'greetingRequirement',
@@ -57,7 +57,7 @@ const SCENE_CONFIGS: Record<
   followUp: {
     label: '跟进',
     description:
-      '已读不回或未读时：结合职位、已发送的打招呼语与用户简历，生成提醒问候。',
+      '沟通暂时中断时：结合职位、求职者简历与当前聊天记录，生成自然的跟进消息。',
     systemKey: 'followUpSystem',
     taskKey: 'followUpTask',
     requirementKey: 'followUpRequirement',
@@ -68,7 +68,7 @@ const SCENE_CONFIGS: Record<
   reply: {
     label: '回复',
     description:
-      '招聘者已回复：结合职位、HR 信息、用户简历与当前聊天记录，生成回复。',
+      '延续当前沟通：结合职位、招聘者信息、求职者简历与当前聊天记录，生成回复。',
     systemKey: 'replySystem',
     taskKey: 'replyTask',
     requirementKey: 'replyRequirement',
@@ -191,8 +191,7 @@ function GreetingPromptView({ onBack }: GreetingPromptViewProps) {
             {SCENE_CONFIGS[scene].description}
           </p>
           <p className="text-xs text-muted-foreground">
-            系统提示限定角色与输出规则，任务描述与生成要求会拼在职位信息之前；
-            保存后立即生效。
+            系统提示限定角色与输出形态，任务描述和生成要求会与分区后的事实材料共同发送；保存后立即生效。
           </p>
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">

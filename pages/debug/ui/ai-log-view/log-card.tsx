@@ -34,9 +34,9 @@ function DetailField({
   );
 }
 
-// 由上下文段首行推断字段名：以「聊天记录」「已发送」开头分别命名，其余归为上下文片段
+// 由上下文段标题推断字段名，并兼容历史日志的旧标题格式
 const sectionLabelOf = (section: string): string => {
-  if (section.startsWith('聊天记录')) {
+  if (section.startsWith('## 聊天记录') || section.startsWith('聊天记录')) {
     return '聊天记录';
   }
   if (section.startsWith('已发送')) {

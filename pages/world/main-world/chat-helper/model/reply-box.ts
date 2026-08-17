@@ -101,7 +101,7 @@ const handleGreeting = async (
   }
 };
 
-// 生成提醒问候：已读不回/未读时，取已发送的打招呼语句经后台生成提醒
+// 生成跟进消息：读取当前页面最近聊天记录并经后台生成自然提醒
 const handleFollowUp = async (
   bodyEl: HTMLElement,
   followUpButton: HTMLButtonElement,
@@ -116,9 +116,9 @@ const handleFollowUp = async (
     bodyEl.textContent = '暂无聊天记录（页面可能还在加载）';
     return;
   }
-  // 提醒要求自己已发送过消息：还没发过话的会话不该提醒
-  if (!messages.some((message) => message.role === 'self')) {
-    bodyEl.textContent = '还没有发送过消息：请先打招呼，之后才能使用提醒';
+  // 仅在最后一条消息由求职者发出时跟进，招聘者刚回复时应直接作答
+  if (messages.at(-1)?.role !== 'self') {
+    bodyEl.textContent = '招聘者刚刚发来消息：请使用“回复”继续沟通';
     return;
   }
   followUpButton.disabled = true;

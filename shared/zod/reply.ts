@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 import { hrInfoSchema } from './hr';
+import { recordedJdSchema } from './jd';
 
 // 单条聊天记录：说话方与正文
 const replyMessageSchema = z.object({
@@ -9,15 +10,19 @@ const replyMessageSchema = z.object({
   text: z.string(), // 消息正文
 });
 
-// 回复生成所需的最小职位信息：来自扩展库 JD 或聊天页兜底
-const replyJdSchema = z.object({
-  title: z.string(), // 职位名称
-  companyName: z.string(), // 公司名
-  companyScale: z.string(), // 公司规模，读不到为空串
-  companyIndustry: z.string(), // 公司行业，读不到为空串
-  salary: z.string(), // 薪资文本，读不到为空串
-  description: z.string(), // 职位描述，读不到为空串
-});
+// 回复生成所需的职位信息：基础字段必填，扩展库命中时补充标签与地址
+const replyJdSchema = recordedJdSchema
+  .pick({
+    title: true,
+    companyName: true,
+    companyScale: true,
+    companyIndustry: true,
+    salary: true,
+    description: true,
+    tags: true,
+    address: true,
+  })
+  .partial({ tags: true, address: true });
 
 // 生成请求的输入数据：后台优先按 jobId 查库拿完整 JD
 const replyInputSchema = z.object({
