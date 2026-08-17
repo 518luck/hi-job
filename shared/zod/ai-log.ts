@@ -30,6 +30,8 @@ const aiLogSchema = z.object({
   promptText: z.string().optional(), // 拼平后的完整提示词文本（实际发送给模型的内容）
   ok: z.boolean(), // 调用是否成功
   durationMs: z.number(), // 调用耗时（毫秒）
+  inputTokens: z.number().optional(), // 输入 token 数，SDK 未返回时缺省（旧日志无此字段）
+  outputTokens: z.number().optional(), // 输出 token 数，SDK 未返回时缺省（旧日志无此字段）
   output: z.string().optional(), // 成功时的返回文本，失败时缺省
   error: z.string().optional(), // 失败时的错误消息
 });

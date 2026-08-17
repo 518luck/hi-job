@@ -31,6 +31,8 @@ interface RecordAiLogInput {
   startedAt: number; // 调用开始时间戳（毫秒）
   ok: boolean; // 调用是否成功
   output?: string; // 成功时的返回文本
+  inputTokens?: number; // 输入 token 数，SDK 未返回时缺省
+  outputTokens?: number; // 输出 token 数，SDK 未返回时缺省
   error?: string; // 失败时的错误消息
 }
 
@@ -47,6 +49,8 @@ const recordAiLog = async ({
   startedAt,
   ok,
   output,
+  inputTokens,
+  outputTokens,
   error,
 }: RecordAiLogInput): Promise<void> => {
   try {
@@ -64,6 +68,8 @@ const recordAiLog = async ({
       ok,
       durationMs: Date.now() - startedAt,
       output,
+      inputTokens,
+      outputTokens,
       error,
     });
   } catch {

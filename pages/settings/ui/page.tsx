@@ -78,6 +78,17 @@ function SettingsPage({ focusSection, onSectionFocused }: SettingsPageProps) {
         </div>
       </section>
       <StorageUsageSection />
+      {/* 免责声明：固定在设置页底部，学习用途限定与风险告知 */}
+      <section className="mt-auto flex flex-col gap-1.5 pt-2">
+        <span className="text-sm text-muted-foreground">免责声明</span>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          本扩展仅供个人学习与技术交流使用，禁止用于任何商业用途或违法违规活动；扩展与
+          BOSS 直聘无任何关联，也未获得其授权。
+        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          扩展按「现状」提供，不保证功能持续可用，使用产生的风险与后果由使用者自行承担；请遵守目标网站的用户协议与相关法律法规。所有数据仅存储在本地浏览器，不上传任何远程服务器。
+        </p>
+      </section>
     </div>
   );
 }

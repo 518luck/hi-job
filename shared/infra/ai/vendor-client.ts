@@ -1,6 +1,7 @@
 // # AI 厂商客户端：构造 AI SDK 供应商实例、模型列表拉取与文本生成
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import type { LanguageModelUsage } from 'ai';
 import { generateText } from 'ai';
 
 import type {
@@ -146,7 +147,8 @@ const chatWithVendor = async ({
     promptText,
     startedAt,
   };
-  let result: string;
+  let result = '';
+  let usage: LanguageModelUsage | undefined;
   try {
     // 权限申请失败也算一次失败调用：与生成失败统一进日志
     if (requestPermission) {
@@ -161,13 +163,14 @@ const chatWithVendor = async ({
       apiKey: vendor.apiKey,
       apiFormat: vendor.apiFormat,
     });
-    const { text } = await generateText({
+    const generated = await generateText({
       model: provider(modelId),
       system,
       prompt: promptText,
       ...resolvedArgs,
     });
-    result = text.trim();
+    result = generated.text.trim();
+    usage = generated.usage;
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : '生成失败';
     // 思考档位下失败多为模型不支持思考参数：追加可读提示，便于切回默认档
@@ -190,6 +193,8 @@ const chatWithVendor = async ({
     ...logEntry,
     ok: true,
     output: result,
+    inputTokens: usage?.inputTokens,
+    outputTokens: usage?.outputTokens,
   });
   return result;
 };
