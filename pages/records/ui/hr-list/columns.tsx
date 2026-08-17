@@ -137,7 +137,7 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent disableAnimation>
+            <AccordionContent>
               <HrChatView encryptBossId={hr.encryptBossId} />
             </AccordionContent>
           </AccordionItem>

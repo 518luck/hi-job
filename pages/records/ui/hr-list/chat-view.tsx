@@ -53,37 +53,40 @@ function HrChatView({ encryptBossId }: HrChatViewProps) {
     );
   }
   return (
-    <div className="flex flex-col gap-1 px-1">
-      {deduped.map((message) => (
-        <div
-          key={message.msgId}
-          className={cn(
-            'flex items-end gap-1',
-            message.role === 'self' ? 'justify-end' : 'justify-start',
-          )}
-        >
-          {message.role === 'friend' && (
-            <span className="shrink-0 text-muted-foreground">
-              {formatMsgAt(message.msgAt)}
-            </span>
-          )}
-          <span
+    // 固定最大高度 + 内部滚动：行高上限确定，虚拟滚动一次测量到位
+    <div className="max-h-80 overflow-y-auto">
+      <div className="flex flex-col gap-1 px-1">
+        {deduped.map((message) => (
+          <div
+            key={message.msgId}
             className={cn(
-              'max-w-[75%] rounded px-2 py-1 break-words whitespace-pre-line',
-              message.role === 'self'
-                ? 'bg-primary/10 text-foreground'
-                : 'bg-muted text-foreground',
+              'flex items-end gap-1',
+              message.role === 'self' ? 'justify-end' : 'justify-start',
             )}
           >
-            {message.text}
-          </span>
-          {message.role === 'self' && (
-            <span className="shrink-0 text-muted-foreground">
-              {formatMsgAt(message.msgAt)}
+            {message.role === 'friend' && (
+              <span className="shrink-0 text-muted-foreground">
+                {formatMsgAt(message.msgAt)}
+              </span>
+            )}
+            <span
+              className={cn(
+                'max-w-[75%] rounded px-2 py-1 break-words whitespace-pre-line',
+                message.role === 'self'
+                  ? 'bg-primary/10 text-foreground'
+                  : 'bg-muted text-foreground',
+              )}
+            >
+              {message.text}
             </span>
-          )}
-        </div>
-      ))}
+            {message.role === 'self' && (
+              <span className="shrink-0 text-muted-foreground">
+                {formatMsgAt(message.msgAt)}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
