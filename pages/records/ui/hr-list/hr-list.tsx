@@ -116,8 +116,8 @@ function HrList({ hrList }: HrListProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>清空全部 HR 档案？</AlertDialogTitle>
                 <AlertDialogDescription>
-                  将删除 {hrList.length}{' '}
-                  位 HR 的档案数据（不影响职位记录与聊天消息），删除后无法恢复，建议先导出备份。
+                  将删除 {hrList.length} 位 HR
+                  的档案数据（不影响职位记录与聊天消息），删除后无法恢复，建议先导出备份。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -137,9 +137,7 @@ function HrList({ hrList }: HrListProps) {
         </div>
       </div>
       {filtered.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          该时间范围内没有 HR
-        </p>
+        <p className="text-xs text-muted-foreground">该时间范围内没有 HR</p>
       ) : (
         <DataTable
           columns={hrColumns}
