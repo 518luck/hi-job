@@ -1,4 +1,4 @@
-// # 单条 AI 日志卡片：手风琴触发头展示摘要，展开后各详情字段独立折叠
+// # 单条 AI 日志卡片：手风琴触发头展示摘要，展开后展示原生提示词对象与结果详情
 import {
   Accordion,
   AccordionContent,
@@ -34,8 +34,9 @@ function DetailField({
   );
 }
 
-// 单条 AI 日志手风琴项目：展开区按字段有无展示提示词、职位与错误详情
+// 单条 AI 日志手风琴项目：触发头带职位摘要，展开区展示原始提示词对象与结果详情
 function LogCard({ log }: { log: AiLog }) {
+  const jd = log.prompt?.jd;
   return (
     <AccordionItem value={String(log.id)} className="rounded-lg border">
       <AccordionTrigger className="flex-col items-start gap-1 px-2 py-2 hover:no-underline">
@@ -65,15 +66,12 @@ function LogCard({ log }: { log: AiLog }) {
           思考：{THINKING_MODE_LABELS[log.thinkingMode]} · 耗时 {log.durationMs}
           ms
         </div>
-        {log.jd !== undefined && (
+        {jd !== undefined && (
           <div className="w-full text-xs">
-            <span className="truncate">{log.jd.title}</span>
-            <span className="text-muted-foreground">
-              {' '}
-              · {log.jd.companyName}
-            </span>
-            {log.jd.salary !== '' && (
-              <span className="text-primary"> · {log.jd.salary}</span>
+            <span className="truncate">{jd.title}</span>
+            <span className="text-muted-foreground"> · {jd.companyName}</span>
+            {jd.salary !== '' && (
+              <span className="text-primary"> · {jd.salary}</span>
             )}
           </div>
         )}
@@ -83,32 +81,11 @@ function LogCard({ log }: { log: AiLog }) {
           {log.system !== undefined && log.system !== '' && (
             <DetailField value="system" label="系统提示词" text={log.system} />
           )}
-          {log.prompt !== undefined && log.prompt !== '' && (
-            <DetailField value="prompt" label="用户提示词" text={log.prompt} />
-          )}
-          {log.promptTask !== undefined && log.promptTask !== '' && (
+          {log.prompt !== undefined && (
             <DetailField
-              value="promptTask"
-              label="任务描述"
-              text={log.promptTask}
-            />
-          )}
-          {log.promptRequirement !== undefined &&
-            log.promptRequirement !== '' && (
-              <DetailField
-                value="promptRequirement"
-                label="生成要求"
-                text={log.promptRequirement}
-              />
-            )}
-          {log.resume !== undefined && (
-            <DetailField value="resume" label="简历" text={log.resume} />
-          )}
-          {log.jd !== undefined && (
-            <DetailField
-              value="jd"
-              label="职位信息"
-              text={JSON.stringify(log.jd, null, 2)}
+              value="prompt"
+              label="用户提示词（原始结构）"
+              text={JSON.stringify(log.prompt, null, 2)}
             />
           )}
           <DetailField

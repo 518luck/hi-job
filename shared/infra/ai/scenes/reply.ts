@@ -9,7 +9,6 @@ import type {
 } from '@/shared/zod';
 
 import { chatWithVendor } from '../vendor-client';
-import { hrSectionOf, resumeSectionOf } from './prompt-parts';
 
 // 回复系统提示默认文案：以求职者本人身份延续对话，未配置时使用
 const DEFAULT_REPLY_SYSTEM =
@@ -25,34 +24,6 @@ const DEFAULT_REPLY_REQUIREMENT =
 const transcriptOf = (messages: ReplyMessage[]): string =>
   messages
     .map(({ role, text }) => `${role === 'friend' ? '招聘者' : '我'}：${text}`)
-    .join('\n');
-
-// 拼用户提示：配置文案 + 职位信息 + HR 与简历（有则带上）+ 对话上下文
-const replyPromptOf = (
-  jd: ReplyJd,
-  messages: ReplyMessage[],
-  task: string,
-  requirement: string,
-  hr?: HrInfo,
-  resumeText?: string,
-): string =>
-  [
-    task,
-    requirement,
-    '',
-    `职位名称：${jd.title}`,
-    `公司：${jd.companyName}`,
-    jd.companyScale !== '' ? `公司规模：${jd.companyScale}` : '',
-    jd.companyIndustry !== '' ? `公司行业：${jd.companyIndustry}` : '',
-    jd.salary !== '' ? `薪资：${jd.salary}` : '',
-    jd.description !== '' ? `职位描述：${jd.description}` : '',
-    hrSectionOf(hr),
-    resumeSectionOf(resumeText),
-    '',
-    '聊天记录：',
-    transcriptOf(messages),
-  ]
-    .filter((line) => line !== '')
     .join('\n');
 
 // 用所选厂商与模型生成下一条回复：读取全局提示词配置与简历，未配置时用默认文案
@@ -75,21 +46,22 @@ const generateReply = async ({
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
-  const system = preference.replySystem ?? DEFAULT_REPLY_SYSTEM;
-  const task = preference.replyTask ?? DEFAULT_REPLY_TASK;
-  const requirement = preference.replyRequirement ?? DEFAULT_REPLY_REQUIREMENT;
   return chatWithVendor({
+    source: 'reply',
     vendor,
     modelId,
-    system,
-    prompt: replyPromptOf(jd, messages, task, requirement, hr, resume?.content),
+    system: preference.replySystem ?? DEFAULT_REPLY_SYSTEM,
     thinkingMode,
-    source: 'reply',
-    promptTask: task,
-    promptRequirement: requirement,
-    resumeText: resume?.content,
-    jd,
     requestPermission,
+    // 结构化提示词：完整职位字段 + HR/简历 + 聊天记录，文本与日志字段由 chatWithVendor 内部推导
+    prompt: {
+      task: preference.replyTask ?? DEFAULT_REPLY_TASK,
+      requirement: preference.replyRequirement ?? DEFAULT_REPLY_REQUIREMENT,
+      jd,
+      hr,
+      resumeText: resume?.content,
+      sections: [`聊天记录：\n${transcriptOf(messages)}`],
+    },
   });
 };
 

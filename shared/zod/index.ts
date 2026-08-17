@@ -1,8 +1,8 @@
 // # zod 数据字典公有 API：一表一文件的聚合出口，上层统一从 '@/shared/zod' 导入
 
 // aiLog 表：AI 调用日志（调试用）
-export type { AiLog, AiLogInput, AiLogSource } from './ai-log';
-export { aiLogInputSchema, aiLogSchema } from './ai-log';
+export type { AiLog, AiLogInput, AiLogSource, ScenePrompt } from './ai-log';
+export { aiLogInputSchema, aiLogSchema, scenePromptSchema } from './ai-log';
 // aiPreference 表：AI 调用全局偏好（厂商/模型选择 + 思考模式）+ 协议 DTO
 export type {
   AiPreference,

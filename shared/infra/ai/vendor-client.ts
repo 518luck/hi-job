@@ -6,11 +6,12 @@ import { generateText } from 'ai';
 import type {
   AiLogSource,
   AiVendorRecord,
-  ReplyJd,
+  ScenePrompt,
   ThinkingMode,
 } from '@/shared/zod';
 
 import { recordAiLog, type ThinkingArgs } from './ai-log';
+import { assemblePromptText } from './scenes/prompt-parts';
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
@@ -111,7 +112,7 @@ const resolveThinkingArgs = (
   return { reasoning: mode };
 };
 
-// > 用厂商配置与指定模型跑一次文本生成：先申请跨域权限，须在用户手势（按钮点击）内调用
+// > 用厂商配置与指定模型跑一次文本生成：收结构化提示词，内部拼平并清洗日志字段；先申请跨域权限
 const chatWithVendor = async ({
   vendor,
   modelId,
@@ -119,26 +120,31 @@ const chatWithVendor = async ({
   prompt,
   thinkingMode = 'default',
   source,
-  promptTask,
-  promptRequirement,
-  resumeText,
-  jd,
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
   modelId: string; // 本次调用使用的模型 id
   system: string; // 系统提示
-  prompt: string; // 用户提示
+  prompt: ScenePrompt; // 结构化场景提示词（素材），文本与日志字段由此推导
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
-  promptTask?: string; // 提示词任务描述（打招呼生成时记录日志）
-  promptRequirement?: string; // 提示词生成要求（打招呼生成时记录日志）
-  resumeText?: string; // 用户简历文本（记录日志用），未上传时缺省
-  jd?: ReplyJd; // 本次调用使用的职位信息（记录日志用），核查生成上下文
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
+  // 拼平提示词文本：实际发送给模型的内容，同时作为日志中的 prompt 记录
+  const promptText = assemblePromptText(prompt);
   const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
   const startedAt = Date.now();
+  // 日志公共字段：成功/失败两分支共用，只在此处写一份（直接存原生素材）
+  const logEntry = {
+    source,
+    vendor,
+    modelId,
+    thinkingMode,
+    resolvedArgs,
+    system,
+    prompt,
+    startedAt,
+  };
   let result: string;
   try {
     // 权限申请失败也算一次失败调用：与生成失败统一进日志
@@ -157,7 +163,7 @@ const chatWithVendor = async ({
     const { text } = await generateText({
       model: provider(modelId),
       system,
-      prompt,
+      prompt: promptText,
       ...resolvedArgs,
     });
     result = text.trim();
@@ -173,35 +179,14 @@ const chatWithVendor = async ({
           ? error
           : new Error(rawMessage);
     await recordAiLog({
-      source,
-      vendor,
-      modelId,
-      thinkingMode,
-      resolvedArgs,
-      system,
-      prompt,
-      promptTask,
-      promptRequirement,
-      resume: resumeText ?? '',
-      jd,
-      startedAt,
+      ...logEntry,
       ok: false,
       error: finalError.message,
     });
     throw finalError;
   }
   await recordAiLog({
-    source,
-    vendor,
-    modelId,
-    thinkingMode,
-    resolvedArgs,
-    system,
-    prompt,
-    promptTask,
-    promptRequirement,
-    resume: resumeText ?? '',
-    startedAt,
+    ...logEntry,
     ok: true,
     output: result,
   });

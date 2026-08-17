@@ -8,7 +8,6 @@ import type {
 } from '@/shared/zod';
 
 import { chatWithVendor } from '../vendor-client';
-import { hrSectionOf, resumeSectionOf } from './prompt-parts';
 
 // 打招呼系统提示默认文案：限定角色与输出形态，未配置时使用
 const DEFAULT_GREETING_SYSTEM =
@@ -19,30 +18,6 @@ const DEFAULT_GREETING_TASK =
   '根据下面职位信息，写一段求职者发给招聘者的打招呼消息。';
 const DEFAULT_GREETING_REQUIREMENT =
   '要求：突出与职位方向的匹配和诚意，语气自然礼貌，80~120 字，结尾表达希望进一步沟通。';
-
-// 由职位信息拼用户提示：配置的任务/要求文案 + 职位字段 + HR 信息与简历（有则带上）
-const greetingPromptOf = (
-  jd: ReplyJd,
-  task: string,
-  requirement: string,
-  hr?: HrInfo,
-  resumeText?: string,
-): string =>
-  [
-    task,
-    requirement,
-    '',
-    `职位名称：${jd.title}`,
-    `公司：${jd.companyName}`,
-    jd.companyScale !== '' ? `公司规模：${jd.companyScale}` : '',
-    jd.companyIndustry !== '' ? `公司行业：${jd.companyIndustry}` : '',
-    `薪资：${jd.salary}`,
-    `职位描述：${jd.description}`,
-    hrSectionOf(hr),
-    resumeSectionOf(resumeText),
-  ]
-    .filter((line) => line !== '')
-    .join('\n');
 
 // 用所选厂商与模型生成打招呼消息：读取全局提示词配置与简历，未配置时用默认文案
 const generateGreeting = async ({
@@ -62,22 +37,22 @@ const generateGreeting = async ({
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
-  const system = preference.greetingSystem ?? DEFAULT_GREETING_SYSTEM;
-  const task = preference.greetingTask ?? DEFAULT_GREETING_TASK;
-  const requirement =
-    preference.greetingRequirement ?? DEFAULT_GREETING_REQUIREMENT;
   return chatWithVendor({
+    source: 'greeting',
     vendor,
     modelId,
-    system,
-    prompt: greetingPromptOf(jd, task, requirement, hr, resume?.content),
+    system: preference.greetingSystem ?? DEFAULT_GREETING_SYSTEM,
     thinkingMode,
-    source: 'greeting',
-    promptTask: task,
-    promptRequirement: requirement,
-    resumeText: resume?.content,
-    jd,
     requestPermission,
+    // 结构化提示词：完整职位字段 + HR/简历，文本与日志字段由 chatWithVendor 内部推导
+    prompt: {
+      task: preference.greetingTask ?? DEFAULT_GREETING_TASK,
+      requirement:
+        preference.greetingRequirement ?? DEFAULT_GREETING_REQUIREMENT,
+      jd,
+      hr,
+      resumeText: resume?.content,
+    },
   });
 };
 
