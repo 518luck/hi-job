@@ -115,6 +115,7 @@ function AiVendorsPage() {
             size="xs"
             onClick={() => openPreset({ preset })}
           >
+            <img src={preset.icon} alt="" className="size-3.5 shrink-0" />
             {preset.name}
           </Button>
         ))}
