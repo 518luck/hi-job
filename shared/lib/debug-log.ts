@@ -9,6 +9,9 @@ const DEBUG_LOG_HOST_FLAG = 'data-hijob-debug-log';
 // 单条日志文本的最大长度，防止大对象刷屏
 const MAX_ENTRY_LENGTH = 300;
 
+// 日志条数上限：超出淘汰最旧条目，避免隐藏 DOM 无限累积
+const MAX_ENTRIES = 200;
+
 // 把任意值压成文本：Error 取 message，对象尝试 JSON 序列化，失败退化为 String
 const textOf = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -42,7 +45,12 @@ const debugLog = (...args: unknown[]): void => {
   const text = args.map(textOf).join(' ').slice(0, MAX_ENTRY_LENGTH);
   const entry = document.createElement('div');
   entry.textContent = `[${time}] ${text}`;
-  ensureHost().append(entry);
+  const host = ensureHost();
+  host.append(entry);
+  // 超出上限淘汰最旧条目，日志缓冲保持恒定大小
+  while (host.childElementCount > MAX_ENTRIES) {
+    host.firstElementChild?.remove();
+  }
   console.log('[hi-job]', ...args);
 };
 

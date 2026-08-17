@@ -248,7 +248,7 @@ const renderLogs = (panel: HTMLElement): void => {
   const pre = document.createElement('pre');
   pre.textContent = logs.join('\n');
   pre.style.cssText =
-    'margin:4px 0 0;padding:12px;font:12px/1.5 monospace;color:#333;background:#fff;white-space:pre-wrap;word-break:break-all;';
+    'margin:4px 0 0;padding:12px;font:12px/1.5 monospace;color:#333;background:#fff;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;';
   pre.addEventListener('click', () => {
     const selection = window.getSelection();
     const range = document.createRange();
