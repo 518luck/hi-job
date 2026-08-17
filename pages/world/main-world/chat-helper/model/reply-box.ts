@@ -224,7 +224,7 @@ const copyReplyText = async (
   }, 1500);
 };
 
-// 聊天窗定位：打开时放到悬浮按钮附近，优先上方、放不下则下方，水平不超出视口
+// 聊天窗定位：打开时放到悬浮按钮附近，优先上方、放不下则下方；水平方向按按钮所在半边对齐，不超出视口
 const positionChatWindow = (chatWindow: HTMLElement): void => {
   const fab = document.querySelector<HTMLElement>(
     `[data-${HIJOB_PREFIX}-reply-fab]`,
@@ -239,11 +239,20 @@ const positionChatWindow = (chatWindow: HTMLElement): void => {
       ? `${rect.top - CHAT_WINDOW_HEIGHT - gap}px`
       : `${rect.bottom + gap}px`;
   chatWindow.style.bottom = 'auto';
-  chatWindow.style.right = `${Math.min(
-    Math.max(window.innerWidth - rect.right, 8),
-    window.innerWidth - CHAT_WINDOW_WIDTH - 8,
-  )}px`;
-  chatWindow.style.left = 'auto';
+  // 按钮在左半边时窗的左缘贴按钮左缘，在右半边时窗的右缘贴按钮右缘，均夹在视口内
+  if (rect.left + rect.width / 2 < window.innerWidth / 2) {
+    chatWindow.style.left = `${Math.min(
+      Math.max(rect.left, 8),
+      window.innerWidth - CHAT_WINDOW_WIDTH - 8,
+    )}px`;
+    chatWindow.style.right = 'auto';
+  } else {
+    chatWindow.style.right = `${Math.min(
+      Math.max(window.innerWidth - rect.right, 8),
+      window.innerWidth - CHAT_WINDOW_WIDTH - 8,
+    )}px`;
+    chatWindow.style.left = 'auto';
+  }
 };
 
 // 悬浮按钮拖拽：按住拖动改变位置，位移超过阈值视为拖拽（不触发点击）
@@ -380,6 +389,27 @@ const createTooltip = (chatWindow: HTMLElement) => {
   return { tooltip, bind };
 };
 
+// 注入液态玻璃 SVG 滤镜：伪元素先 backdrop-filter 模糊背景，再经 feTurbulence 噪声位移形成液态折射；
+// 噪声频率与位移强度按悬浮按钮的小尺寸调小（liquid-glass 演示默认值是 300×200 面板用的），仅 Chromium 生效
+const ensureGlassFilter = (): void => {
+  if (document.getElementById(`${HIJOB_PREFIX}-glass-distortion`) !== null) {
+    return;
+  }
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', `${HIJOB_PREFIX}-svg-defs`);
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = [
+    `<filter id="${HIJOB_PREFIX}-glass-distortion" x="0%" y="0%" width="100%" height="100%">`,
+    '<feTurbulence type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="2" seed="92" result="noise"/>',
+    '<feGaussianBlur in="noise" stdDeviation="2" result="blurred"/>',
+    '<feDisplacementMap in="SourceGraphic" in2="blurred" scale="40" xChannelSelector="R" yChannelSelector="G"/>',
+    '</filter>',
+  ].join('');
+  svg.append(defs);
+  document.body.append(svg);
+};
+
 // 注入悬浮按钮与聊天窗：右下角悬浮按钮，可拖拽移动，点击切换聊天窗显示
 const ensureReplyBox = (): void => {
   const conversation = document.querySelector('.chat-conversation');
@@ -390,11 +420,15 @@ const ensureReplyBox = (): void => {
     return;
   }
 
-  // 悬浮按钮：点击展开/收起聊天窗，可拖拽改变位置
+  // 悬浮按钮：点击展开/收起聊天窗，可拖拽改变位置；玻璃质感由伪元素层 + SVG 位移滤镜叠出
+  ensureGlassFilter();
   const fab = document.createElement('button');
   fab.dataset.hijobReplyFab = '1';
   fab.className = `${HIJOB_PREFIX}-reply-fab`;
-  fab.textContent = 'AI 回复';
+  const fabLabel = document.createElement('span');
+  fabLabel.className = `${HIJOB_PREFIX}-fab-label`;
+  fabLabel.textContent = 'AI 回复';
+  fab.append(fabLabel);
   document.body.append(fab);
 
   // 聊天窗骨架：标题栏 + 正文 + 操作区（生成/复制）
