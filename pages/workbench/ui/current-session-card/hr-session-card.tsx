@@ -1,4 +1,4 @@
-// HR 会话卡片：最近打开的 HR 信息 + 关联 JD 手风琴，无 JD 时引导跳转抓取
+// # HR 会话卡片：最近打开的 HR 信息 + 关联 JD 手风琴，无 JD 时引导跳转抓取
 import { useState } from 'react';
 
 import { sendMessage } from '@/shared/infra/messaging';
