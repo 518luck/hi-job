@@ -63,6 +63,9 @@ const toggleExcluded = async (encryptBossId: string): Promise<boolean> => {
   return excluded;
 };
 
+// 清空全部 HR 档案：清除数据库时一并清理
+const clearAllHrs = (): Promise<void> => db.hr.clear();
+
 // hr 领域仓储：档案读写的统一入口
 const hrStore = {
   saveHr, // 上报当前 HR
@@ -71,6 +74,7 @@ const hrStore = {
   readLatestHr, // 读取最近打开 HR
   readExcludedHrIds, // 读取被排除名单
   toggleExcluded, // 切换排除标记
+  clearAllHrs, // 清空全部 HR
 };
 
 export { hrStore };

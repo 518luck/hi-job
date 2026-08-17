@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
 
-import { jdStore } from '@/shared/infra/storage';
+import { chatMessageStore, hrStore, jdStore } from '@/shared/infra/storage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,10 +17,11 @@ import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
-import { exportRecordedJds } from '../model/export-jds';
+import { exportAllData } from '../model/export-all';
 import { extractCity } from '../model/extract-city';
 import { useRecordedHrs } from '../model/use-recorded-hrs';
 import { useRecordedJds } from '../model/use-recorded-jds';
+import { useRecordedMessages } from '../model/use-recorded-messages';
 import { CityList } from './city-list';
 import { CompanyList } from './company-list';
 import { HrList } from './hr-list';
@@ -34,6 +35,7 @@ function RecordsPage() {
   const [clearOpen, setClearOpen] = useState(false);
   const { jds, companies, loading } = useRecordedJds();
   const { hrs, loading: hrLoading } = useRecordedHrs();
+  const { messagesCount } = useRecordedMessages();
   // 统计已覆盖城市数：地址可识别出城市的去重计数
   const cityCount = new Set(
     jds.map((jd) => extractCity(jd.address)).filter((city) => city !== ''),
@@ -85,7 +87,7 @@ function RecordsPage() {
           size="sm"
           className="flex-1"
           onClick={() => {
-            void exportRecordedJds();
+            void exportAllData();
           }}
         >
           <Icons.exportData data-icon="inline-start" />
@@ -102,10 +104,11 @@ function RecordsPage() {
           </AlertDialogTrigger>
           <AlertDialogContent size="sm">
             <AlertDialogHeader>
-              <AlertDialogTitle>清空全部记录？</AlertDialogTitle>
+              <AlertDialogTitle>清空全部数据？</AlertDialogTitle>
               <AlertDialogDescription>
-                将删除 {jds.length} 条职位与 {companies.length}
-                家公司的全部记录，删除后无法恢复，建议先导出备份。
+                将删除 {jds.length} 条职位、{companies.length} 家公司、{' '}
+                {hrs.length} 位 HR 与 {messagesCount}{' '}
+                条聊天消息的全部数据，删除后无法恢复，建议先导出备份。
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -113,7 +116,11 @@ function RecordsPage() {
               <AlertDialogAction
                 variant="destructive"
                 onClick={() => {
-                  void jdStore.clearAll();
+                  void Promise.all([
+                    jdStore.clearAll(),
+                    hrStore.clearAllHrs(),
+                    chatMessageStore.clearAllChatMessages(),
+                  ]);
                   setClearOpen(false);
                 }}
               >
