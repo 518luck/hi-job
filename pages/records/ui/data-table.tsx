@@ -43,6 +43,7 @@ const features = tableFeatures({
 interface DataTableProps<TData extends RowData> {
   columns: ColumnDef<typeof features, TData>[];
   data: TData[];
+  estimateSize?: () => number;
   getRowClassName?: (row: Row<typeof features, TData>) => string | undefined;
 }
 
@@ -61,6 +62,7 @@ const sortIndicatorOf = (sorted: false | 'asc' | 'desc'): React.ReactNode => {
 function DataTable<TData extends RowData>({
   columns,
   data,
+  estimateSize = () => 56,
   getRowClassName,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -76,7 +78,7 @@ function DataTable<TData extends RowData>({
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 56,
+    estimateSize,
     getItemKey: (index) => rows[index]?.id ?? String(index),
     overscan: 5,
   });

@@ -25,7 +25,7 @@ import { useRecordedMessages } from '../model/use-recorded-messages';
 import { CityList } from './city-list';
 import { CompanyList } from './company-list';
 import { HrList } from './hr-list';
-import { JdCard } from './jd-card';
+import { JdList } from './jobs-list';
 
 // 记录页的展示维度：职位时间流、公司聚合、HR 列表、地区聚合
 type Dimension = 'jobs' | 'companies' | 'hrs' | 'cities';
@@ -65,13 +65,7 @@ function RecordsPage() {
     if (dimension === 'cities') {
       return <CityList jds={jds} />;
     }
-    return (
-      <div className="flex flex-col gap-2">
-        {jds.map((jd) => (
-          <JdCard key={jd.jobId} jd={jd} />
-        ))}
-      </div>
-    );
+    return <JdList jds={jds} />;
   };
 
   return (

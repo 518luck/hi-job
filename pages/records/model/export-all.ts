@@ -39,4 +39,13 @@ const exportHrsData = async (): Promise<void> => {
   downloadJson({ exportedAt: Date.now(), hrs });
 };
 
-export { exportAllData, exportHrsData };
+// 导出职位数据：记录页职位维度的单独备份（职位与公司聚合）
+const exportJdsData = async (): Promise<void> => {
+  const [jds, companies] = await Promise.all([
+    jdStore.readAllRecordedJds(),
+    jdStore.readAllCompanyRecords(),
+  ]);
+  downloadJson({ exportedAt: Date.now(), jds, companies });
+};
+
+export { exportAllData, exportHrsData, exportJdsData };
