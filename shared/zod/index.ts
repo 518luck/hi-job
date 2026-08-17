@@ -68,8 +68,15 @@ export {
   hrSchema,
 } from './hr';
 // jd 表：落库实体 + 传输 DTO
-export type { RecordedJd, SelectedJd, VueJobCard, VueJobData } from './jd';
+export type {
+  PageJobContext,
+  RecordedJd,
+  SelectedJd,
+  VueJobCard,
+  VueJobData,
+} from './jd';
 export {
+  pageJobContextSchema,
   recordedJdSchema,
   selectedJdSchema,
   vueJobCardSchema,

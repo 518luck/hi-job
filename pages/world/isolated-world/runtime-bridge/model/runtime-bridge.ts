@@ -13,6 +13,8 @@ import { sendMessage } from '@/shared/infra/messaging';
 import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
 
+import { requestVueJobData } from '../../jd-listener';
+
 let runtimeBridgeStarted = false;
 
 // 启动主世界到后台的直通 RPC 服务
@@ -50,6 +52,25 @@ const startRuntimeBridge = (): void => {
         return;
       }
       sendResponse(readDebugLogs());
+    },
+  );
+  // 页面职位上下文查询应答：返回页面类型与当前职位数据（职位列表页时异步拉取）
+  browser.runtime.onMessage.addListener(
+    (message: unknown, _sender, sendResponse) => {
+      if (readProperty(message, 'hiJobQuery') !== 'job-context') {
+        return;
+      }
+      const page = location.pathname.includes('/web/geek/jobs')
+        ? 'jobs'
+        : 'other';
+      if (page !== 'jobs') {
+        sendResponse({ page });
+        return;
+      }
+      void requestVueJobData()
+        .then((job) => sendResponse({ page, job }))
+        .catch(() => sendResponse({ page }));
+      return true; // 异步应答：保持消息通道等待 sendResponse 被调用
     },
   );
 };

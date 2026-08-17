@@ -21,6 +21,7 @@ import type {
   AiVendorRecord,
   FollowUpInput,
   GreetingInput,
+  PageJobContext,
   RejectionFeedbackInput,
   ReplyInput,
   ThinkingMode,
@@ -34,6 +35,7 @@ import {
   followUpInputSchema,
   greetingInputSchema,
   hrInputSchema,
+  pageJobContextSchema,
   rejectionFeedbackInputSchema,
   replyInputSchema,
   selectedJdSchema,
@@ -172,6 +174,35 @@ const handlePageDebugLogs = async (): Promise<string[]> => {
   }
 };
 
+// 读取当前 BOSS 页面的职位上下文：判断页面类型并转发查询当前职位数据
+const handlePageJobContext = async (): Promise<PageJobContext> => {
+  const [tab] = await browser.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
+    url: '*://*.zhipin.com/*',
+  });
+  if (tab?.id === undefined) {
+    return { page: 'other' };
+  }
+  try {
+    const response = await browser.tabs.sendMessage(tab.id, {
+      hiJobQuery: 'job-context',
+    });
+    const parsed = pageJobContextSchema.safeParse(response);
+    return parsed.success ? parsed.data : { page: 'other' };
+  } catch {
+    // 页面无应答（内容脚本未注入或已休眠）时返回其他页面
+    return { page: 'other' };
+  }
+};
+
+// 广播职位上下文变更：通知扩展上下文（含侧边栏）刷新当前职位信息
+const broadcastJobContextChanged = async (): Promise<void> => {
+  await browser.runtime
+    .sendMessage({ hiJobNotify: 'job-context-changed' })
+    .catch(() => {});
+};
+
 export default defineBackground(() => {
   // 点击工具栏图标直接打开侧边栏面板（Chrome 专属 API，Firefox 自动跳过）
   browser.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
@@ -225,6 +256,8 @@ export default defineBackground(() => {
   });
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
   onMessage('getPageDebugLogs', () => handlePageDebugLogs());
+  onMessage('getPageJobContext', () => handlePageJobContext());
+  onMessage('jobContextChanged', () => broadcastJobContextChanged());
   onMessage('saveDebugSettings', async ({ data }) => {
     const parsed = debugSettingsSchema.safeParse(data);
     if (!parsed.success) {

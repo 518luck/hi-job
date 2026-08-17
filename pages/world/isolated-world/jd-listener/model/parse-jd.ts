@@ -8,6 +8,9 @@ const EMPTY_VUE_JOB_DATA: VueJobData = {
   salaryDesc: '',
   companyScale: '',
   companyIndustry: '',
+  brandName: '',
+  bossOnline: false,
+  bossActiveDesc: '',
 };
 
 // 取第一个匹配元素的文本，找不到返回空串

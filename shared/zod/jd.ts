@@ -33,7 +33,16 @@ const vueJobDataSchema = recordedJdSchema
   .pick({ companyIndustry: true, companyScale: true })
   .extend({
     salaryDesc: z.string(), // 原始薪资描述（如 10-15K），读不到为空串
+    brandName: z.string(), // 公司名，取自 currentJob.brandName，读不到为空串
+    bossOnline: z.boolean().optional(), // HR 是否在线，页面值缺失时缺省（展示为未知）
+    bossActiveDesc: z.string(), // HR 活跃状态文本（如 刚刚活跃），取自详情面板 bossInfo，读不到为空串
   });
+
+// 页面职位上下文：工作台查询当前 BOSS 标签页的页面类型与当前职位数据
+const pageJobContextSchema = z.object({
+  page: z.enum(['jobs', 'other']), // 当前页面类型：职位列表页 / 其他
+  job: vueJobDataSchema.optional(), // 职位列表页时携带当前选中职位的数据，读不到缺省
+});
 
 // 传输 DTO：列表卡片的规模与行业，字段语义与落库实体一致
 const vueJobCardSchema = recordedJdSchema.pick({
@@ -46,9 +55,11 @@ type RecordedJd = z.infer<typeof recordedJdSchema>;
 type SelectedJd = z.infer<typeof selectedJdSchema>;
 type VueJobData = z.infer<typeof vueJobDataSchema>;
 type VueJobCard = z.infer<typeof vueJobCardSchema>;
+type PageJobContext = z.infer<typeof pageJobContextSchema>;
 
-export type { RecordedJd, SelectedJd, VueJobCard, VueJobData };
+export type { PageJobContext, RecordedJd, SelectedJd, VueJobCard, VueJobData };
 export {
+  pageJobContextSchema,
   recordedJdSchema,
   selectedJdSchema,
   vueJobCardSchema,

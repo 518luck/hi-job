@@ -4,5 +4,6 @@ export {
   startJdRecorder,
   startJobCardBlocker,
   startJobCardDecorator,
+  startJobChangeWatcher,
 } from './jd-listener';
 export { startRuntimeBridge } from './runtime-bridge';

@@ -7,6 +7,7 @@ import type {
   FollowUpInput,
   GreetingInput,
   HrInput,
+  PageJobContext,
   RejectionFeedbackInput,
   ReplyInput,
   SelectedJd,
@@ -23,6 +24,8 @@ interface ProtocolMap {
   getBlockedCompanyNames(): string[]; // 隔离世界脚本/侧边栏	后台	获取屏蔽公司名单
   saveBlockedCompanies(data: string[]): void; // 侧边栏	后台	保存屏蔽公司名单并广播到职位列表页
   getPageDebugLogs(): string[]; // 侧边栏	后台	读取当前 BOSS 页面的采集日志
+  getPageJobContext(): PageJobContext; // 侧边栏	后台	读取当前 BOSS 页面的职位上下文（页面类型与当前职位数据）
+  jobContextChanged(): void; // 隔离世界脚本	后台	通知职位选中已变化（后台广播到侧边栏刷新）
   getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
   saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
   greeting(data: GreetingInput): string; // 主世界脚本（经桥）	后台	生成打招呼语句

@@ -1,4 +1,4 @@
-// 当前会话卡片：最近打开的 HR 信息 + 关联 JD 手风琴，无 JD 时提供抓取跳转
+// HR 会话卡片：最近打开的 HR 信息 + 关联 JD 手风琴，无 JD 时引导跳转抓取
 import { useState } from 'react';
 
 import { sendMessage } from '@/shared/infra/messaging';
@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Icons } from '@/shared/ui/icons';
 import type { RecordedJd } from '@/shared/zod';
 
-import { useCurrentSession } from '../model/use-current-session';
+import { useCurrentSession } from '../../model/use-current-session';
 
 // JD 详情段：展开显示标签、描述与地址，附打开职位链接
 // 格式化记录时间：MM-dd，供 JD 展开区展示
@@ -77,8 +77,8 @@ function JdDetailSection({ jd }: { jd: RecordedJd }) {
   );
 }
 
-// 当前会话卡片：HR 信息在上，JD 手风琴在下；无 JD 时引导跳转抓取
-function CurrentSessionCard() {
+// HR 会话卡片：HR 信息在上，JD 手风琴在下；无 JD 时引导跳转抓取
+function HrSessionCard() {
   const { view } = useCurrentSession();
   const [jdOpen, setJdOpen] = useState(false);
 
@@ -179,4 +179,4 @@ function CurrentSessionCard() {
   );
 }
 
-export { CurrentSessionCard };
+export { HrSessionCard };

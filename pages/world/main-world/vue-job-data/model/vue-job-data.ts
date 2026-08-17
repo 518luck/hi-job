@@ -9,12 +9,46 @@ import { debugLog } from '@/shared/lib/debug-log';
 import { readProperty, stringOf } from '@/shared/lib/page-property';
 import type { VueJobCard, VueJobData } from '@/shared/zod';
 
+// 详情面板 props data：公司规模（brandComInfo）与 HR 活跃状态（bossInfo）的来源
+const readDetailPanelData = (): unknown =>
+  readProperty(
+    readProperty(
+      readProperty(
+        document.querySelector<HTMLElement>('.job-detail-box'),
+        '__vue__',
+      ),
+      '$props',
+    ),
+    'data',
+  );
+
 // 从 currentJob 原始对象提取所需字段（主世界侧，字段名与页面数据源一致）
-const extractJobData = (currentJob: unknown): VueJobData => ({
-  salaryDesc: stringOf(currentJob, 'salaryDesc'),
-  companyScale: stringOf(currentJob, 'brandScaleName'),
-  companyIndustry: stringOf(currentJob, 'brandIndustry'),
-});
+const extractJobData = (currentJob: unknown): VueJobData => {
+  const detailData = readDetailPanelData();
+  const brandComInfo = readProperty(detailData, 'brandComInfo');
+  const bossInfo = readProperty(detailData, 'bossInfo');
+  // 页面 bossOnline 目前为 true/false 字符串，兼容布尔与字符串两种取值；读不到时缺省
+  const bossOnlineRaw = readProperty(currentJob, 'bossOnline');
+  let bossOnline: boolean | undefined;
+  if (bossOnlineRaw === true || bossOnlineRaw === 'true') {
+    bossOnline = true;
+  } else if (bossOnlineRaw === false || bossOnlineRaw === 'false') {
+    bossOnline = false;
+  }
+  return {
+    salaryDesc: stringOf(currentJob, 'salaryDesc'),
+    companyScale:
+      stringOf(brandComInfo, 'scaleName') ||
+      stringOf(currentJob, 'brandScaleName'),
+    companyIndustry:
+      stringOf(currentJob, 'brandIndustry') ||
+      stringOf(brandComInfo, 'industryName'),
+    brandName:
+      stringOf(currentJob, 'brandName') || stringOf(bossInfo, 'brandName'),
+    bossOnline,
+    bossActiveDesc: stringOf(bossInfo, 'activeTimeDesc'),
+  };
+};
 
 // 从 jobList 原始数组提取各卡片规模信息，键为 encryptJobId（主世界侧）
 const extractJobCards = (jobList: unknown): Record<string, VueJobCard> => {

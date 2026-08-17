@@ -3,6 +3,7 @@ import {
   startJdRecorder,
   startJobCardBlocker,
   startJobCardDecorator,
+  startJobChangeWatcher,
   startRuntimeBridge,
 } from '@/pages/world/isolated-world';
 
@@ -15,6 +16,8 @@ export default defineContentScript({
     startJobCardDecorator({ doc: document });
     // 列表卡片按屏蔽公司名单盖「已屏蔽」遮罩
     startJobCardBlocker({ doc: document });
+    // 职位选中变化时通知后台，侧边栏工作台刷新公司信息卡
+    startJobChangeWatcher({ doc: document });
     // 主世界聊天页脚本的扩展 API 请求转发（主世界拿不到 chrome API）
     startRuntimeBridge();
   },

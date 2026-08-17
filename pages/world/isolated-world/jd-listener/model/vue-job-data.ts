@@ -19,6 +19,9 @@ const emptyJobData = (): VueJobData => ({
   salaryDesc: '',
   companyScale: '',
   companyIndustry: '',
+  brandName: '',
+  bossOnline: false,
+  bossActiveDesc: '',
 });
 
 // 向主世界请求职位原始数据；薪资为空则重试
