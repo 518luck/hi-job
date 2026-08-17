@@ -1,4 +1,6 @@
 import {
+  ArrowDown,
+  ArrowUp,
   Bot,
   Bug,
   Building2,
@@ -44,6 +46,8 @@ const Icons = {
   refresh: RefreshCw,
   copy: Copy,
   externalLink: ExternalLink,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
 };
 
 export { Icons };

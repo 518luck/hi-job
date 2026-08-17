@@ -20,6 +20,9 @@ let lastFriendSignature = '';
 const MESSAGE_SYNC_INTERVAL = 10_000;
 let lastMessageSync: { bossId: string; at: number } | null = null;
 
+// 历史加载进行中标记：防止滚动加载期间防抖并发启动多个加载循环
+let loadingHistory = false;
+
 // 历史加载最多轮数：会话极长时终止循环，防止死等
 const MAX_HISTORY_ROUNDS = 12;
 
@@ -48,8 +51,9 @@ const findChatScroller = (): HTMLElement | null => {
 // 向上滚动加载更早消息：反复滚到顶等待新消息渲染，直到数量不再增长
 const loadChatHistory = async (scroller: HTMLElement): Promise<void> => {
   for (let round = 0; round < MAX_HISTORY_ROUNDS; round += 1) {
-    const before = document.querySelectorAll(MESSAGE_ITEM_COUNT_SELECTOR)
-      .length;
+    const before = document.querySelectorAll(
+      MESSAGE_ITEM_COUNT_SELECTOR,
+    ).length;
     scroller.scrollTop = 0;
     await sleep(500);
     const after = document.querySelectorAll(MESSAGE_ITEM_COUNT_SELECTOR).length;
@@ -155,13 +159,22 @@ const syncChatMessages = async (): Promise<void> => {
   ) {
     return;
   }
-  // 首次进入该会话：滚顶加载更早消息后恢复原滚动位置，再抓全量
+  // 首次进入该会话：滚顶加载更早消息后恢复原滚动位置，再抓全量；
+  // 加载进行中防抖并发进入时直接跳过，避免多个加载循环互相触发
   if (entering) {
-    const scroller = findChatScroller();
-    if (scroller !== null) {
-      const restoreTop = scroller.scrollTop;
-      await loadChatHistory(scroller);
-      scroller.scrollTop = restoreTop;
+    if (loadingHistory) {
+      return;
+    }
+    loadingHistory = true;
+    try {
+      const scroller = findChatScroller();
+      if (scroller !== null) {
+        const restoreTop = scroller.scrollTop;
+        await loadChatHistory(scroller);
+        scroller.scrollTop = restoreTop;
+      }
+    } finally {
+      loadingHistory = false;
     }
   }
   const messages = readChatMessages().map(

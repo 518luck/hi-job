@@ -208,10 +208,8 @@ const messageMetaOf = (
     if (source === null || typeof source !== 'object') {
       continue;
     }
-    const msgId =
-      stringOf(source, 'msgId') || stringOf(source, 'msgid');
-    const ts =
-      numberOf(source, 'lastTS') || numberOf(source, 'ts');
+    const msgId = stringOf(source, 'msgId') || stringOf(source, 'msgid');
+    const ts = numberOf(source, 'lastTS') || numberOf(source, 'ts');
     if (msgId !== '' || ts > 0) {
       return {
         msgId: msgId === '' ? undefined : msgId,

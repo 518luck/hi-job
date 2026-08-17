@@ -206,12 +206,10 @@ const probeMessageDom = (lastText: string): Record<string, unknown> => {
 // 消息项元素沿祖先找 Vue 元信息：$props/$data 中取消息 id 与时间戳（与采集链路同法）
 const vueMetaOf = (
   el: HTMLElement,
-):
-  | {
-      msgId: string;
-      ts: number;
-    }
-  | null => {
+): {
+  msgId: string;
+  ts: number;
+} | null => {
   for (
     let node: HTMLElement | null = el, depth = 0;
     node !== null && depth < 3;
