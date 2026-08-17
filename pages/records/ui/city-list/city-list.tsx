@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 
+import { DataTable } from '@/shared/ui/data-table';
 import type { RecordedJd } from '@/shared/zod';
 
 import { extractCity } from '../../model/extract-city';
-import { DataTable } from '../data-table';
 import { type CityGroup, cityColumns } from './columns';
 
 // 地区列表的 props

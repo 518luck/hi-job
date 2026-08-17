@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { Icons } from '@/shared/ui/icons';
@@ -5,6 +6,7 @@ import { Switch } from '@/shared/ui/switch';
 
 import { useDebugSettings } from '../model/use-debug-settings';
 import { AiLogView } from './ai-log-view';
+import { PageLogView } from './page-log-view';
 
 // 单个调试开关行的 props
 interface ToggleRowProps {
@@ -36,8 +38,41 @@ function ToggleRow({
   );
 }
 
+// 日志入口卡片行的 props
+interface LogEntryRowProps {
+  icon: LucideIcon; // 入口图标
+  title: string; // 入口名称
+  description: string; // 入口说明
+  onOpen: () => void; // 点击进入对应日志视图
+}
+
+// 日志入口卡片行：与上方开关行同款样式，整行可点进入对应日志视图
+function LogEntryRow({
+  icon: Icon,
+  title,
+  description,
+  onOpen,
+}: LogEntryRowProps) {
+  return (
+    <button
+      type="button"
+      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
+      onClick={onOpen}
+    >
+      <span className="flex items-center gap-3">
+        <Icon className="size-4 shrink-0 text-muted-foreground" />
+        <span className="flex flex-col gap-1">
+          <span className="text-sm font-medium">{title}</span>
+          <span className="text-xs text-muted-foreground">{description}</span>
+        </span>
+      </span>
+      <Icons.chevronRight className="size-4 shrink-0 text-muted-foreground" />
+    </button>
+  );
+}
+
 // 调试页视图：首页（开关 + 日志入口）与各日志列表
-type DebugView = 'home' | 'aiLog';
+type DebugView = 'home' | 'aiLog' | 'pageLog';
 
 // 调试页：控制探测按钮开关，日志入口按钮后续扩展程序日志
 function DebugPage() {
@@ -53,6 +88,14 @@ function DebugPage() {
     return (
       <div className="flex min-h-0 flex-1 flex-col p-4">
         <AiLogView onBack={() => setView('home')} />
+      </div>
+    );
+  }
+
+  if (view === 'pageLog') {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <PageLogView onBack={() => setView('home')} />
       </div>
     );
   }
@@ -82,23 +125,18 @@ function DebugPage() {
       </div>
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">日志</h3>
-        {/* 日志入口卡片行：与上方开关行同款样式，整行可点进入对应日志视图 */}
-        <button
-          type="button"
-          className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
-          onClick={() => setView('aiLog')}
-        >
-          <span className="flex items-center gap-3">
-            <Icons.aiLog className="size-4 shrink-0 text-muted-foreground" />
-            <span className="flex flex-col gap-1">
-              <span className="text-sm font-medium">AI 日志</span>
-              <span className="text-xs text-muted-foreground">
-                查看打招呼、回复等 AI 调用记录
-              </span>
-            </span>
-          </span>
-          <Icons.chevronRight className="size-4 shrink-0 text-muted-foreground" />
-        </button>
+        <LogEntryRow
+          icon={Icons.aiLog}
+          title="AI 日志"
+          description="查看打招呼、回复等 AI 调用记录"
+          onOpen={() => setView('aiLog')}
+        />
+        <LogEntryRow
+          icon={Icons.history}
+          title="页面采集日志"
+          description="查看当前 BOSS 页面的采集与同步运行日志"
+          onOpen={() => setView('pageLog')}
+        />
       </div>
     </div>
   );

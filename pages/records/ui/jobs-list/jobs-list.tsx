@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/shared/ui/button';
+import { DataTable } from '@/shared/ui/data-table';
 import { Icons } from '@/shared/ui/icons';
 import {
   Select,
@@ -12,7 +13,6 @@ import {
 import type { RecordedJd } from '@/shared/zod';
 
 import { exportJdsData } from '../../model/export-all';
-import { DataTable } from '../data-table';
 import { JdAccordionContext, jdColumns } from './columns';
 
 // 职位列表的 props

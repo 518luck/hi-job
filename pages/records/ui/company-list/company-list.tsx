@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
+import { DataTable } from '@/shared/ui/data-table';
 import type { CompanyRecord, RecordedJd } from '@/shared/zod';
 
-import { DataTable } from '../data-table';
 import { CompanyAccordionContext, companyColumns } from './columns';
 
 // 公司列表的 props

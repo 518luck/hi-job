@@ -10,6 +10,7 @@ import {
   WINDOW_RPC_NAMESPACE_BACKGROUND,
 } from '@/pages/world/rpc';
 import { sendMessage } from '@/shared/infra/messaging';
+import { readDebugLogs } from '@/shared/lib/debug-log';
 import { readProperty } from '@/shared/lib/page-property';
 
 let runtimeBridgeStarted = false;
@@ -41,6 +42,16 @@ const startRuntimeBridge = (): void => {
       location.origin,
     );
   });
+  // 页面日志查询应答：后台经 tabs 送达的 hiJobQuery，同步应答隐藏节点里的采集日志
+  // > Chrome 原生 onMessage 不投递监听器返回值，必须经 sendResponse 显式应答
+  browser.runtime.onMessage.addListener(
+    (message: unknown, _sender, sendResponse) => {
+      if (readProperty(message, 'hiJobQuery') !== 'debug-logs') {
+        return;
+      }
+      sendResponse(readDebugLogs());
+    },
+  );
 };
 
 export { startRuntimeBridge };

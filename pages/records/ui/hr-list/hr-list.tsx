@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from '@/shared/ui/alert-dialog';
 import { Button } from '@/shared/ui/button';
+import { DataTable } from '@/shared/ui/data-table';
 import { Icons } from '@/shared/ui/icons';
 import {
   Select,
@@ -25,7 +26,6 @@ import {
 import type { Hr } from '@/shared/zod';
 
 import { exportHrsData } from '../../model/export-all';
-import { DataTable } from '../data-table';
 import { HrAccordionContext, hrColumns } from './columns';
 
 // HR 列表的 props

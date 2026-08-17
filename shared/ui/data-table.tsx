@@ -45,6 +45,7 @@ interface DataTableProps<TData extends RowData> {
   data: TData[];
   estimateSize?: () => number;
   getRowClassName?: (row: Row<typeof features, TData>) => string | undefined;
+  getCellClassName?: (columnId: string) => string | undefined;
 }
 
 // 渲染表头排序指示符：升序/降序箭头
@@ -64,6 +65,7 @@ function DataTable<TData extends RowData>({
   data,
   estimateSize = () => 56,
   getRowClassName,
+  getCellClassName,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -93,7 +95,10 @@ function DataTable<TData extends RowData>({
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className="flex min-w-0 flex-1 items-center"
+                  className={cn(
+                    'flex min-w-0 flex-1 items-center',
+                    getCellClassName?.(header.column.id),
+                  )}
                 >
                   {header.isPlaceholder ? null : header.column.getCanSort() ? (
                     <button
@@ -136,7 +141,13 @@ function DataTable<TData extends RowData>({
                   className={cn('flex w-full', getRowClassName?.(row))}
                 >
                   {row.getAllCells().map((cell) => (
-                    <TableCell key={cell.id} className="min-w-0 flex-1 p-2">
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        'min-w-0 flex-1 p-2',
+                        getCellClassName?.(cell.column.id),
+                      )}
+                    >
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}

@@ -39,6 +39,9 @@ export { chatMessageInputSchema, chatMessageSchema } from './chat-message';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
+// debug-log 消息：页面采集日志查询 DTO
+export type { DebugLogLines } from './debug-log';
+export { debugLogLinesSchema } from './debug-log';
 // debugSetting 表：调试功能开关设置 + 协议 DTO
 export type { DebugSetting, DebugSettings } from './debug-setting';
 export {

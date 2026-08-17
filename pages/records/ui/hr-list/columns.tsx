@@ -13,10 +13,10 @@ import {
 } from '@/shared/ui/accordion';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
+import type { features } from '@/shared/ui/data-table';
 import { Icons } from '@/shared/ui/icons';
 import type { Hr } from '@/shared/zod';
 
-import type { features } from '../data-table';
 import { HrChatView } from './chat-view';
 
 // 手风琴展开状态上下文：由列表组件持有，列定义保持静态避免表格重建

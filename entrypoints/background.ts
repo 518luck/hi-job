@@ -28,6 +28,7 @@ import type {
 import {
   blockedCompanyNamesSchema,
   chatMessageInputSchema,
+  debugLogLinesSchema,
   debugSettingsSchema,
   excludedHrIdsResponseSchema,
   followUpInputSchema,
@@ -149,6 +150,28 @@ const broadcastNotify = async (type: string): Promise<void> => {
   );
 };
 
+// 读取当前 BOSS 页面的采集日志：转发查询到最近聚焦窗口的激活 BOSS 标签页
+const handlePageDebugLogs = async (): Promise<string[]> => {
+  const [tab] = await browser.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
+    url: '*://*.zhipin.com/*',
+  });
+  if (tab?.id === undefined) {
+    return [];
+  }
+  try {
+    const response = await browser.tabs.sendMessage(tab.id, {
+      hiJobQuery: 'debug-logs',
+    });
+    const parsed = debugLogLinesSchema.safeParse(response);
+    return parsed.success ? parsed.data : [];
+  } catch {
+    // 页面无应答（内容脚本未注入或已休眠）时返回空
+    return [];
+  }
+};
+
 export default defineBackground(() => {
   // 点击工具栏图标直接打开侧边栏面板（Chrome 专属 API，Firefox 自动跳过）
   browser.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true });
@@ -201,6 +224,7 @@ export default defineBackground(() => {
     await broadcastNotify('blocked-companies-changed');
   });
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
+  onMessage('getPageDebugLogs', () => handlePageDebugLogs());
   onMessage('saveDebugSettings', async ({ data }) => {
     const parsed = debugSettingsSchema.safeParse(data);
     if (!parsed.success) {

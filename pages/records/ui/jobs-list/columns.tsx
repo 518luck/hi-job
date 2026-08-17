@@ -8,10 +8,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/shared/ui/accordion';
+import type { features } from '@/shared/ui/data-table';
 import type { RecordedJd } from '@/shared/zod';
 
 import { formatSeenAt } from '../../lib/format';
-import type { features } from '../data-table';
 import { JdDetailView } from './jd-detail-view';
 
 // 手风琴展开状态上下文：由列表组件持有，列定义保持静态避免表格重建

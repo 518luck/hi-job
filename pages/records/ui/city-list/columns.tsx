@@ -1,9 +1,8 @@
 // 地区列表列定义：城市名与职位数，纯信息展示无展开
 import type { ColumnDef } from '@tanstack/react-table';
 
+import type { features } from '@/shared/ui/data-table';
 import type { RecordedJd } from '@/shared/zod';
-
-import type { features } from '../data-table';
 
 // 地区聚合行的数据结构：城市名与所属职位
 interface CityGroup {
