@@ -148,7 +148,10 @@ function CurrentSessionCard() {
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <JdDetailSection jd={jd} />
+                {/* // > 展开区固定高度：内容多少都占满同一高度，超出部分内部滚动 */}
+                <div className="h-60 overflow-y-auto pr-1">
+                  <JdDetailSection jd={jd} />
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
