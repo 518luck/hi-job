@@ -55,6 +55,27 @@ const fieldsOf = (obj: unknown): Record<string, string> => {
   return out;
 };
 
+// 任意值的结构摘要：区分原始类型/数组/对象，带字段名与 JSON 片段
+const shapeOf = (value: unknown): unknown => {
+  if (value === null) {
+    return 'null';
+  }
+  if (typeof value !== 'object') {
+    return typeof value;
+  }
+  if (Array.isArray(value)) {
+    return { kind: 'array', length: value.length };
+  }
+  const keys = Object.keys(value).slice(0, 10);
+  let sample = '';
+  try {
+    sample = JSON.stringify(value).slice(0, 200);
+  } catch {
+    sample = '(JSON 序列化失败)';
+  }
+  return { kind: 'object', keys, sample };
+};
+
 // 单个实例的组件名：$options.name 优先，回退 $vnode.tag
 const componentNameOf = (instance: unknown): string => {
   const options = readProperty(instance, '$options');
@@ -290,7 +311,25 @@ const deepDive = (root: unknown): Record<string, unknown> => {
       result.friendFirst = fieldsOf(friends[0]);
       result.friendSecond =
         friends.length > 1 ? fieldsOf(friends[1]) : undefined;
+      // 首元素真实结构：类型与可枚举字段，判定 friends 是否为联系人对象数组
+      result.friendShape = shapeOf(friends[0]);
     }
+  }
+  // 虚拟列表与联系人列表组件的 props：完整数据可能挂在 props 而非 data
+  const virtualList = findInstanceByName(root, 'virtual-list', 0);
+  if (virtualList !== undefined) {
+    result.virtualListProps = fieldsOf(readProperty(virtualList, '$props'));
+    const sources = readProperty(
+      readProperty(virtualList, '$props'),
+      'dataSources',
+    );
+    if (Array.isArray(sources) && sources.length > 0) {
+      result.virtualDataFirst = fieldsOf(sources[0]);
+    }
+  }
+  const bossList = findInstanceByName(root, 'boss-list', 0);
+  if (bossList !== undefined) {
+    result.bossListData = fieldsOf(readProperty(bossList, '$data'));
   }
   const msgInstance = findInstanceByName(root, 'message-list', 0);
   if (msgInstance !== undefined) {

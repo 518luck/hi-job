@@ -47,11 +47,22 @@ const findInstanceByName = (
 const readVueRoot = (): unknown =>
   readProperty(document.querySelector(VUE_ROOT_SELECTOR), '__vue__');
 
-// 读取全部联系人列表：boss-list-label 组件的 friends 数组，含未点开过的会话
+// 读取全部联系人列表：优先取虚拟列表 dataSources（联系人对象数组，随滚动分页增长），
+// 取不到时回退 boss-list-label 的 friends 数组（注意：后者元素可能是 id 字符串）
 const readAllFriends = (): Record<string, unknown>[] => {
   const root = readVueRoot();
   if (root === undefined) {
     return [];
+  }
+  const listInstance = findInstanceByName(root, 'virtual-list', 0);
+  if (listInstance !== undefined) {
+    const sources = readProperty(
+      readProperty(listInstance, '$props'),
+      'dataSources',
+    );
+    if (Array.isArray(sources)) {
+      return sources as Record<string, unknown>[];
+    }
   }
   const labelInstance = findInstanceByName(root, 'boss-list-label', 0);
   if (labelInstance === undefined) {

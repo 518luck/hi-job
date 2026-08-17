@@ -32,7 +32,7 @@ const startChatHelper = (): void => {
   syncFriendCount();
   syncAllHrs();
   syncHrReport();
-  syncChatMessages();
+  void syncChatMessages();
   void loadExcludedHrs();
 
   // 后台推送的排除名单变更：工作台切换 Pass 后即时重拉，替代轮询
@@ -54,7 +54,7 @@ const startChatHelper = (): void => {
       ensureReplyBox();
       syncAllHrs();
       syncHrReport();
-      syncChatMessages();
+      void syncChatMessages();
     }, 500);
   });
   observer.observe(document.body, {
