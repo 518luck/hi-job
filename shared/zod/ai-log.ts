@@ -27,6 +27,7 @@ const aiLogSchema = z.object({
   resolvedArgs: z.unknown(), // 实际传递给 AI SDK 的思考参数
   system: z.string().optional(), // 系统提示（角色设定），完整记录
   prompt: scenePromptSchema, // 原生结构化的用户提示素材，不再拼平
+  promptText: z.string().optional(), // 拼平后的完整提示词文本（实际发送给模型的内容）
   ok: z.boolean(), // 调用是否成功
   durationMs: z.number(), // 调用耗时（毫秒）
   output: z.string().optional(), // 成功时的返回文本，失败时缺省

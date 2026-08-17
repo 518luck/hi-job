@@ -130,7 +130,7 @@ const chatWithVendor = async ({
   source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
-  // 拼平提示词文本：实际发送给模型的内容，同时作为日志中的 prompt 记录
+  // 拼平提示词文本：发送给模型的实际内容，同时记入日志 promptText 字段
   const promptText = assemblePromptText(prompt);
   const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
   const startedAt = Date.now();
@@ -143,6 +143,7 @@ const chatWithVendor = async ({
     resolvedArgs,
     system,
     prompt,
+    promptText,
     startedAt,
   };
   let result: string;

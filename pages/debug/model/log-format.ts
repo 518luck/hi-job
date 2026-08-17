@@ -14,7 +14,7 @@ const formatLogTime = (timestamp: number): string => {
 const logTextOf = (log: AiLog): string => {
   const lines = [
     `${formatLogTime(log.createdAt)} ${SOURCE_LABELS[log.source]} · ${log.vendorName} · ${log.modelId} · 思考：${THINKING_MODE_LABELS[log.thinkingMode]} · ${log.ok ? '成功' : '失败'} · ${log.durationMs}ms`,
-    `实际传递参数：${JSON.stringify(log.resolvedArgs, null, 2)}`,
+    `模型思考等级参数：${JSON.stringify(log.resolvedArgs, null, 2)}`,
   ];
   if (log.output !== undefined && log.output !== '') {
     lines.push(`返回内容：\n${log.output}`);

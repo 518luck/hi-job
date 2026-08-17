@@ -36,7 +36,9 @@ function DetailField({
 
 // 单条 AI 日志手风琴项目：触发头带职位摘要，展开区展示原始提示词对象与结果详情
 function LogCard({ log }: { log: AiLog }) {
-  const jd = log.prompt?.jd;
+  const prompt = log.prompt;
+  const promptText = log.promptText;
+  const jd = prompt?.jd;
   return (
     <AccordionItem value={String(log.id)} className="rounded-lg border">
       <AccordionTrigger className="flex-col items-start gap-1 px-2 py-2 hover:no-underline">
@@ -81,16 +83,48 @@ function LogCard({ log }: { log: AiLog }) {
           {log.system !== undefined && log.system !== '' && (
             <DetailField value="system" label="系统提示词" text={log.system} />
           )}
-          {log.prompt !== undefined && (
-            <DetailField
-              value="prompt"
-              label="用户提示词（原始结构）"
-              text={JSON.stringify(log.prompt, null, 2)}
-            />
+          {prompt !== undefined && (
+            <>
+              <span className="text-xs font-medium text-muted-foreground">
+                用户提示词
+              </span>
+              {promptText !== undefined && promptText !== '' && (
+                <DetailField
+                  value="promptText"
+                  label="用户提示词全文"
+                  text={promptText}
+                />
+              )}
+              <DetailField value="task" label="任务描述" text={prompt.task} />
+              <DetailField
+                value="requirement"
+                label="生成要求"
+                text={prompt.requirement}
+              />
+              <DetailField
+                value="jd"
+                label="职位详情"
+                text={JSON.stringify(prompt.jd, null, 2)}
+              />
+              {prompt.hr !== undefined && (
+                <DetailField
+                  value="hr"
+                  label="当前 HR 信息"
+                  text={JSON.stringify(prompt.hr, null, 2)}
+                />
+              )}
+              {prompt.resumeText !== undefined && prompt.resumeText !== '' && (
+                <DetailField
+                  value="resumeText"
+                  label="求职者简历"
+                  text={prompt.resumeText}
+                />
+              )}
+            </>
           )}
           <DetailField
             value="resolvedArgs"
-            label="实际传递参数"
+            label="模型思考等级参数"
             text={JSON.stringify(log.resolvedArgs, null, 2)}
           />
           {log.output !== undefined && log.output !== '' && (

@@ -27,6 +27,7 @@ interface RecordAiLogInput {
   resolvedArgs: ThinkingArgs; // 实际传递的思考参数
   system: string; // 系统提示（角色设定）
   prompt: ScenePrompt; // 原生结构化提示词素材，按原样记录
+  promptText: string; // 拼平后的完整提示词文本（实际发送给模型的内容）
   startedAt: number; // 调用开始时间戳（毫秒）
   ok: boolean; // 调用是否成功
   output?: string; // 成功时的返回文本
@@ -42,6 +43,7 @@ const recordAiLog = async ({
   resolvedArgs,
   system,
   prompt,
+  promptText,
   startedAt,
   ok,
   output,
@@ -58,6 +60,7 @@ const recordAiLog = async ({
       resolvedArgs,
       system,
       prompt,
+      promptText,
       ok,
       durationMs: Date.now() - startedAt,
       output,
