@@ -72,6 +72,13 @@ function ResumeUpload() {
           event.target.value = '';
         }}
       />
+      {/* 格式提示仅在上传前展示：已有简历时让位给预览 */}
+      {resume === undefined && (
+        <p className="text-xs text-muted-foreground">
+          支持 .md / .docx 格式：md 直接读取，docx 自动转
+          Markdown（仅保留文字与表格，图片与复杂排版不保留）
+        </p>
+      )}
       {uploading && <p className="text-xs text-muted-foreground">解析中…</p>}
       {error !== '' && <p className="text-xs text-destructive">{error}</p>}
       {resume !== undefined && (
