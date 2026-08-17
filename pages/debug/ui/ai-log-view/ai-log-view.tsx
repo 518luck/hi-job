@@ -97,6 +97,9 @@ function AiLogView({ onBack }: AiLogViewProps) {
           <TabsTrigger value="followUp" className="flex-1">
             跟进
           </TabsTrigger>
+          <TabsTrigger value="rejectionFeedback" className="flex-1">
+            请教反馈
+          </TabsTrigger>
         </TabsList>
         <TabsContent value={filter} className="flex flex-col gap-2">
           <p className="text-xs text-muted-foreground">

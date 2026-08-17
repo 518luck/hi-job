@@ -19,7 +19,7 @@ const scenePromptSchema = z.object({
 const aiLogSchema = z.object({
   id: z.number().optional(), // Dexie 自增主键，写入时自动生成
   createdAt: z.number(), // 调用结束时间戳（毫秒）
-  source: z.enum(['greeting', 'reply', 'followUp']), // 调用来源：打招呼/聊天页回复/跟进消息
+  source: z.enum(['greeting', 'reply', 'followUp', 'rejectionFeedback']), // 调用来源：打招呼/聊天页回复/跟进消息/请教反馈
   vendorName: z.string(), // 厂商名称
   apiFormat: z.enum(['openai', 'anthropic']), // API 协议格式
   modelId: z.string(), // 模型 id

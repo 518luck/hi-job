@@ -6,7 +6,7 @@ import { db } from '../db';
 // 单行固定主键：AI 调用偏好只有一份
 const AI_PREFERENCE_KEY = 'global';
 
-// 默认偏好：未选择厂商/模型，思考模式默认档，三场景系统提示与文案用默认
+// 默认偏好：未选择厂商/模型，思考模式默认档，各场景系统提示与文案用默认
 const DEFAULT_AI_PREFERENCE: AiPreferenceInput = {
   vendorId: null, // 工作台所选厂商 id，null 未选择
   modelId: null, // 工作台所选模型 id，null 未选择
@@ -20,6 +20,9 @@ const DEFAULT_AI_PREFERENCE: AiPreferenceInput = {
   replySystem: null, // 回复系统提示，null 用默认
   replyTask: null, // 回复任务描述，null 用默认
   replyRequirement: null, // 回复生成要求，null 用默认
+  rejectionFeedbackSystem: null, // 请教反馈系统提示，null 用默认
+  rejectionFeedbackTask: null, // 请教反馈任务描述，null 用默认
+  rejectionFeedbackRequirement: null, // 请教反馈生成要求，null 用默认
 };
 
 // 保存偏好：单行覆盖写入
@@ -49,6 +52,9 @@ const readAiPreference = async (): Promise<AiPreferenceInput> => {
     replySystem: record.replySystem ?? null,
     replyTask: record.replyTask ?? null,
     replyRequirement: record.replyRequirement ?? null,
+    rejectionFeedbackSystem: record.rejectionFeedbackSystem ?? null,
+    rejectionFeedbackTask: record.rejectionFeedbackTask ?? null,
+    rejectionFeedbackRequirement: record.rejectionFeedbackRequirement ?? null,
   };
 };
 

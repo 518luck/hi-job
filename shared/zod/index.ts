@@ -62,6 +62,9 @@ export {
   vueJobCardSchema,
   vueJobDataSchema,
 } from './jd';
+// rejection-feedback 消息：聊天页请求 AI 生成招聘流程结束后的反馈请教消息
+export type { RejectionFeedbackInput } from './rejection-feedback';
+export { rejectionFeedbackInputSchema } from './rejection-feedback';
 // reply 消息：聊天页请求 AI 生成下一条回复
 export type { ReplyInput, ReplyJd, ReplyMessage } from './reply';
 export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';

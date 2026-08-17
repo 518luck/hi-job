@@ -7,6 +7,7 @@ import type {
   FollowUpInput,
   GreetingInput,
   HrInput,
+  RejectionFeedbackInput,
   ReplyInput,
   SelectedJd,
 } from '@/shared/zod';
@@ -24,6 +25,7 @@ interface ProtocolMap {
   greeting(data: GreetingInput): string; // 主世界脚本（经桥）	后台	生成打招呼语句
   followUp(data: FollowUpInput): string; // 主世界脚本（经桥）	后台	生成跟进消息
   generateReply(data: ReplyInput): string; // 隔离世界脚本	后台	调 AI 生成回复
+  rejectionFeedback(data: RejectionFeedbackInput): string; // 主世界脚本（经桥）	后台	生成请教反馈消息
 }
 
 // 类型安全消息收发：隔离世界内容脚本与后台使用

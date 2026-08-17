@@ -9,6 +9,7 @@ import type {
   FollowUpInput,
   GreetingInput,
   HrInput,
+  RejectionFeedbackInput,
   ReplyInput,
 } from '@/shared/zod';
 
@@ -43,6 +44,8 @@ const extensionApi = {
     callBackground('followUp', data),
   generateReply: (data: ReplyInput): Promise<string> =>
     callBackground('generateReply', data),
+  rejectionFeedback: (data: RejectionFeedbackInput): Promise<string> =>
+    callBackground('rejectionFeedback', data),
 };
 
 export { extensionApi };

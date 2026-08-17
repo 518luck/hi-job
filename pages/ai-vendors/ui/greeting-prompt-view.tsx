@@ -1,4 +1,4 @@
-// # 提示词配置视图：三场景（打招呼/跟进/回复）的系统提示、任务描述与生成要求
+// # 提示词配置视图：各场景（打招呼/跟进/回复/请教反馈）的系统提示、任务描述与生成要求
 
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
@@ -10,6 +10,9 @@ import {
   DEFAULT_GREETING_REQUIREMENT,
   DEFAULT_GREETING_SYSTEM,
   DEFAULT_GREETING_TASK,
+  DEFAULT_REJECTION_FEEDBACK_REQUIREMENT,
+  DEFAULT_REJECTION_FEEDBACK_SYSTEM,
+  DEFAULT_REJECTION_FEEDBACK_TASK,
   DEFAULT_REPLY_REQUIREMENT,
   DEFAULT_REPLY_SYSTEM,
   DEFAULT_REPLY_TASK,
@@ -23,8 +26,8 @@ import { Icons } from '@/shared/ui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
 
-// 提示词场景：打招呼/跟进/回复
-type PromptScene = 'greeting' | 'followUp' | 'reply';
+// 提示词场景：打招呼/跟进/回复/请教反馈
+type PromptScene = 'greeting' | 'followUp' | 'reply' | 'rejectionFeedback';
 
 // 场景配置：偏好字段键、默认文案与场景描述
 const SCENE_CONFIGS: Record<
@@ -32,12 +35,21 @@ const SCENE_CONFIGS: Record<
   {
     label: string; // 场景名
     description: string; // 场景说明（Tab 下方展示）
-    systemKey: 'greetingSystem' | 'followUpSystem' | 'replySystem'; // 系统提示偏好字段
-    taskKey: 'greetingTask' | 'followUpTask' | 'replyTask'; // 任务描述偏好字段
+    systemKey:
+      | 'greetingSystem'
+      | 'followUpSystem'
+      | 'replySystem'
+      | 'rejectionFeedbackSystem'; // 系统提示偏好字段
+    taskKey:
+      | 'greetingTask'
+      | 'followUpTask'
+      | 'replyTask'
+      | 'rejectionFeedbackTask'; // 任务描述偏好字段
     requirementKey:
       | 'greetingRequirement'
       | 'followUpRequirement'
-      | 'replyRequirement'; // 生成要求偏好字段
+      | 'replyRequirement'
+      | 'rejectionFeedbackRequirement'; // 生成要求偏好字段
     defaultSystem: string; // 默认系统提示
     defaultTask: string; // 默认任务描述
     defaultRequirement: string; // 默认生成要求
@@ -75,6 +87,17 @@ const SCENE_CONFIGS: Record<
     defaultSystem: DEFAULT_REPLY_SYSTEM,
     defaultTask: DEFAULT_REPLY_TASK,
     defaultRequirement: DEFAULT_REPLY_REQUIREMENT,
+  },
+  rejectionFeedback: {
+    label: '请教反馈',
+    description:
+      '招聘流程结束后：只结合职位名称、公司名称与当前最近聊天记录，生成低负担的反馈请教消息，不发送简历。',
+    systemKey: 'rejectionFeedbackSystem',
+    taskKey: 'rejectionFeedbackTask',
+    requirementKey: 'rejectionFeedbackRequirement',
+    defaultSystem: DEFAULT_REJECTION_FEEDBACK_SYSTEM,
+    defaultTask: DEFAULT_REJECTION_FEEDBACK_TASK,
+    defaultRequirement: DEFAULT_REJECTION_FEEDBACK_REQUIREMENT,
   },
 };
 

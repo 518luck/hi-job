@@ -1,4 +1,4 @@
-// # 生成场景域公有 API：三场景生成函数、默认文案与公共拼接段
+// # 生成场景域公有 API：各场景生成函数、默认文案与公共拼接段
 
 export {
   DEFAULT_FOLLOW_UP_REQUIREMENT,
@@ -13,6 +13,12 @@ export {
   generateGreeting,
 } from './greeting';
 export { hrSectionOf, resumeSectionOf } from './prompt-parts';
+export {
+  DEFAULT_REJECTION_FEEDBACK_REQUIREMENT,
+  DEFAULT_REJECTION_FEEDBACK_SYSTEM,
+  DEFAULT_REJECTION_FEEDBACK_TASK,
+  generateRejectionFeedback,
+} from './rejection-feedback';
 export {
   DEFAULT_REPLY_REQUIREMENT,
   DEFAULT_REPLY_SYSTEM,

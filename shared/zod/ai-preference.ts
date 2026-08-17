@@ -19,6 +19,9 @@ const aiPreferenceSchema = z.object({
   replySystem: z.string().nullable(), // 回复生成系统提示文案，null 用默认
   replyTask: z.string().nullable(), // 回复生成任务描述文案，null 用默认文案
   replyRequirement: z.string().nullable(), // 回复生成要求文案，null 用默认文案
+  rejectionFeedbackSystem: z.string().nullable(), // 请教反馈系统提示文案，null 用默认
+  rejectionFeedbackTask: z.string().nullable(), // 请教反馈任务描述文案，null 用默认文案
+  rejectionFeedbackRequirement: z.string().nullable(), // 请教反馈生成要求文案，null 用默认文案
 });
 
 // 协议传输的偏好：去掉存储主键

@@ -14,6 +14,7 @@ const SOURCE_LABELS: Record<AiLog['source'], string> = {
   greeting: '打招呼',
   reply: '回复',
   followUp: '跟进',
+  rejectionFeedback: '请教反馈',
 };
 
 // 日志分层筛选：全部或按来源
@@ -25,6 +26,7 @@ const FILTER_DESCRIPTIONS: Record<LogFilter, string> = {
   greeting: '首次联系招聘者时生成的打招呼消息（聊天窗「问候」）。',
   reply: '结合当前聊天记录生成的下一条回复（聊天窗「回复」）。',
   followUp: '招聘沟通暂时中断时生成的跟进消息（聊天窗「提醒」）。',
+  rejectionFeedback: '招聘流程结束后生成的反馈请教消息（聊天窗「反馈」）。',
 };
 
 export type { LogFilter };

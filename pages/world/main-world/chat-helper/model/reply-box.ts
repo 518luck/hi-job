@@ -1,4 +1,4 @@
-// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/提醒/回复/复制
+// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/跟进/反馈/回复/复制
 import { stringOf } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
@@ -138,6 +138,77 @@ const handleFollowUp = async (
   } finally {
     followUpButton.disabled = false;
     restoreButtonText(followUpButton, '提醒');
+  }
+};
+
+interface RejectionFeedbackHandlerOptions {
+  bodyEl: HTMLElement;
+  feedbackButton: HTMLButtonElement;
+}
+
+// 生成请教反馈消息：读取当前会话职位信息与最近聊天记录，经后台生成反馈请求
+const handleRejectionFeedback = async ({
+  bodyEl,
+  feedbackButton,
+}: RejectionFeedbackHandlerOptions): Promise<void> => {
+  feedbackButton.disabled = true;
+  showButtonLoading(feedbackButton);
+  showLoading(bodyEl);
+
+  let conversationId = '';
+  try {
+    const boss = await readCurrentBossWithRetry();
+    if (boss === null) {
+      bodyEl.textContent = '未找到当前会话信息';
+      return;
+    }
+    conversationId = stringOf(boss, 'encryptBossId');
+    if (conversationId === '') {
+      bodyEl.textContent = '未找到当前会话标识';
+      return;
+    }
+    const messages = await readMessagesWithRetry();
+    if (messages.length === 0) {
+      bodyEl.textContent = '暂无聊天记录（页面可能还在加载）';
+      return;
+    }
+    const currentBoss = await readCurrentBossWithRetry();
+    if (
+      currentBoss === null ||
+      stringOf(currentBoss, 'encryptBossId') !== conversationId
+    ) {
+      bodyEl.textContent = '会话已切换，请在当前会话中重新操作';
+      return;
+    }
+
+    const response = await extensionApi.rejectionFeedback({
+      jobId: stringOf(boss, 'encryptJobId'),
+      jd: replyJdOf(boss),
+      messages,
+      hr: hrOf(boss),
+    });
+    const latestBoss = await readCurrentBossWithRetry();
+    if (
+      latestBoss === null ||
+      stringOf(latestBoss, 'encryptBossId') !== conversationId
+    ) {
+      bodyEl.textContent = '会话已切换，已忽略上一会话的生成结果';
+      return;
+    }
+    bodyEl.textContent = response;
+  } catch (error) {
+    const latestBoss = await readCurrentBossWithRetry();
+    const latestConversationId =
+      latestBoss === null ? '' : stringOf(latestBoss, 'encryptBossId');
+    if (conversationId !== '' && latestConversationId !== conversationId) {
+      bodyEl.textContent = '会话已切换，已忽略上一会话的生成结果';
+      return;
+    }
+    bodyEl.textContent =
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+  } finally {
+    feedbackButton.disabled = false;
+    restoreButtonText(feedbackButton, '反馈');
   }
 };
 
@@ -302,6 +373,12 @@ const ensureReplyBox = (): void => {
   followUp.addEventListener('click', () => {
     void handleFollowUp(body, followUp);
   });
+  const feedback = document.createElement('button');
+  feedback.className = `${HIJOB_PREFIX}-copy-button`;
+  feedback.textContent = '反馈';
+  feedback.addEventListener('click', () => {
+    void handleRejectionFeedback({ bodyEl: body, feedbackButton: feedback });
+  });
   const generate = document.createElement('button');
   generate.className = `${HIJOB_PREFIX}-reply-button`;
   generate.textContent = '回复';
@@ -314,7 +391,7 @@ const ensureReplyBox = (): void => {
   copy.addEventListener('click', () => {
     void copyReplyText(body, copy);
   });
-  footer.append(greeting, followUp, generate, copy);
+  footer.append(greeting, followUp, feedback, generate, copy);
 
   chatWindow.append(header, body, footer);
   document.body.append(chatWindow);

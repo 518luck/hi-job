@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   generateFollowUp,
   generateGreeting,
+  generateRejectionFeedback,
   generateReply,
 } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
@@ -19,6 +20,7 @@ import type {
   AiVendorRecord,
   FollowUpInput,
   GreetingInput,
+  RejectionFeedbackInput,
   ReplyInput,
   ThinkingMode,
 } from '@/shared/zod';
@@ -29,6 +31,7 @@ import {
   followUpInputSchema,
   greetingInputSchema,
   hrInputSchema,
+  rejectionFeedbackInputSchema,
   replyInputSchema,
   selectedJdSchema,
 } from '@/shared/zod';
@@ -114,6 +117,24 @@ const handleGreeting = async (input: GreetingInput): Promise<string> => {
   });
 };
 
+// 生成请教反馈消息：优先用库中完整 JD，无记录时用输入兜底信息，带 HR 信息
+const handleRejectionFeedback = async (
+  input: RejectionFeedbackInput,
+): Promise<string> => {
+  const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
+  const recorded = await jdStore.readJdByJobId(input.jobId);
+  const jd = recorded ?? input.jd;
+  return generateRejectionFeedback({
+    jd,
+    messages: input.messages,
+    vendor,
+    modelId,
+    thinkingMode,
+    hr: input.hr,
+    requestPermission: false,
+  });
+};
+
 // 广播通知：向各 Boss直聘 标签页的桥推送指定类型，由桥转发给主世界
 const broadcastNotify = async (type: string): Promise<void> => {
   const tabs = await browser.tabs.query({ url: '*://*.zhipin.com/*' });
@@ -195,5 +216,12 @@ export default defineBackground(() => {
       throw new Error('回复生成参数不合法');
     }
     return handleGenerateReply(parsed.data);
+  });
+  onMessage('rejectionFeedback', ({ data }) => {
+    const parsed = rejectionFeedbackInputSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('请教反馈参数不合法');
+    }
+    return handleRejectionFeedback(parsed.data);
   });
 });
