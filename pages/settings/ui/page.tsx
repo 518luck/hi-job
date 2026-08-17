@@ -1,10 +1,20 @@
 import { useTheme } from 'next-themes';
+import { useEffect, useRef } from 'react';
 
 import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 
 import { BlockedCompanyInput } from './blocked-company-input';
 import { StorageUsageSection } from './storage-usage';
+
+// 设置页可聚焦区块：外部导航进入时滚动定位
+type SettingsSection = 'blockedCompanies';
+
+// 设置页的 props
+interface SettingsPageProps {
+  focusSection?: SettingsSection | null; // 进入时聚焦的区块
+  onSectionFocused?: () => void; // 聚焦完成后的清除回调
+}
 
 // 主题切换选项
 const THEME_OPTIONS = [
@@ -13,9 +23,22 @@ const THEME_OPTIONS = [
   { value: 'system', label: '跟随系统', icon: Icons.themeSystem },
 ] as const;
 
-// 设置页
-function SettingsPage() {
+// 设置页：主题切换、屏蔽公司、存储占用；支持外部导航定位到指定区块
+function SettingsPage({ focusSection, onSectionFocused }: SettingsPageProps) {
   const { theme, setTheme } = useTheme();
+  const blockedSectionRef = useRef<HTMLElement>(null);
+
+  // 聚焦指定区块：平滑滚动定位后回调清除，避免重复触发
+  useEffect(() => {
+    if (focusSection !== 'blockedCompanies') {
+      return;
+    }
+    blockedSectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+    onSectionFocused?.();
+  }, [focusSection, onSectionFocused]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4">
@@ -47,7 +70,7 @@ function SettingsPage() {
           ))}
         </ToggleGroup>
       </section>
-      <section className="flex flex-col gap-2">
+      <section ref={blockedSectionRef} className="flex flex-col gap-2">
         <BlockedCompanyInput />
         {/* // ! 包含匹配的误伤提醒：短词会遮住所有含该词的公司，提醒用户用全称规避 */}
         <div className="border border-amber-300/60 bg-amber-50 px-2.5 py-2 text-xs leading-relaxed text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300">
@@ -59,4 +82,5 @@ function SettingsPage() {
   );
 }
 
+export type { SettingsSection };
 export { SettingsPage };

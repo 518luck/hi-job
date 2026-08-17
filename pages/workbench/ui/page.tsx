@@ -12,6 +12,7 @@ import {
 import type { NavKey } from '@/widgets/nav-bar';
 
 import { useAiPreference } from '../model/use-ai-preference';
+import { useHasBlockedCompanies } from '../model/use-has-blocked-companies';
 import { useVendors } from '../model/use-vendors';
 import { CurrentSessionCard } from './current-session-card';
 import { ResumeUpload } from './resume-upload';
@@ -25,14 +26,19 @@ const THINKING_MODE_OPTIONS = [
   { value: 'high', label: '思考：高（传 reasoning: high）' },
 ] as const;
 
-// 工作台页的 props：onNavigate 用于跳转到其他导航页
+// 工作台页的 props：onNavigate 用于跳转到其他导航页，onOpenBlockedCompanies 跳到设置页屏蔽公司区块
 interface WorkbenchPageProps {
   onNavigate: (key: NavKey) => void;
+  onOpenBlockedCompanies: () => void;
 }
 
 // 工作台页：配置 AI 生成用的厂商、模型与思考模式
-function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
+function WorkbenchPage({
+  onNavigate,
+  onOpenBlockedCompanies,
+}: WorkbenchPageProps) {
   const { vendors } = useVendors();
+  const hasBlockedCompanies = useHasBlockedCompanies();
   const {
     vendorId,
     modelId,
@@ -147,6 +153,22 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
       <CurrentSessionCard />
       {renderVendorPicker()}
       <ResumeUpload />
+      {/* 屏蔽公司引导入口：仅在名单为空时展示，已配置则不再指引 */}
+      {!hasBlockedCompanies && (
+        <button
+          type="button"
+          className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-1 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-ring/50"
+          onClick={onOpenBlockedCompanies}
+        >
+          <span className="flex items-center gap-3">
+            <Icons.company className="size-4 shrink-0 text-muted-foreground" />
+            <span className="flex flex-col gap-1">
+              <span className="text-sm font-medium">屏蔽公司</span>
+            </span>
+          </span>
+          <Icons.chevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      )}
     </div>
   );
 }

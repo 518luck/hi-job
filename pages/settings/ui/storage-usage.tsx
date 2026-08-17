@@ -45,7 +45,7 @@ function StorageUsageSection() {
         <p className="text-xs text-muted-foreground">读取中…</p>
       )}
       <p className="text-xs text-muted-foreground">
-        数据为浏览器对本扩展源的存储估算（含全部本地数据）；清理数据请到记录页各列表操作。
+        所有数据仅存储在本地浏览器，不会上传到任何远程服务器；数字为浏览器对本扩展的存储估算，清理数据请到记录页操作。
       </p>
     </div>
   );
