@@ -11,3 +11,5 @@ export { hrStore } from './hr';
 export type { CompanyRecord, RecordedJd } from './jd';
 export { jdStore } from './jd';
 export { resumeStore } from './resume';
+export type { OriginUsage } from './storage-usage';
+export { storageUsageStore } from './storage-usage';

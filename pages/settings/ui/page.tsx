@@ -4,6 +4,7 @@ import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 
 import { BlockedCompanyInput } from './blocked-company-input';
+import { StorageUsageSection } from './storage-usage';
 
 // 主题切换选项
 const THEME_OPTIONS = [
@@ -56,6 +57,7 @@ function SettingsPage() {
           注意：包含匹配可能误伤——短词会遮住名字里含该词的所有公司（如「微创」也会遮「微创医疗」）。被遮卡片上会显示命中词与公司原名，便于二次辨认；发现误伤请删除短词，改用更长的全称（如「微创软件」「广州云链」）。
         </div>
       </section>
+      <StorageUsageSection />
     </div>
   );
 }
