@@ -40,6 +40,27 @@ const BUILT_IN_VENDORS: BuiltInVendor[] = [
     models: ['qwen3-max', 'qwen-plus', 'qwen-turbo'],
   },
   {
+    key: 'minimax',
+    name: 'MiniMax',
+    baseUrl: 'https://api.minimaxi.com/v1',
+    apiFormat: 'openai',
+    models: ['MiniMax-H3', 'MiniMax-M2'],
+  },
+  {
+    key: 'hunyuan',
+    name: '腾讯混元',
+    baseUrl: 'https://api.hunyuan.cloud.tencent.com/v1',
+    apiFormat: 'openai',
+    models: ['hunyuan-turbos-latest', 'hunyuan-lite'],
+  },
+  {
+    key: 'volcengine',
+    name: '火山方舟（豆包）',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+    apiFormat: 'openai',
+    models: ['doubao-seed-1.6'],
+  },
+  {
     key: 'openai',
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
