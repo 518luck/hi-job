@@ -1,7 +1,7 @@
 // # greeting 消息：聊天页请求 AI 生成打招呼语句（首次联系场景）
 import { z } from 'zod';
 
-import { hrInfoSchema } from './chat-session';
+import { hrInfoSchema } from './hr';
 import { replyJdSchema } from './reply';
 
 // 打招呼的输入：会话职位 + 兜底职位信息 + 可选 HR 信息

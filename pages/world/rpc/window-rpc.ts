@@ -8,8 +8,8 @@ const WINDOW_RPC_NAMESPACE_BACKGROUND = 'hi-job/window-rpc/background';
 // 页面内单向通知：后台推送经隔离世界桥转发给主世界，无请求响应结构
 const WINDOW_NOTIFY_NAMESPACE = 'hi-job/window-notify';
 
-// 通知类型：HR 标记已变更，主世界收到后重拉标记
-const WINDOW_NOTIFY_MARKS_CHANGED = 'marks-changed';
+// 通知类型：HR 排除标记已变更，主世界收到后重拉排除名单
+const WINDOW_NOTIFY_HRS_CHANGED = 'hrs-changed';
 
 // 通知类型：调试开关已变更，主世界收到后重新应用探测按钮
 const WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED = 'debug-settings-changed';
@@ -231,7 +231,7 @@ export {
   createWindowRpcClient,
   createWindowRpcServer,
   WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
-  WINDOW_NOTIFY_MARKS_CHANGED,
+  WINDOW_NOTIFY_HRS_CHANGED,
   WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,
   WINDOW_RPC_NAMESPACE_VUE,

@@ -39,5 +39,6 @@ content script → sendMessage → background 校验（zod）→ 仓储写入
 | `storage/` | 存储域：聚合入口（`index.ts`）、数据库装配（`db.ts`） |
 | `storage/jd/` | jd 领域：表索引 + 职位与公司记录的读写 |
 | `storage/ai-vendor/` | ai-vendor 领域：表索引 + AI 厂商配置的读写 |
-| `storage/chat-session/` | chat-session 领域：聊天会话档案的写入与最近会话读取 |
+| `storage/hr/` | hr 领域：HR 档案（含排除自标）的读写 |
+| `storage/chat-message/` | chat-message 领域：与 HR 的逐条聊天消息读写 |
 | `ai/` | AI 域：厂商客户端（供应商实例、模型拉取、文本生成），聚合入口 `@/shared/infra/ai` |

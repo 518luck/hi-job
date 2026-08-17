@@ -1,4 +1,6 @@
 // # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 生成）
+import { z } from 'zod';
+
 import {
   generateFollowUp,
   generateGreeting,
@@ -8,9 +10,9 @@ import { onMessage } from '@/shared/infra/messaging';
 import {
   aiPreferenceStore,
   aiVendorStore,
-  chatSessionStore,
+  chatMessageStore,
   debugSettingStore,
-  friendMarkStore,
+  hrStore,
   jdStore,
 } from '@/shared/infra/storage';
 import type {
@@ -21,12 +23,12 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 import {
-  chatSessionInputSchema,
+  chatMessageInputSchema,
   debugSettingsSchema,
+  excludedHrIdsResponseSchema,
   followUpInputSchema,
-  friendMarkInputSchema,
-  friendMarksResponseSchema,
   greetingInputSchema,
+  hrInputSchema,
   replyInputSchema,
   selectedJdSchema,
 } from '@/shared/zod';
@@ -136,26 +138,33 @@ export default defineBackground(() => {
     }
     await jdStore.saveSelectedJd({ jd: parsed.data });
   });
-  onMessage('saveFriendMark', async ({ data }) => {
-    const parsed = friendMarkInputSchema.safeParse(data);
+  onMessage('saveHr', async ({ data }) => {
+    const parsed = hrInputSchema.safeParse(data);
     if (!parsed.success) {
-      throw new Error('INVALID_PARAMS: HR 标记参数不合法');
+      throw new Error('INVALID_PARAMS: HR 档案上报参数不合法');
     }
-    await friendMarkStore.saveFriendMark(parsed.data);
+    await hrStore.saveHr(parsed.data);
   });
-  onMessage('getFriendMarks', () =>
-    friendMarkStore
-      .readAllFriendMarks()
-      .then((marks) => friendMarksResponseSchema.parse(marks)),
+  onMessage('syncHrs', async ({ data }) => {
+    const parsed = z.array(hrInputSchema).safeParse(data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: HR 批量同步参数不合法');
+    }
+    await hrStore.saveHrs(parsed.data);
+  });
+  onMessage('saveChatMessages', async ({ data }) => {
+    const parsed = z.array(chatMessageInputSchema).safeParse(data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: 聊天消息参数不合法');
+    }
+    await chatMessageStore.saveChatMessages(parsed.data);
+  });
+  onMessage('getExcludedHrIds', () =>
+    hrStore
+      .readExcludedHrIds()
+      .then((ids) => excludedHrIdsResponseSchema.parse(ids)),
   );
-  onMessage('saveChatSession', async ({ data }) => {
-    const parsed = chatSessionInputSchema.safeParse(data);
-    if (!parsed.success) {
-      throw new Error('INVALID_PARAMS: 会话上报参数不合法');
-    }
-    await chatSessionStore.saveChatSession(parsed.data);
-  });
-  onMessage('marksChanged', () => broadcastNotify('marks-changed'));
+  onMessage('hrsChanged', () => broadcastNotify('hrs-changed'));
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
   onMessage('saveDebugSettings', async ({ data }) => {
     const parsed = debugSettingsSchema.safeParse(data);

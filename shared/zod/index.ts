@@ -26,13 +26,9 @@ export {
   vendorDialogFormSchema,
   vendorFormSchema,
 } from './ai-vendor';
-// chatSession 表：聊天会话档案 + HR 信息派生
-export type { ChatSession, ChatSessionInput, HrInfo } from './chat-session';
-export {
-  chatSessionInputSchema,
-  chatSessionSchema,
-  hrInfoSchema,
-} from './chat-session';
+// chat-message 表：与 HR 的逐条聊天消息
+export type { ChatMessage, ChatMessageInput } from './chat-message';
+export { chatMessageInputSchema, chatMessageSchema } from './chat-message';
 // company 表：落库实体
 export type { CompanyRecord } from './company';
 export { companyRecordSchema } from './company';
@@ -46,17 +42,18 @@ export {
 // follow-up 消息：聊天页请求 AI 生成提醒问候
 export type { FollowUpInput } from './follow-up';
 export { followUpInputSchema } from './follow-up';
-// friend-mark 表：HR 会话状态标记 + 操作输入
-export type { FriendMark, FriendMarkInput } from './friend-mark';
-export {
-  FRIEND_MARK_STATUSES,
-  friendMarkInputSchema,
-  friendMarkSchema,
-  friendMarksResponseSchema,
-} from './friend-mark';
 // greeting 消息：聊天页请求 AI 生成打招呼语句
 export type { GreetingInput } from './greeting';
 export { greetingInputSchema } from './greeting';
+// hr 表：HR 档案底表 + 自标状态 + HR 信息派生
+export type { Hr, HrInfo, HrInput } from './hr';
+export {
+  excludedHrIdsResponseSchema,
+  HR_STATUSES,
+  hrInfoSchema,
+  hrInputSchema,
+  hrSchema,
+} from './hr';
 // jd 表：落库实体 + 传输 DTO
 export type { RecordedJd, SelectedJd, VueJobCard, VueJobData } from './jd';
 export {

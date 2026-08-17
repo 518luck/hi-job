@@ -182,6 +182,61 @@ const probeMessageDom = (lastText: string): Record<string, unknown> => {
   };
 };
 
+// 消息项元素沿祖先找 Vue 元信息：$props/$data 中取消息 id 与时间戳（与采集链路同法）
+const vueMetaOf = (
+  el: HTMLElement,
+):
+  | {
+      msgId: string;
+      ts: number;
+    }
+  | null => {
+  for (
+    let node: HTMLElement | null = el, depth = 0;
+    node !== null && depth < 3;
+    node = node.parentElement, depth += 1
+  ) {
+    const vue = readProperty(node, '__vue__');
+    if (vue === undefined) {
+      continue;
+    }
+    for (const source of [
+      readProperty(vue, '$props'),
+      readProperty(vue, '$data'),
+    ]) {
+      if (source === null || typeof source !== 'object') {
+        continue;
+      }
+      const msgId = String(
+        readProperty(source, 'msgId') ?? readProperty(source, 'msgid') ?? '',
+      );
+      const ts = readProperty(source, 'lastTS') ?? readProperty(source, 'ts');
+      if (msgId !== '' || typeof ts === 'number') {
+        return { msgId, ts: typeof ts === 'number' ? ts : 0 };
+      }
+    }
+  }
+  return null;
+};
+
+// 探测插件可采集的消息预览：文本、角色、DOM 属性与 Vue id/时间，用于无控制台验证
+const probeCollectedMessages = (): Record<string, unknown>[] =>
+  Array.from(
+    document.querySelectorAll<HTMLElement>('.chat-record .message-item'),
+  )
+    .slice(0, 20)
+    .map((item) => {
+      const content = item.querySelector<HTMLElement>('.message-content');
+      const text = (content?.innerText ?? item.innerText).trim().slice(0, 100);
+      // 消息只有自己/招聘者两方：非 item-friend 即自己（页面已无 item-self 标记）
+      const role = item.classList.contains('item-friend') ? 'friend' : 'self';
+      const domAttrs: Record<string, string> = {};
+      for (const attr of item.getAttributeNames().slice(0, 12)) {
+        domAttrs[attr] = String(item.getAttribute(attr));
+      }
+      return { role, text, domAttrs, vueMeta: vueMetaOf(item) };
+    });
+
 // 扫描疑似消息数组：$data 各字段中，元素含消息特征键的数组
 const scanMessageArrays = (msgData: unknown): Record<string, unknown>[] => {
   const out: Record<string, unknown>[] = [];
@@ -266,6 +321,8 @@ const deepDive = (root: unknown): Record<string, unknown> => {
         : '';
     result.messageDom = probeMessageDom(lastText);
   }
+  // 逐条消息采集预览：插件采集链路能拿到的文本、角色、id/时间与 DOM 属性
+  result.messages = probeCollectedMessages();
   return result;
 };
 

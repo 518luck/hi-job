@@ -1,6 +1,11 @@
 // # 聊天页数据读取（主世界）：Vue 实例与 DOM 中的会话、消息数据
-import { readProperty, stringOf } from '@/shared/lib/page-property';
-import type { HrInfo, ReplyJd, ReplyMessage } from '@/shared/zod';
+import { numberOf, readProperty, stringOf } from '@/shared/lib/page-property';
+import type {
+  ChatMessageInput,
+  HrInfo,
+  ReplyJd,
+  ReplyMessage,
+} from '@/shared/zod';
 
 // 聊天页根组件挂载点：探测确认 .main-wrap 持有 Chat 根实例
 const VUE_ROOT_SELECTOR = '.main-wrap';
@@ -42,19 +47,22 @@ const findInstanceByName = (
 const readVueRoot = (): unknown =>
   readProperty(document.querySelector(VUE_ROOT_SELECTOR), '__vue__');
 
-// 读取会话总数：boss-list-label 组件的 friends 数组长度
-const readFriendCount = (): number => {
+// 读取全部联系人列表：boss-list-label 组件的 friends 数组，含未点开过的会话
+const readAllFriends = (): Record<string, unknown>[] => {
   const root = readVueRoot();
   if (root === undefined) {
-    return 0;
+    return [];
   }
   const labelInstance = findInstanceByName(root, 'boss-list-label', 0);
   if (labelInstance === undefined) {
-    return 0;
+    return [];
   }
   const friends = readProperty(readProperty(labelInstance, '$data'), 'friends');
-  return Array.isArray(friends) ? friends.length : 0;
+  return Array.isArray(friends) ? (friends as Record<string, unknown>[]) : [];
 };
+
+// 读取会话总数：全部联系人数组长度
+const readFriendCount = (): number => readAllFriends().length;
 
 // 读取当前会话信息：message-list 组件的 boss 对象
 const readCurrentBoss = (): Record<string, unknown> | null => {
@@ -169,6 +177,136 @@ const readMessagesFromDom = (): ReplyMessage[] => {
   return messages.slice(-100);
 };
 
+// 从消息项沿祖先的 Vue 实例读取消息元信息：优先真实 id 与时间戳（页面私有字段逐层尝试）
+const messageMetaOf = (
+  item: HTMLElement,
+):
+  | {
+      msgId?: string;
+      ts?: number;
+    }
+  | undefined => {
+  const instance = vueOfElement(item);
+  if (instance === undefined) {
+    return undefined;
+  }
+  for (const source of [
+    readProperty(instance, '$props'),
+    readProperty(instance, '$data'),
+  ]) {
+    if (source === null || typeof source !== 'object') {
+      continue;
+    }
+    const msgId =
+      stringOf(source, 'msgId') || stringOf(source, 'msgid');
+    const ts =
+      numberOf(source, 'lastTS') || numberOf(source, 'ts');
+    if (msgId !== '' || ts > 0) {
+      return {
+        msgId: msgId === '' ? undefined : msgId,
+        ts: ts > 0 ? ts : undefined,
+      };
+    }
+    // 消息字段可能包在实例数据内层对象里，遍历一层查找
+    for (const key of Object.keys(source)) {
+      const value = readProperty(source, key);
+      if (value === null || typeof value !== 'object') {
+        continue;
+      }
+      const nestedId = stringOf(value, 'msgId') || stringOf(value, 'id');
+      const nestedTs = numberOf(value, 'lastTS') || numberOf(value, 'ts');
+      if (nestedId !== '' || nestedTs > 0) {
+        return {
+          msgId: nestedId === '' ? undefined : nestedId,
+          ts: nestedTs > 0 ? nestedTs : undefined,
+        };
+      }
+    }
+  }
+  return undefined;
+};
+
+// 消息 id 提取：DOM 属性优先（data-mid 为页面真实消息 id），其次元素 Vue 元信息，最后回退哨兵
+const messageIdOf = (
+  item: HTMLElement,
+  role: 'self' | 'friend',
+  text: string,
+): string => {
+  const domId =
+    item.getAttribute('data-mid') ??
+    item.getAttribute('data-msgid') ??
+    item.getAttribute('data-id') ??
+    item.id;
+  if (domId !== '') {
+    return domId;
+  }
+  return messageMetaOf(item)?.msgId ?? `${role}:${text}`;
+};
+
+// 消息时间提取：data-ts 属性优先，其次元素 Vue 元信息，再解析时间文本，无法识别回退 0
+const parseMessageTime = (item: HTMLElement): number => {
+  const timeEl = item.querySelector<HTMLElement>('.time');
+  const rawTs = timeEl?.dataset.ts;
+  if (rawTs !== undefined && !Number.isNaN(Number(rawTs))) {
+    return Number(rawTs);
+  }
+  const metaTs = messageMetaOf(item)?.ts;
+  if (metaTs !== undefined) {
+    return metaTs;
+  }
+  const text = timeEl?.textContent ?? '';
+  const timeMatch = text.match(/(\d{1,2}):(\d{2})/);
+  if (timeMatch !== null) {
+    const now = new Date();
+    return new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      Number(timeMatch[1]),
+      Number(timeMatch[2]),
+    ).getTime();
+  }
+  if (text.includes('昨天')) {
+    return Date.now() - 24 * 60 * 60_000;
+  }
+  const dateMatch = text.match(/(\d{1,2})[月/](\d{1,2})/);
+  if (dateMatch !== null) {
+    const now = new Date();
+    return new Date(
+      now.getFullYear(),
+      Number(dateMatch[1]) - 1,
+      Number(dateMatch[2]),
+    ).getTime();
+  }
+  return 0;
+};
+
+// 读取聊天窗消息流水：文本、发出方、消息 id 与时间，encryptBossId 由调用方补齐
+const readChatMessages = (): ChatMessageInput[] => {
+  const messages: ChatMessageInput[] = [];
+  for (const item of document.querySelectorAll<HTMLElement>(
+    MESSAGE_ITEM_SELECTOR,
+  )) {
+    const content = item.querySelector<HTMLElement>(MESSAGE_CONTENT_SELECTOR);
+    const text = cleanMessageText(
+      (content?.innerText ?? item.innerText).trim(),
+    );
+    if (text === '' || isPkCardText(text)) {
+      continue;
+    }
+    // 消息只有自己/招聘者两方：非 item-friend 即自己（页面已无 item-self 标记）
+    const role = item.classList.contains('item-friend') ? 'friend' : 'self';
+    messages.push({
+      encryptBossId: '',
+      msgId: messageIdOf(item, role, text),
+      role,
+      text,
+      msgAt: parseMessageTime(item),
+    });
+  }
+  return messages;
+};
+
 // 带重试的聊天记录读取：消息异步渲染，短窗口内 DOM 可能为空
 const readMessagesWithRetry = async (): Promise<ReplyMessage[]> => {
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -205,6 +343,8 @@ const hrOf = (boss: Record<string, unknown>): HrInfo | undefined => {
 export {
   friendOf,
   hrOf,
+  readAllFriends,
+  readChatMessages,
   readCurrentBoss,
   readCurrentBossWithRetry,
   readFriendCount,

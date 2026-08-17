@@ -8,6 +8,7 @@ import {
   ExternalLink,
   History,
   LayoutDashboard,
+  MapPin,
   MessageSquareText,
   Monitor,
   Moon,
@@ -15,21 +16,22 @@ import {
   Plus,
   RefreshCw,
   Settings,
-  Star,
   Sun,
   Trash2,
+  UserRound,
 } from 'lucide-react';
 
 // 全局图标注册表：业务代码统一通过 Icons 对象使用，不直接导入图标库
 const Icons = {
   workbench: LayoutDashboard,
-  favorites: Star,
   settings: Settings,
   themeLight: Sun,
   themeDark: Moon,
   themeSystem: Monitor,
   company: Building2,
   history: History,
+  person: UserRound,
+  location: MapPin,
   chevronDown: ChevronDown,
   exportData: Download,
   clearData: Trash2,

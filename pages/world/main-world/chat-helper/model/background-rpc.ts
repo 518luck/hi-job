@@ -5,11 +5,10 @@ import {
 } from '@/pages/world/rpc';
 import type { ProtocolMap } from '@/shared/infra/messaging';
 import type {
-  ChatSessionInput,
+  ChatMessageInput,
   FollowUpInput,
-  FriendMark,
-  FriendMarkInput,
   GreetingInput,
+  HrInput,
   ReplyInput,
 } from '@/shared/zod';
 
@@ -32,12 +31,12 @@ const callBackground = <K extends keyof ProtocolMap>(
 
 // 业务调用封装：方法名、参数与返回值集中受 ProtocolMap 约束
 const extensionApi = {
-  saveFriendMark: (data: FriendMarkInput): Promise<void> =>
-    callBackground('saveFriendMark', data),
-  saveChatSession: (data: ChatSessionInput): Promise<void> =>
-    callBackground('saveChatSession', data),
-  getFriendMarks: (): Promise<FriendMark[]> =>
-    callBackground('getFriendMarks', undefined),
+  saveHr: (data: HrInput): Promise<void> => callBackground('saveHr', data),
+  syncHrs: (data: HrInput[]): Promise<void> => callBackground('syncHrs', data),
+  saveChatMessages: (data: ChatMessageInput[]): Promise<void> =>
+    callBackground('saveChatMessages', data),
+  getExcludedHrIds: (): Promise<string[]> =>
+    callBackground('getExcludedHrIds', undefined),
   greeting: (data: GreetingInput): Promise<string> =>
     callBackground('greeting', data),
   followUp: (data: FollowUpInput): Promise<string> =>

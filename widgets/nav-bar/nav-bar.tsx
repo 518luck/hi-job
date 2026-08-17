@@ -4,7 +4,7 @@ import { Icons } from '@/shared/ui/icons';
 // 右侧菜单栏的导航配置
 const NAV_ITEMS = [
   { key: 'workbench', label: '工作台', icon: Icons.workbench },
-  { key: 'favorites', label: '收藏', icon: Icons.favorites },
+  { key: 'records', label: '记录', icon: Icons.history },
   { key: 'aiVendors', label: 'AI 厂商', icon: Icons.aiVendors },
   { key: 'settings', label: '设置', icon: Icons.settings },
   { key: 'debug', label: '调试', icon: Icons.debug },

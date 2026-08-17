@@ -1,17 +1,17 @@
-// # 会话列表同步（主世界）：拉取工作台写入的标记盖遮盖层，注入未沟通时长标签
+// # 会话列表同步（主世界）：拉取工作台写入的排除名单盖遮盖层，注入未沟通时长标签
 import { debugLog } from '@/shared/lib/debug-log';
 import { numberOf, stringOf } from '@/shared/lib/page-property';
-import { friendMarksResponseSchema } from '@/shared/zod';
+import { excludedHrIdsResponseSchema } from '@/shared/zod';
 
 import { extensionApi } from './background-rpc';
 import { HIJOB_PREFIX } from './style';
 import { friendOf, readFriendCount } from './vue-reader';
 
-// 本地标记缓存：encryptBossId -> status，页面加载时从后台拉取
-const marks = new Map<string, string>();
+// 本地排除名单缓存：encryptBossId 集合，页面加载时从后台拉取
+const excludedIds = new Set<string>();
 
 // 上次日志记录的标记数：数量变化才打日志，避免轮询刷屏
-let lastLoggedMarksCount = -1;
+let lastLoggedCount = -1;
 
 // 注入会话总数标签：label-list 区域追加「共 N 位」；文本不变不写，避免触发自身观察者
 const syncFriendCount = (): void => {
@@ -48,18 +48,18 @@ const sinceChatText = (lastTS: number): string => {
   return `${Math.floor(hours / 24)} 天未沟通`;
 };
 
-// 同步单个会话项：已标记盖「已 Pass」遮盖层，未标记移除；时间行注入未沟通时长
+// 同步单个会话项：已排除盖「已 Pass」遮盖层，未排除移除；时间行注入未沟通时长
 const syncItem = (item: HTMLElement): void => {
   const friend = friendOf(item);
   const bossId = friend === null ? '' : stringOf(friend, 'encryptBossId');
-  const marked = bossId !== '' && marks.has(bossId);
+  const excluded = bossId !== '' && excludedIds.has(bossId);
   let mask = item.querySelector<HTMLElement>(`.${HIJOB_PREFIX}-pass-mask`);
-  if (marked && mask === null) {
+  if (excluded && mask === null) {
     mask = document.createElement('div');
     mask.className = `${HIJOB_PREFIX}-pass-mask`;
     mask.textContent = '已 Pass';
     item.append(mask);
-  } else if (!marked && mask !== null) {
+  } else if (!excluded && mask !== null) {
     mask.remove();
   }
   const timeRow = item.querySelector('.time')?.parentElement ?? null;
@@ -102,25 +102,25 @@ const syncAllItems = (): void => {
   }
 };
 
-// 从后台拉取全部标记并渲染
-const loadMarks = async (): Promise<void> => {
+// 从后台拉取排除名单并渲染
+const loadExcludedHrs = async (): Promise<void> => {
   try {
-    const response = await extensionApi.getFriendMarks();
-    const parsed = friendMarksResponseSchema.safeParse(response);
+    const response = await extensionApi.getExcludedHrIds();
+    const parsed = excludedHrIdsResponseSchema.safeParse(response);
     if (parsed.success) {
-      marks.clear();
-      for (const mark of parsed.data) {
-        marks.set(mark.encryptBossId, mark.status);
+      excludedIds.clear();
+      for (const id of parsed.data) {
+        excludedIds.add(id);
       }
     }
   } catch {
-    // 后台不可达时保持空标记，不阻塞页面其他功能
+    // 后台不可达时保持空名单，不阻塞页面其他功能
   }
-  if (marks.size !== lastLoggedMarksCount) {
-    debugLog('拉取标记', `${marks.size} 条`);
-    lastLoggedMarksCount = marks.size;
+  if (excludedIds.size !== lastLoggedCount) {
+    debugLog('拉取排除名单', `${excludedIds.size} 条`);
+    lastLoggedCount = excludedIds.size;
   }
   syncAllItems();
 };
 
-export { loadMarks, syncAllItems, syncFriendCount };
+export { loadExcludedHrs, syncAllItems, syncFriendCount };

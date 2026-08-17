@@ -2,12 +2,11 @@
 import { defineExtensionMessaging } from '@webext-core/messaging';
 
 import type {
-  ChatSessionInput,
+  ChatMessageInput,
   DebugSettings,
   FollowUpInput,
-  FriendMark,
-  FriendMarkInput,
   GreetingInput,
+  HrInput,
   ReplyInput,
   SelectedJd,
 } from '@/shared/zod';
@@ -15,10 +14,11 @@ import type {
 // 消息协议表：消息名 -> 参数与返回类型，隔离世界与后台两端编译期一致
 interface ProtocolMap {
   recordJd(data: SelectedJd): void; // 隔离世界脚本	后台	保存职位
-  saveFriendMark(data: FriendMarkInput): void; // 隔离世界脚本	后台	保存 HR 标记
-  getFriendMarks(): FriendMark[]; // 隔离世界脚本	后台	获取 HR 标记
-  saveChatSession(data: ChatSessionInput): void; // 主世界脚本（经桥）	后台	上报当前聊天会话档案
-  marksChanged(): void; // 侧边栏	后台	通知 HR 标记已变更（后台广播到聊天页重拉）
+  saveHr(data: HrInput): void; // 主世界脚本（经桥）	后台	上报当前 HR 档案
+  syncHrs(data: HrInput[]): void; // 主世界脚本（经桥）	后台	整批同步全部 HR 档案
+  saveChatMessages(data: ChatMessageInput[]): void; // 主世界脚本（经桥）	后台	保存某会话的聊天消息
+  getExcludedHrIds(): string[]; // 主世界脚本（经桥）	后台	获取被排除的 HR id 列表
+  hrsChanged(): void; // 侧边栏	后台	通知排除标记已变更（后台广播到聊天页重拉）
   getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
   saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
   greeting(data: GreetingInput): string; // 主世界脚本（经桥）	后台	生成打招呼语句

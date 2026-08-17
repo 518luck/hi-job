@@ -15,28 +15,38 @@ import {
 } from '@/shared/ui/alert-dialog';
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { exportRecordedJds } from '../model/export-jds';
+import { extractCity } from '../model/extract-city';
+import { useRecordedHrs } from '../model/use-recorded-hrs';
 import { useRecordedJds } from '../model/use-recorded-jds';
+import { CityList } from './city-list';
 import { CompanyList } from './company-list';
+import { HrList } from './hr-list';
 import { JdCard } from './jd-card';
 
-// 记录列表的展示视图：按公司聚合或按时间倒序
-type ListView = 'company' | 'timeline';
+// 记录页的展示维度：职位时间流、公司聚合、HR 列表、地区聚合
+type Dimension = 'jobs' | 'companies' | 'hrs' | 'cities';
 
-// 判断值是否为合法列表视图
-const isListView = (value: string): value is ListView =>
-  value === 'company' || value === 'timeline';
-
-// 收藏页：自动记录点击过的职位，按公司聚合或时间流展示
-function FavoritesPage() {
-  const [view, setView] = useState<ListView>('company');
+// 记录页：自动记录点击过的职位，可切换职位/公司/HR/地区四个维度查看
+function RecordsPage() {
   const [clearOpen, setClearOpen] = useState(false);
   const { jds, companies, loading } = useRecordedJds();
+  const { hrs, loading: hrLoading } = useRecordedHrs();
+  // 统计已覆盖城市数：地址可识别出城市的去重计数
+  const cityCount = new Set(
+    jds.map((jd) => extractCity(jd.address)).filter((city) => city !== ''),
+  ).size;
 
-  // 渲染记录列表：读取中、空态与两种视图
-  const renderList = (): ReactElement | null => {
+  // 渲染当前维度的列表：读取中、空态与四个维度列表
+  const renderList = (dimension: Dimension): ReactElement | null => {
+    if (dimension === 'hrs') {
+      if (hrLoading) {
+        return <p className="text-xs text-muted-foreground">读取中…</p>;
+      }
+      return <HrList hrList={hrs} />;
+    }
     if (loading) {
       return <p className="text-xs text-muted-foreground">读取中…</p>;
     }
@@ -47,8 +57,11 @@ function FavoritesPage() {
         </p>
       );
     }
-    if (view === 'company') {
+    if (dimension === 'companies') {
       return <CompanyList companies={companies} jds={jds} />;
+    }
+    if (dimension === 'cities') {
+      return <CityList jds={jds} />;
     }
     return (
       <div className="flex flex-col gap-2">
@@ -61,9 +74,10 @@ function FavoritesPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
-      <h2 className="text-base font-medium">收藏</h2>
+      <h2 className="text-base font-medium">记录</h2>
       <p className="text-xs text-muted-foreground">
-        已记录 {jds.length} 条职位 · {companies.length} 家公司
+        已记录 {jds.length} 条职位 · {companies.length} 家公司 · {hrs.length} 位
+        HR · {cityCount} 个地区
       </p>
       <div className="flex gap-2">
         <Button
@@ -88,7 +102,7 @@ function FavoritesPage() {
           </AlertDialogTrigger>
           <AlertDialogContent size="sm">
             <AlertDialogHeader>
-              <AlertDialogTitle>清空全部收藏？</AlertDialogTitle>
+              <AlertDialogTitle>清空全部记录？</AlertDialogTitle>
               <AlertDialogDescription>
                 将删除 {jds.length} 条职位与 {companies.length}
                 家公司的全部记录，删除后无法恢复，建议先导出备份。
@@ -109,29 +123,32 @@ function FavoritesPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      <ToggleGroup
-        variant="outline"
-        className="w-full"
-        value={[view]}
-        onValueChange={(values) => {
-          const next = values[0];
-          if (next !== undefined && isListView(next)) {
-            setView(next);
-          }
-        }}
-      >
-        <ToggleGroupItem value="company" className="flex-1">
-          <Icons.company data-icon="inline-start" />
-          <span>按公司</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="timeline" className="flex-1">
-          <Icons.history data-icon="inline-start" />
-          <span>按时间</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
-      {renderList()}
+      <Tabs defaultValue="jobs">
+        <TabsList variant="line" className="w-full">
+          <TabsTrigger value="jobs">
+            <Icons.history data-icon="inline-start" />
+            <span>职位</span>
+          </TabsTrigger>
+          <TabsTrigger value="companies">
+            <Icons.company data-icon="inline-start" />
+            <span>公司</span>
+          </TabsTrigger>
+          <TabsTrigger value="hrs">
+            <Icons.person data-icon="inline-start" />
+            <span>HR</span>
+          </TabsTrigger>
+          <TabsTrigger value="cities">
+            <Icons.location data-icon="inline-start" />
+            <span>地区</span>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="jobs">{renderList('jobs')}</TabsContent>
+        <TabsContent value="companies">{renderList('companies')}</TabsContent>
+        <TabsContent value="hrs">{renderList('hrs')}</TabsContent>
+        <TabsContent value="cities">{renderList('cities')}</TabsContent>
+      </Tabs>
     </div>
   );
 }
 
-export { FavoritesPage };
+export { RecordsPage };

@@ -1,4 +1,4 @@
-// # 收藏数据导出：把全部职位与公司聚合打包成 JSON 文件下载
+// # 记录数据导出：把全部职位与公司聚合打包成 JSON 文件下载
 import { jdStore } from '@/shared/infra/storage';
 
 // 两位数字补零，用于文件名里的时间片段

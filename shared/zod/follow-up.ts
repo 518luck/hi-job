@@ -1,7 +1,7 @@
 // # follow-up 消息：聊天页请求 AI 生成提醒问候（已读不回/未读场景）
 import { z } from 'zod';
 
-import { hrInfoSchema } from './chat-session';
+import { hrInfoSchema } from './hr';
 import { replyJdSchema } from './reply';
 
 // 跟进问候的输入：会话职位 + 已发送的打招呼语句 + 兜底职位信息 + 可选 HR 信息

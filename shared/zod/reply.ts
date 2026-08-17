@@ -1,7 +1,7 @@
 // # reply 消息数据字典：聊天页请求 AI 生成下一条回复的数据结构
 import { z } from 'zod';
 
-import { hrInfoSchema } from './chat-session';
+import { hrInfoSchema } from './hr';
 
 // 单条聊天记录：说话方与正文
 const replyMessageSchema = z.object({

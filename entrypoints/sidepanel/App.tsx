@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { AiVendorsPage } from '@/pages/ai-vendors';
 import { DebugPage } from '@/pages/debug';
-import { FavoritesPage } from '@/pages/favorites';
+import { RecordsPage } from '@/pages/records';
 import { SettingsPage } from '@/pages/settings';
 import { WorkbenchPage } from '@/pages/workbench';
 import { NavBar, type NavKey } from '@/widgets/nav-bar';
@@ -17,7 +17,7 @@ function App() {
         {activeKey === 'workbench' && (
           <WorkbenchPage onNavigate={setActiveKey} />
         )}
-        {activeKey === 'favorites' && <FavoritesPage />}
+        {activeKey === 'records' && <RecordsPage />}
         {activeKey === 'aiVendors' && <AiVendorsPage />}
         {activeKey === 'settings' && <SettingsPage />}
         {activeKey === 'debug' && <DebugPage />}

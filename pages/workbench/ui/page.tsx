@@ -12,10 +12,10 @@ import {
 import type { NavKey } from '@/widgets/nav-bar';
 
 import { useAiPreference } from '../model/use-ai-preference';
-import { useChatSession } from '../model/use-chat-session';
+import { useHrSession } from '../model/use-hr-session';
 import { useJds } from '../model/use-jds';
 import { useVendors } from '../model/use-vendors';
-import { ChatSessionCard } from './chat-session-card';
+import { HrCard } from './hr-card';
 import { JdCard } from './jd-card';
 
 // 思考模式档位选项：文案说明各档对生成参数的影响
@@ -44,7 +44,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     selectModel,
     setThinkingMode,
   } = useAiPreference();
-  const { view: chatView, toggleFailed } = useChatSession();
+  const { view: hrView, toggleExcluded } = useHrSession();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
   const vendor =
@@ -176,13 +176,13 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     <div className="flex flex-1 flex-col gap-2 p-4">
       <h2 className="text-base font-medium">工作台</h2>
       {renderVendorPicker()}
-      {chatView !== undefined && (
-        <ChatSessionCard
-          session={chatView.session}
-          jd={chatView.jd}
-          failed={chatView.failed}
-          onToggleFailed={() => {
-            void toggleFailed();
+      {hrView !== undefined && (
+        <HrCard
+          hr={hrView.hr}
+          jd={hrView.jd}
+          excluded={hrView.excluded}
+          onToggleExcluded={() => {
+            void toggleExcluded();
           }}
         />
       )}
