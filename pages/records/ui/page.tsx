@@ -133,7 +133,7 @@ function RecordsPage() {
       <Tabs defaultValue="jobs">
         <TabsList variant="line" className="w-full">
           <TabsTrigger value="jobs">
-            <Icons.history data-icon="inline-start" />
+            <Icons.briefcase data-icon="inline-start" />
             <span>职位</span>
           </TabsTrigger>
           <TabsTrigger value="companies">
