@@ -68,6 +68,9 @@ const ensureStyle = (): void => {
     `.hijob-reply-button:disabled{opacity:.6;cursor:not-allowed;}`,
     `.hijob-copy-button{flex:1;padding:6px 12px;border:1px solid var(--hijob-border);border-radius:6px;background:transparent;color:var(--hijob-fg);font-size:12px;cursor:pointer;transition:background .15s,border-color .15s;}`,
     `.hijob-copy-button:hover{background:var(--hijob-muted);border-color:var(--hijob-muted-fg);}`,
+    // 按钮悬停气泡：深浅色反转强调，随主题切换，不拦截鼠标事件
+    `.hijob-button-tooltip{position:absolute;z-index:2;max-width:300px;padding:8px 10px;border:1px solid var(--hijob-border);background:var(--hijob-fg);color:var(--hijob-bg);font-size:12px;line-height:1.6;transform:translateX(-50%);box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none;}`,
+    `.hijob-tooltip-title{font-weight:600;}`,
   ].join('\n');
   document.head.append(style);
 };

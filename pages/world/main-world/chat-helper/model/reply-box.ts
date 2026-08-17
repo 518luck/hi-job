@@ -1,4 +1,4 @@
-// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/跟进/反馈/回复/复制
+// # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/跟进/反馈/回复/复制，悬停气泡显示使用时机
 import { stringOf } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
@@ -320,6 +320,66 @@ const enableFabDrag = (
   });
 };
 
+// 悬停气泡绑定项：目标按钮与标题、使用时机文案
+interface TooltipBindOptions {
+  button: HTMLButtonElement;
+  title: string;
+  text: string;
+}
+
+// 创建按钮悬停气泡：挂在聊天窗内单例复用，悬停 300ms 后在按钮上方展示使用时机
+const createTooltip = (chatWindow: HTMLElement) => {
+  const tooltip = document.createElement('div');
+  tooltip.className = `${HIJOB_PREFIX}-button-tooltip`;
+  tooltip.hidden = true;
+
+  // 填充文案并定位：水平居中于按钮后夹在窗内，底部对准按钮上沿
+  const show = ({ button, title, text }: TooltipBindOptions): void => {
+    const titleEl = document.createElement('span');
+    titleEl.className = `${HIJOB_PREFIX}-tooltip-title`;
+    titleEl.textContent = `${title} · `;
+    const textEl = document.createElement('span');
+    textEl.textContent = text;
+    tooltip.replaceChildren(titleEl, textEl);
+    tooltip.hidden = false;
+    // > 归位测宽后显式定宽：不定宽的绝对定位元素可用宽度是「窗宽-left」，越靠右的按钮会把气泡挤得越窄、换行越多
+    tooltip.style.left = '0px';
+    tooltip.style.width = 'auto';
+    const half = tooltip.offsetWidth / 2;
+    tooltip.style.width = `${half * 2}px`;
+    const windowRect = chatWindow.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const center = buttonRect.left - windowRect.left + buttonRect.width / 2;
+    tooltip.style.left = `${Math.min(
+      Math.max(center, half + 8),
+      windowRect.width - half - 8,
+    )}px`;
+    tooltip.style.bottom = `${windowRect.height - (buttonRect.top - windowRect.top) + 6}px`;
+  };
+
+  // 绑定单个按钮：进入延迟展示，离开或点击隐藏
+  const bind = (options: TooltipBindOptions): void => {
+    const { button } = options;
+    let timer = 0;
+    button.addEventListener('pointerenter', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        show(options);
+      }, 300);
+    });
+    button.addEventListener('pointerleave', () => {
+      window.clearTimeout(timer);
+      tooltip.hidden = true;
+    });
+    button.addEventListener('click', () => {
+      window.clearTimeout(timer);
+      tooltip.hidden = true;
+    });
+  };
+
+  return { tooltip, bind };
+};
+
 // 注入悬浮按钮与聊天窗：右下角悬浮按钮，可拖拽移动，点击切换聊天窗显示
 const ensureReplyBox = (): void => {
   const conversation = document.querySelector('.chat-conversation');
@@ -393,7 +453,30 @@ const ensureReplyBox = (): void => {
   });
   footer.append(greeting, followUp, feedback, generate, copy);
 
-  chatWindow.append(header, body, footer);
+  // 悬停气泡：说明各按钮使用时机，作为聊天窗子元素随窗显隐
+  const { tooltip, bind } = createTooltip(chatWindow);
+  bind({
+    button: greeting,
+    title: '问候',
+    text: '首次联系时结合职位与 HR 信息生成打招呼语',
+  });
+  bind({
+    button: followUp,
+    title: '提醒',
+    text: '对方已读未回时生成自然跟进；招聘者刚回复请用「回复」',
+  });
+  bind({
+    button: feedback,
+    title: '反馈',
+    text: '沟通结束或被拒后，生成礼貌请教反馈的消息',
+  });
+  bind({
+    button: generate,
+    title: '回复',
+    text: '结合聊天记录与职位信息，生成下一条回复',
+  });
+
+  chatWindow.append(header, body, footer, tooltip);
   document.body.append(chatWindow);
   enableFabDrag(fab, chatWindow);
 };
