@@ -26,6 +26,13 @@ export {
   vendorDialogFormSchema,
   vendorFormSchema,
 } from './ai-vendor';
+// blockedCompany 表：屏蔽公司名单设置 + 协议 DTO
+export type { BlockedCompany, BlockedCompanyNames } from './blocked-company';
+export {
+  BLOCKED_COMPANY_KEY,
+  blockedCompanyNamesSchema,
+  blockedCompanySchema,
+} from './blocked-company';
 // chat-message 表：与 HR 的逐条聊天消息
 export type { ChatMessage, ChatMessageInput } from './chat-message';
 export { chatMessageInputSchema, chatMessageSchema } from './chat-message';

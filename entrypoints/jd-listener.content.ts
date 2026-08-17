@@ -1,6 +1,7 @@
 // # Boss直聘 内容脚本（隔离世界）：监听用户点开的职位并自动记录
 import {
   startJdRecorder,
+  startJobCardBlocker,
   startJobCardDecorator,
   startRuntimeBridge,
 } from '@/pages/world/isolated-world';
@@ -12,6 +13,8 @@ export default defineContentScript({
     startJdRecorder({ doc: document });
     // 列表卡片注入公司规模标签
     startJobCardDecorator({ doc: document });
+    // 列表卡片按屏蔽公司名单盖「已屏蔽」遮罩
+    startJobCardBlocker({ doc: document });
     // 主世界聊天页脚本的扩展 API 请求转发（主世界拿不到 chrome API）
     startRuntimeBridge();
   },

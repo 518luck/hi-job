@@ -20,6 +20,8 @@ interface ProtocolMap {
   saveChatMessages(data: ChatMessageInput[]): void; // 主世界脚本（经桥）	后台	保存某会话的聊天消息
   getExcludedHrIds(): string[]; // 主世界脚本（经桥）	后台	获取被排除的 HR id 列表
   hrsChanged(): void; // 侧边栏	后台	通知排除标记已变更（后台广播到聊天页重拉）
+  getBlockedCompanyNames(): string[]; // 隔离世界脚本/侧边栏	后台	获取屏蔽公司名单
+  saveBlockedCompanies(data: string[]): void; // 侧边栏	后台	保存屏蔽公司名单并广播到职位列表页
   getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
   saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
   greeting(data: GreetingInput): string; // 主世界脚本（经桥）	后台	生成打招呼语句

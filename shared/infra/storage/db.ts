@@ -8,6 +8,7 @@ import type {
   AiLog,
   AiPreference,
   AiVendorRecord,
+  BlockedCompany,
   ChatMessage,
   CompanyRecord,
   DebugSetting,
@@ -24,6 +25,7 @@ const db = new Dexie('hi-job') as Dexie & {
   hr: EntityTable<Hr, 'encryptBossId'>; // HR 档案表
   chatMessage: Table<ChatMessage, [string, string]>; // 聊天消息流水表（复合主键）
   debugSetting: EntityTable<DebugSetting, 'key'>; // 调试开关设置表
+  blockedCompany: EntityTable<BlockedCompany, 'key'>; // 屏蔽公司名单表
   aiLog: EntityTable<AiLog, 'id'>; // AI 调用日志表
   aiPreference: EntityTable<AiPreference, 'key'>; // AI 调用全局偏好表
   resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
@@ -37,6 +39,7 @@ db.version(1).stores({
   hr: 'encryptBossId, lastMsgAt, lastChatAt, status',
   chatMessage: '[encryptBossId+msgId], encryptBossId, msgAt',
   debugSetting: 'key',
+  blockedCompany: 'key',
   aiLog: '++id, createdAt',
   aiPreference: 'key',
   resume: 'key',

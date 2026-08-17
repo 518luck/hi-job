@@ -1,4 +1,4 @@
-// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、AI 生成）
+// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、屏蔽公司、AI 生成）
 import { z } from 'zod';
 
 import {
@@ -11,6 +11,7 @@ import { onMessage } from '@/shared/infra/messaging';
 import {
   aiPreferenceStore,
   aiVendorStore,
+  blockedCompanyStore,
   chatMessageStore,
   debugSettingStore,
   hrStore,
@@ -25,6 +26,7 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 import {
+  blockedCompanyNamesSchema,
   chatMessageInputSchema,
   debugSettingsSchema,
   excludedHrIdsResponseSchema,
@@ -186,6 +188,18 @@ export default defineBackground(() => {
       .then((ids) => excludedHrIdsResponseSchema.parse(ids)),
   );
   onMessage('hrsChanged', () => broadcastNotify('hrs-changed'));
+  onMessage('getBlockedCompanyNames', () =>
+    blockedCompanyStore.readBlockedCompanies(),
+  );
+  onMessage('saveBlockedCompanies', async ({ data }) => {
+    const parsed = blockedCompanyNamesSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new Error('INVALID_PARAMS: 屏蔽公司名单参数不合法');
+    }
+    await blockedCompanyStore.saveBlockedCompanies(parsed.data);
+    // 广播到各标签页，职位列表页遮罩即时增减
+    await broadcastNotify('blocked-companies-changed');
+  });
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
   onMessage('saveDebugSettings', async ({ data }) => {
     const parsed = debugSettingsSchema.safeParse(data);

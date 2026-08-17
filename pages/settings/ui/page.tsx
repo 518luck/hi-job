@@ -3,6 +3,8 @@ import { useTheme } from 'next-themes';
 import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 
+import { BlockedCompanyInput } from './blocked-company-input';
+
 // 主题切换选项
 const THEME_OPTIONS = [
   { value: 'light', label: '浅色', icon: Icons.themeLight },
@@ -15,32 +17,45 @@ function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex flex-1 flex-col gap-2 p-4">
+    <div className="flex flex-1 flex-col gap-6 p-4">
       <h2 className="text-base font-medium">设置</h2>
-      <ToggleGroup
-        variant="outline"
-        className="w-full"
-        value={theme ? [theme] : []}
-        onValueChange={(values) => {
-          const next = values[0];
-          if (next) {
-            setTheme(next);
-          }
-        }}
-      >
-        {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
-          <ToggleGroupItem
-            key={value}
-            value={value}
-            className="flex-1"
-            title={label}
-            aria-label={label}
-          >
-            <Icon data-icon="inline-start" />
-            <span>{label}</span>
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <section className="flex flex-col gap-2">
+        <span className="text-sm text-muted-foreground">主题</span>
+        <ToggleGroup
+          variant="outline"
+          className="w-full"
+          value={theme ? [theme] : []}
+          onValueChange={(values) => {
+            const next = values[0];
+            if (next) {
+              setTheme(next);
+            }
+          }}
+        >
+          {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+            <ToggleGroupItem
+              key={value}
+              value={value}
+              className="flex-1"
+              title={label}
+              aria-label={label}
+            >
+              <Icon data-icon="inline-start" />
+              <span>{label}</span>
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </section>
+      <section className="flex flex-col gap-2">
+        <BlockedCompanyInput />
+        <p className="text-xs text-muted-foreground">
+          按公司名包含匹配（不区分大小写）：输入「中软」即屏蔽「中软国际」；支持逗号分隔批量粘贴，或一键导入常见外包公司模板。职位列表页命中的卡片遮罩会显示命中词与公司原名。
+        </p>
+        {/* // ! 包含匹配的误伤提醒：短词会遮住所有含该词的公司，提醒用户用全称规避 */}
+        <div className="border border-amber-300/60 bg-amber-50 px-2.5 py-2 text-xs leading-relaxed text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300">
+          注意：包含匹配可能误伤——短词会遮住名字里含该词的所有公司（如「微创」也会遮「微创医疗」）。被遮卡片上会显示命中词与公司原名，便于二次辨认；发现误伤请删除短词，改用更长的全称（如「微创软件」「广州云链」）。
+        </div>
+      </section>
     </div>
   );
 }
