@@ -235,11 +235,13 @@ const messageMetaOf = (
   return undefined;
 };
 
-// 消息 id 提取：DOM 属性优先（data-mid 为页面真实消息 id），其次元素 Vue 元信息，最后回退哨兵
+// 消息 id 提取：DOM 属性优先（data-mid 为页面真实消息 id），其次元素 Vue 元信息，
+// 最后回退「发出方:文本:时间」哨兵（含时间戳降低同文本消息误合并/重复的概率）
 const messageIdOf = (
   item: HTMLElement,
   role: 'self' | 'friend',
   text: string,
+  msgAt: number,
 ): string => {
   const domId =
     item.getAttribute('data-mid') ??
@@ -249,7 +251,7 @@ const messageIdOf = (
   if (domId !== '') {
     return domId;
   }
-  return messageMetaOf(item)?.msgId ?? `${role}:${text}`;
+  return messageMetaOf(item)?.msgId ?? `${role}:${text}:${msgAt}`;
 };
 
 // 消息时间提取：data-ts 属性优先，其次元素 Vue 元信息，再解析时间文本，无法识别回退 0
@@ -305,12 +307,13 @@ const readChatMessages = (): ChatMessageInput[] => {
     }
     // 消息只有自己/招聘者两方：非 item-friend 即自己（页面已无 item-self 标记）
     const role = item.classList.contains('item-friend') ? 'friend' : 'self';
+    const msgAt = parseMessageTime(item);
     messages.push({
       encryptBossId: '',
-      msgId: messageIdOf(item, role, text),
+      msgId: messageIdOf(item, role, text, msgAt),
       role,
       text,
-      msgAt: parseMessageTime(item),
+      msgAt,
     });
   }
   return messages;

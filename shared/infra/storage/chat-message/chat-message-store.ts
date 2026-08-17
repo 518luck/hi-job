@@ -22,8 +22,7 @@ const readAllChatMessages = (): Promise<ChatMessage[]> =>
   db.chatMessage.toArray();
 
 // 统计全部聊天消息条数：清空确认文案展示用
-const countAllChatMessages = (): Promise<number> =>
-  db.chatMessage.count();
+const countAllChatMessages = (): Promise<number> => db.chatMessage.count();
 
 // 清空全部聊天消息：清除数据库时一并清理
 const clearAllChatMessages = (): Promise<void> => db.chatMessage.clear();

@@ -92,7 +92,7 @@ function DataTable<TData extends RowData>({
                   key={header.id}
                   className="flex min-w-0 flex-1 items-center"
                 >
-                  {header.isPlaceholder ? null : (
+                  {header.isPlaceholder ? null : header.column.getCanSort() ? (
                     <button
                       type="button"
                       className="flex items-center gap-1 text-left"
@@ -101,6 +101,8 @@ function DataTable<TData extends RowData>({
                       <table.FlexRender header={header} />
                       {sortIndicatorOf(header.column.getIsSorted())}
                     </button>
+                  ) : (
+                    <table.FlexRender header={header} />
                   )}
                 </TableHead>
               ))}

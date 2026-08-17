@@ -1,11 +1,36 @@
-// HR 列表列定义：两列布局，左列信息堆叠、右列时长与状态，时长列按时间戳排序
+// HR 列表列定义：单列手风琴，Trigger 展示信息与状态，Content 展开聊天记录
 import type { ColumnDef } from '@tanstack/react-table';
+import { createContext, useContext } from 'react';
 
 import { cn } from '@/shared/lib/cn';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/shared/ui/accordion';
 import { Badge } from '@/shared/ui/badge';
 import type { Hr } from '@/shared/zod';
 
 import type { features } from '../data-table';
+import { HrChatView } from './chat-view';
+
+// 手风琴展开状态上下文：由列表组件持有，列定义保持静态避免表格重建
+interface HrAccordionContextValue {
+  openBossId: string | null;
+  onOpenChange: (bossId: string | null) => void;
+}
+
+const HrAccordionContext = createContext<HrAccordionContextValue | null>(null);
+
+// 读取手风琴展开状态：必须在 HrAccordionProvider 内使用
+const useHrAccordion = (): HrAccordionContextValue => {
+  const context = useContext(HrAccordionContext);
+  if (context === null) {
+    throw new Error('useHrAccordion 必须在 HrAccordionProvider 内使用。');
+  }
+  return context;
+};
 
 // 未沟通天数：满 3 天橙色提醒，满 7 天红色警示；无时间戳视为 0（不误标色）
 const sinceDays = (lastMsgAt: number): number =>
@@ -49,65 +74,77 @@ const toneOf = (lastMsgAt: number): string => {
   return 'text-muted-foreground';
 };
 
-// HR 列表列定义：左列堆叠姓名/公司/最后消息，右列时长+状态并按时长排序
+// HR 列表列定义：静态列，展开状态经上下文读取（虚拟滚动下避免表格重建）
 const hrColumns: ColumnDef<typeof features, Hr>[] = [
   {
-    id: 'info',
+    id: 'hr',
     header: 'HR',
+    enableSorting: false,
     cell: ({ row }) => {
-      const { bossName, bossTitle, brandName, lastText, status } =
-        row.original;
+      const { openBossId, onOpenChange } = useHrAccordion();
+      const hr = row.original;
+      const { bossName, bossTitle, brandName, lastText, status, lastIsSelf } =
+        hr;
       return (
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <div className="flex items-baseline gap-1">
-            <span
-              className={cn(
-                'truncate font-medium',
-                status === 'excluded' && 'line-through',
-              )}
-            >
-              {bossName}
-            </span>
-            {bossTitle !== '' && (
-              <span className="shrink-0 text-muted-foreground">
-                {bossTitle}
-              </span>
-            )}
-          </div>
-          {brandName !== '' && (
-            <p className="truncate text-muted-foreground">{brandName}</p>
-          )}
-          {lastText !== '' && (
-            <p className="truncate text-muted-foreground">{lastText}</p>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: 'lastMsgAt',
-    header: '状态',
-    cell: ({ row }) => {
-      const { status, lastIsSelf } = row.original;
-      return (
-        <div className="flex flex-col items-end gap-0.5 text-right">
-          <span className={toneOf(row.original.lastMsgAt)}>
-            {sinceChatText(row.original.lastMsgAt)}
-          </span>
-          <div className="flex gap-1">
-            {status === 'excluded' && (
-              <Badge variant="secondary">已排除</Badge>
-            )}
-            {lastIsSelf && sinceDays(row.original.lastMsgAt) >= 1 && (
-              <Badge className="bg-orange-600/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
-                等你回复
-              </Badge>
-            )}
-          </div>
-        </div>
+        <Accordion
+          value={openBossId === null ? [] : [openBossId]}
+          onValueChange={(values) => {
+            onOpenChange(values[0] ?? null);
+          }}
+        >
+          <AccordionItem value={hr.encryptBossId}>
+            <AccordionTrigger className="w-full">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-1">
+                    <span
+                      className={cn(
+                        'truncate font-medium',
+                        status === 'excluded' && 'line-through',
+                      )}
+                    >
+                      {bossName}
+                    </span>
+                    {bossTitle !== '' && (
+                      <span className="shrink-0 text-muted-foreground">
+                        {bossTitle}
+                      </span>
+                    )}
+                  </div>
+                  {brandName !== '' && (
+                    <p className="truncate text-muted-foreground">
+                      {brandName}
+                    </p>
+                  )}
+                  {lastText !== '' && (
+                    <p className="truncate text-muted-foreground">{lastText}</p>
+                  )}
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                  <span className={toneOf(hr.lastMsgAt)}>
+                    {sinceChatText(hr.lastMsgAt)}
+                  </span>
+                  <div className="flex gap-1">
+                    {status === 'excluded' && (
+                      <Badge variant="secondary">已排除</Badge>
+                    )}
+                    {lastIsSelf && sinceDays(hr.lastMsgAt) >= 1 && (
+                      <Badge className="bg-orange-600/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
+                        等你回复
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent disableAnimation>
+              <HrChatView encryptBossId={hr.encryptBossId} />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       );
     },
   },
 ];
 
-export { hrColumns };
+export { HrAccordionContext, hrColumns };

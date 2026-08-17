@@ -1,9 +1,5 @@
 // # 全部数据导出：把职位、公司、HR 档案与聊天消息打包成 JSON 文件下载
-import {
-  chatMessageStore,
-  hrStore,
-  jdStore,
-} from '@/shared/infra/storage';
+import { chatMessageStore, hrStore, jdStore } from '@/shared/infra/storage';
 
 // 两位数字补零，用于文件名里的时间片段
 const pad2 = (value: number): string => String(value).padStart(2, '0');

@@ -7,10 +7,7 @@ const useRecordedMessages = (): {
   messagesCount: number;
   loading: boolean;
 } => {
-  const count = useLiveQuery(
-    () => chatMessageStore.countAllChatMessages(),
-    [],
-  );
+  const count = useLiveQuery(() => chatMessageStore.countAllChatMessages(), []);
 
   return {
     messagesCount: count ?? 0,

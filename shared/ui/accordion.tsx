@@ -52,15 +52,25 @@ function AccordionTrigger({
   );
 }
 
+// 展开面板：disableAnimation 用于虚拟滚动等需要即时高度测量的场景
 function AccordionContent({
   className,
   children,
+  disableAnimation = false,
   ...props
-}: AccordionPrimitive.Panel.Props) {
+}: AccordionPrimitive.Panel.Props & {
+  disableAnimation?: boolean;
+}) {
   return (
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
-      className="overflow-hidden text-xs data-open:animate-accordion-down data-closed:animate-accordion-up"
+      className={cn(
+        'overflow-hidden text-xs',
+        disableAnimation
+          ? ''
+          : 'data-open:animate-accordion-down data-closed:animate-accordion-up',
+        className,
+      )}
       {...props}
     >
       <div

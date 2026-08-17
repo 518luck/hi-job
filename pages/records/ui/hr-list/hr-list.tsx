@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { hrStore } from '@/shared/infra/storage';
 import {
@@ -26,7 +26,7 @@ import type { Hr } from '@/shared/zod';
 
 import { exportHrsData } from '../../model/export-all';
 import { DataTable } from '../data-table';
-import { hrColumns } from './columns';
+import { HrAccordionContext, hrColumns } from './columns';
 
 // HR 列表的 props
 interface HrListProps {
@@ -36,6 +36,9 @@ interface HrListProps {
 // 未沟通时长筛选档位：全部或 N 天内
 type TimeFilter = 'all' | '3' | '7' | '30';
 
+// 列表排序方向：最近沟通优先或最久未沟通优先
+type SortBy = 'latest' | 'oldest';
+
 // 筛选档位选项：下拉框展示用
 const TIME_FILTER_OPTIONS = [
   { value: 'all', label: '全部时间' },
@@ -44,23 +47,44 @@ const TIME_FILTER_OPTIONS = [
   { value: '30', label: '30 天内' },
 ] as const;
 
+// 排序方向选项：下拉框展示用
+const SORT_OPTIONS = [
+  { value: 'latest', label: '最近沟通优先' },
+  { value: 'oldest', label: '最久未沟通优先' },
+] as const;
+
 // 判断值是否为合法筛选档位
 const isTimeFilter = (value: string): value is TimeFilter =>
   value === 'all' || value === '3' || value === '7' || value === '30';
+
+// 判断值是否为合法排序方向
+const isSortBy = (value: string): value is SortBy =>
+  value === 'latest' || value === 'oldest';
 
 // 判断 HR 是否在 N 天内有过沟通：无时间戳视为不在范围内
 const withinDays = (lastMsgAt: number, days: number): boolean =>
   lastMsgAt > 0 && Date.now() - lastMsgAt <= days * 86_400_000;
 
-// HR 列表：时间范围筛选 + 单独导出/清空，表格虚拟滚动展示
+// HR 列表：时间筛选 + 排序 + 手风琴展开聊天记录，表格虚拟滚动展示
 function HrList({ hrList }: HrListProps) {
   const [filter, setFilter] = useState<TimeFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('latest');
+  const [openBossId, setOpenBossId] = useState<string | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
   const days = filter === 'all' ? null : Number(filter);
   const filtered =
     days === null
       ? hrList
       : hrList.filter((hr) => withinDays(hr.lastMsgAt, days));
+  const sorted = useMemo(
+    () =>
+      [...filtered].sort((a, b) =>
+        sortBy === 'latest'
+          ? b.lastMsgAt - a.lastMsgAt
+          : a.lastMsgAt - b.lastMsgAt,
+      ),
+    [filtered, sortBy],
+  );
 
   if (hrList.length === 0) {
     return (
@@ -87,6 +111,28 @@ function HrList({ hrList }: HrListProps) {
           <SelectContent>
             <SelectGroup>
               {TIME_FILTER_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          items={SORT_OPTIONS}
+          value={sortBy}
+          onValueChange={(value) => {
+            if (value !== null && isSortBy(value)) {
+              setSortBy(value);
+            }
+          }}
+        >
+          <SelectTrigger size="sm" className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {SORT_OPTIONS.map(({ value, label }) => (
                 <SelectItem key={value} value={value}>
                   {label}
                 </SelectItem>
@@ -139,13 +185,17 @@ function HrList({ hrList }: HrListProps) {
       {filtered.length === 0 ? (
         <p className="text-xs text-muted-foreground">该时间范围内没有 HR</p>
       ) : (
-        <DataTable
-          columns={hrColumns}
-          data={filtered}
-          getRowClassName={(row) =>
-            row.original.status === 'excluded' ? 'opacity-50' : undefined
-          }
-        />
+        <HrAccordionContext.Provider
+          value={{ openBossId, onOpenChange: setOpenBossId }}
+        >
+          <DataTable
+            columns={hrColumns}
+            data={sorted}
+            getRowClassName={(row) =>
+              row.original.status === 'excluded' ? 'opacity-50' : undefined
+            }
+          />
+        </HrAccordionContext.Provider>
       )}
     </div>
   );
