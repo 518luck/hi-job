@@ -56,7 +56,8 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
         >
           <AccordionItem value={hr.encryptBossId}>
             <AccordionTrigger className="w-full">
-              <div className="flex min-w-0 flex-1 items-center gap-2">
+              {/* // > 顶部对齐：左右两侧行数不同（名字两行 vs 时长按钮三行），居中会错位 */}
+              <div className="flex min-w-0 flex-1 items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1">
                     <span
@@ -83,15 +84,13 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
                   <span className={toneOf(hr.lastMsgAt)}>
                     {sinceChatText(hr.lastMsgAt)}
                   </span>
-                  <div className="flex gap-1">
+                  {/* 行内操作：按钮用 span 渲染避免嵌套在展开触发器内；等你回复徽章与按钮同行 */}
+                  <div className="flex items-center gap-1">
                     {lastIsSelf && sinceDays(hr.lastMsgAt) >= 1 && (
                       <Badge className="bg-orange-600/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
                         等你回复
                       </Badge>
                     )}
-                  </div>
-                  {/* 行内操作：按钮用 span 渲染避免嵌套在展开触发器内 */}
-                  <div className="flex items-center gap-1">
                     <Button
                       render={<span />}
                       size="xs"
