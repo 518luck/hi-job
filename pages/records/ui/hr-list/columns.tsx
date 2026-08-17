@@ -132,9 +132,6 @@ const hrColumns: ColumnDef<typeof features, Hr>[] = [
                     {sinceChatText(hr.lastMsgAt)}
                   </span>
                   <div className="flex gap-1">
-                    {status === 'excluded' && (
-                      <Badge variant="secondary">已排除</Badge>
-                    )}
                     {lastIsSelf && sinceDays(hr.lastMsgAt) >= 1 && (
                       <Badge className="bg-orange-600/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
                         等你回复
