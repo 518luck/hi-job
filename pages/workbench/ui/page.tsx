@@ -1,4 +1,4 @@
-// # 工作台页：最近记录的职位与 AI 打招呼
+// # 工作台页：AI 生成设置（厂商/模型/思考模式选择）
 import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
 import {
@@ -12,11 +12,7 @@ import {
 import type { NavKey } from '@/widgets/nav-bar';
 
 import { useAiPreference } from '../model/use-ai-preference';
-import { useHrSession } from '../model/use-hr-session';
-import { useJds } from '../model/use-jds';
 import { useVendors } from '../model/use-vendors';
-import { HrCard } from './hr-card';
-import { JdCard } from './jd-card';
 
 // 思考模式档位选项：文案说明各档对生成参数的影响
 const THINKING_MODE_OPTIONS = [
@@ -32,9 +28,8 @@ interface WorkbenchPageProps {
   onNavigate: (key: NavKey) => void;
 }
 
-// 工作台页：顶部选择生成用的厂商与模型，卡片流展示最近记录的职位
+// 工作台页：配置 AI 生成用的厂商、模型与思考模式
 function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
-  const { jds, loading } = useJds();
   const { vendors } = useVendors();
   const {
     vendorId,
@@ -44,7 +39,6 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     selectModel,
     setThinkingMode,
   } = useAiPreference();
-  const { view: hrView, toggleExcluded } = useHrSession();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
   const vendor =
@@ -145,48 +139,10 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     );
   };
 
-  // 渲染职位列表：读取中与空态提示
-  const renderList = () => {
-    if (loading) {
-      return <p className="text-xs text-muted-foreground">读取中…</p>;
-    }
-    if (jds.length === 0) {
-      return (
-        <p className="text-xs text-muted-foreground">
-          还没有记录的职位：在招聘网站打开职位详情自动记录
-        </p>
-      );
-    }
-    return (
-      <div className="flex flex-col gap-2">
-        {jds.map((jd) => (
-          <JdCard
-            key={jd.jobId}
-            jd={jd}
-            vendor={vendor}
-            modelId={activeModelId}
-            thinkingMode={thinkingMode}
-          />
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
       <h2 className="text-base font-medium">工作台</h2>
       {renderVendorPicker()}
-      {hrView !== undefined && (
-        <HrCard
-          hr={hrView.hr}
-          jd={hrView.jd}
-          excluded={hrView.excluded}
-          onToggleExcluded={() => {
-            void toggleExcluded();
-          }}
-        />
-      )}
-      {renderList()}
     </div>
   );
 }
