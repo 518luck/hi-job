@@ -54,39 +54,42 @@ function LogCard({ log }: { log: AiLog }) {
     <AccordionItem value={String(log.id)} className="rounded-lg border">
       <AccordionTrigger className="flex-col items-start gap-1 px-2 py-2 hover:no-underline">
         <div className="flex w-full items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground whitespace-nowrap">
             {formatLogTime(log.createdAt)}
           </span>
           <Badge
             variant={log.ok ? 'outline' : 'destructive'}
             className={
               log.ok
-                ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
-                : undefined
+                ? 'shrink-0 border-emerald-200 bg-emerald-100 text-emerald-700'
+                : 'shrink-0'
             }
           >
             {log.ok ? '成功' : '失败'}
           </Badge>
         </div>
-        <div className="flex w-full items-center gap-1 text-xs">
-          <span>{SOURCE_LABELS[log.source]}</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="truncate">{log.vendorName}</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="truncate">{log.modelId}</span>
+        <div className="w-full text-xs">{SOURCE_LABELS[log.source]}</div>
+        <div className="w-full truncate text-xs">
+          {log.vendorName} · {log.modelId}
         </div>
         <div className="w-full text-xs text-muted-foreground">
           思考：{THINKING_MODE_LABELS[log.thinkingMode]} · 耗时 {log.durationMs}
           ms
         </div>
         {jd !== undefined && (
-          <div className="w-full text-xs">
-            <span className="truncate">{jd.title}</span>
-            <span className="text-muted-foreground"> · {jd.companyName}</span>
-            {jd.salary !== '' && (
-              <span className="text-primary"> · {jd.salary}</span>
-            )}
-          </div>
+          <>
+            <div className="w-full truncate text-xs">{jd.title}</div>
+            <div className="flex w-full items-center gap-1 text-xs">
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                {jd.companyName}
+              </span>
+              {jd.salary !== '' && (
+                <span className="shrink-0 text-primary whitespace-nowrap">
+                  {jd.salary}
+                </span>
+              )}
+            </div>
+          </>
         )}
       </AccordionTrigger>
       <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">

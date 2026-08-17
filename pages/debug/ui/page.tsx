@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { Button } from '@/shared/ui/button';
 import { Icons } from '@/shared/ui/icons';
 import { Switch } from '@/shared/ui/switch';
 
@@ -83,15 +82,23 @@ function DebugPage() {
       </div>
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">日志</h3>
-        <Button
-          variant="outline"
-          size="xs"
-          className="justify-start"
+        {/* 日志入口卡片行：与上方开关行同款样式，整行可点进入对应日志视图 */}
+        <button
+          type="button"
+          className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
           onClick={() => setView('aiLog')}
         >
-          <Icons.history data-icon="inline-start" />
-          <span>AI 日志</span>
-        </Button>
+          <span className="flex items-center gap-3">
+            <Icons.aiLog className="size-4 shrink-0 text-muted-foreground" />
+            <span className="flex flex-col gap-1">
+              <span className="text-sm font-medium">AI 日志</span>
+              <span className="text-xs text-muted-foreground">
+                查看打招呼、回复等 AI 调用记录
+              </span>
+            </span>
+          </span>
+          <Icons.chevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );
