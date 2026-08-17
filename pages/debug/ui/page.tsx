@@ -109,7 +109,7 @@ function AiRateStats() {
       <AiRateCell
         title="总 Token 数"
         value={intText(totalTokens)}
-        caption="统计 Token 数"
+        caption="最多 200 次调用"
       />
       <AiRateCell
         title="平均 TPM"
