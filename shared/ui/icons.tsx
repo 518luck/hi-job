@@ -22,6 +22,7 @@ import {
   Settings,
   Sun,
   Trash2,
+  Upload,
   UserRound,
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ const Icons = {
   location: MapPin,
   chevronDown: ChevronDown,
   exportData: Download,
+  upload: Upload,
   clearData: Trash2,
   aiVendors: Bot,
   debug: Bug,

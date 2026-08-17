@@ -13,6 +13,7 @@ import type { NavKey } from '@/widgets/nav-bar';
 
 import { useAiPreference } from '../model/use-ai-preference';
 import { useVendors } from '../model/use-vendors';
+import { ResumeUpload } from './resume-upload';
 
 // 思考模式档位选项：文案说明各档对生成参数的影响
 const THINKING_MODE_OPTIONS = [
@@ -143,6 +144,7 @@ function WorkbenchPage({ onNavigate }: WorkbenchPageProps) {
     <div className="flex flex-1 flex-col gap-2 p-4">
       <h2 className="text-base font-medium">工作台</h2>
       {renderVendorPicker()}
+      <ResumeUpload />
     </div>
   );
 }

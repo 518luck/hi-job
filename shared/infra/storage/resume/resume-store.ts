@@ -19,10 +19,14 @@ const saveResume = async (input: ResumeInput): Promise<void> => {
 const readResume = async (): Promise<ResumeRecord | undefined> =>
   db.resume.get(RESUME_KEY);
 
+// 清空简历：删除后 AI 提示词不再注入简历
+const clearResume = (): Promise<void> => db.resume.delete(RESUME_KEY);
+
 // resume 领域仓储：用户简历（单行）的统一读写入口
 const resumeStore = {
   saveResume, // 保存简历（覆盖写入）
   readResume, // 读取简历（未上传时 undefined）
+  clearResume, // 清空简历
 };
 
 export { resumeStore };
