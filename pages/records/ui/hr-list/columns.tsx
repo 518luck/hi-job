@@ -2,6 +2,8 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { createContext, useContext } from 'react';
 
+import { jobUrlOf } from '@/shared/lib/boss-url';
+import { sinceChatText, sinceDays, toneOf } from '@/shared/lib/chat-time';
 import { cn } from '@/shared/lib/cn';
 import {
   Accordion,
@@ -16,14 +18,6 @@ import type { Hr } from '@/shared/zod';
 
 import type { features } from '../data-table';
 import { HrChatView } from './chat-view';
-
-// 构造职位详情跳转链接：路径段即 encryptJobId，securityId 为空时省略参数
-const jobUrlOf = (hr: Hr): string => {
-  const base = `https://www.zhipin.com/job_detail/${hr.encryptJobId}.html`;
-  return hr.securityId === ''
-    ? base
-    : `${base}?securityId=${encodeURIComponent(hr.securityId)}`;
-};
 
 // 手风琴展开状态上下文：由列表组件持有，列定义保持静态避免表格重建
 interface HrAccordionContextValue {
@@ -41,48 +35,6 @@ const useHrAccordion = (): HrAccordionContextValue => {
     throw new Error('useHrAccordion 必须在 HrAccordionProvider 内使用。');
   }
   return context;
-};
-
-// 未沟通天数：满 3 天橙色提醒，满 7 天红色警示；无时间戳视为 0（不误标色）
-const sinceDays = (lastMsgAt: number): number =>
-  lastMsgAt <= 0 ? 0 : Math.floor((Date.now() - lastMsgAt) / 86_400_000);
-
-// 距上次沟通的时长文案：刚刚 / N 分钟 / N 小时 / N 天未沟通，超 30 天显示日期
-const sinceChatText = (lastMsgAt: number): string => {
-  if (lastMsgAt === 0) {
-    return '未知';
-  }
-  const minutes = Math.floor((Date.now() - lastMsgAt) / 60_000);
-  if (minutes < 1) {
-    return '刚刚沟通';
-  }
-  if (minutes < 60) {
-    return `${minutes} 分钟未沟通`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours} 小时未沟通`;
-  }
-  const days = Math.floor(hours / 24);
-  if (days >= 30) {
-    return new Date(lastMsgAt).toLocaleDateString('zh-CN', {
-      month: 'numeric',
-      day: 'numeric',
-    });
-  }
-  return `${days} 天未沟通`;
-};
-
-// 未沟通时长的提示色：满 7 天红色、满 3 天橙色、其余默认灰
-const toneOf = (lastMsgAt: number): string => {
-  const days = sinceDays(lastMsgAt);
-  if (days >= 7) {
-    return 'text-red-600 dark:text-red-400';
-  }
-  if (days >= 3) {
-    return 'text-orange-600 dark:text-orange-400';
-  }
-  return 'text-muted-foreground';
 };
 
 // HR 列表列定义：静态列，展开状态经上下文读取（虚拟滚动下避免表格重建）

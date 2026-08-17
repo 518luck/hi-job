@@ -1,7 +1,14 @@
 import { debugLog } from '@/shared/lib/debug-log';
-import type { SelectedJd } from '@/shared/zod';
+import type { SelectedJd, VueJobData } from '@/shared/zod';
 
 import { requestVueJobData } from './vue-job-data';
+
+// Vue currentJob 仅在列表页有数据；详情页无该结构时用空值走 DOM 抓取
+const EMPTY_VUE_JOB_DATA: VueJobData = {
+  salaryDesc: '',
+  companyScale: '',
+  companyIndustry: '',
+};
 
 // 取第一个匹配元素的文本，找不到返回空串
 const textOf = (root: ParentNode, selector: string): string =>
@@ -13,7 +20,7 @@ const jobIdOfUrl = (url: string): string => {
   return match?.[1] ?? '';
 };
 
-// 解析公司标识与名称：优先取选中卡片的公司链接；匿名或无卡片时按名称聚合
+// 解析公司标识与名称：列表页取选中卡片，独立详情页取侧栏公司信息，匿名时按名称聚合
 const parseCompany = (
   doc: Document,
 ): {
@@ -30,9 +37,25 @@ const parseCompany = (
   const detailName = textOf(doc, '.job-boss-info .boss-info-attr')
     .split('·')[0]
     ?.trim();
-  const companyName = cardName || detailName || '未知公司';
+  // 独立详情页回退：侧栏公司链接与名称
+  const siderHref =
+    doc
+      .querySelector<HTMLAnchorElement>(
+        '.sider-company .company-info a[href*="/gongsi/"]',
+      )
+      ?.getAttribute('href') ?? '';
+  const siderId = siderHref.match(/\/gongsi\/([^.]+)\.html/);
+  const siderName =
+    doc
+      .querySelector<HTMLElement>('.sider-company .company-info a[title]')
+      ?.getAttribute('title') ?? '';
 
-  return { companyId: idMatch?.[1] ?? `anonymous:${companyName}`, companyName };
+  const companyId = idMatch?.[1] ?? siderId?.[1] ?? '';
+  const companyName = cardName || detailName || siderName || '未知公司';
+  return {
+    companyId: companyId === '' ? `anonymous:${companyName}` : companyId,
+    companyName,
+  };
 };
 
 // 合并头部基本信息与"职位描述"下方技能标签两处 tag，去空去重
@@ -47,9 +70,19 @@ const collectTags = (root: ParentNode): string[] => {
   return [...new Set(tags)];
 };
 
+// 读取侧栏公司信息文本：规模/行业文本在图标所在 <p> 内，图标元素自身无文本
+const siderValueOf = (doc: Document, iconClass: string): string =>
+  Array.from(doc.querySelectorAll<HTMLElement>('.sider-company p'))
+    .find((p) => p.querySelector(`.${iconClass}`) !== null)
+    ?.innerText.trim() ?? '';
+
 // 从 Boss直聘 页面解析当前选中的职位（JD）；未选中任何职位时返回 null
 const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
-  const detailBox = doc.querySelector<HTMLElement>('.job-detail-box');
+  // 容器兼容多套结构：列表页详情面板、独立详情页 banner、独立详情页正文区（banner 缺失时）
+  const detailBox =
+    doc.querySelector<HTMLElement>('.job-detail-box') ??
+    doc.querySelector<HTMLElement>('.job-primary.detail-box') ??
+    doc.querySelector<HTMLElement>('.job-detail');
   if (detailBox === null) {
     return null;
   }
@@ -62,30 +95,62 @@ const parseSelectedJd = async (doc: Document): Promise<SelectedJd | null> => {
 
   const { companyId, companyName } = parseCompany(doc);
 
-  // 请求主世界的 Vue 原始数据：公司规模/行业直接取用；薪资读不到时回退 DOM 文本
-  const vueJobData = await requestVueJobData();
+  // 仅列表页面板请求 Vue 原始数据；详情页无 currentJob，直接走 DOM 文本避免无效重试
+  const isListPanel = detailBox.classList.contains('job-detail-box');
+  const vueJobData = isListPanel
+    ? await requestVueJobData()
+    : EMPTY_VUE_JOB_DATA;
   const salary =
-    vueJobData.salaryDesc || textOf(detailBox, '.job-detail-info .job-salary');
+    vueJobData.salaryDesc ||
+    textOf(detailBox, '.job-detail-info .job-salary') ||
+    textOf(detailBox, '.name .salary') ||
+    textOf(doc, '.name .salary') ||
+    '';
   debugLog(
     '记录薪资',
     salary,
     vueJobData.salaryDesc !== '' ? '来源 Vue' : '来源 DOM 回退',
   );
 
+  // 公司规模/行业优先取 Vue；详情页读不到时回退侧栏公司信息
+  const companyScale =
+    vueJobData.companyScale || siderValueOf(doc, 'icon-scale');
+  const companyIndustry =
+    vueJobData.companyIndustry || siderValueOf(doc, 'icon-industry');
+
+  // 独立详情页的字段分散在两段：banner 内标题薪资，详情区描述/招聘者/地址，
+  // 因此这些字段在 banner 内查不到时回退到整个文档查找
+  const tagsInBox = collectTags(detailBox);
+  const descriptionText =
+    detailBox.querySelector<HTMLElement>('.desc')?.innerText.trim() ??
+    detailBox.querySelector<HTMLElement>('.job-sec-text')?.innerText.trim() ??
+    doc.querySelector<HTMLElement>('.job-sec-text')?.innerText.trim() ??
+    doc.querySelector<HTMLElement>('.desc')?.innerText.trim() ??
+    '';
+
   return {
     jobId: jobIdOfUrl(url),
     companyId,
     companyName,
-    companyIndustry: vueJobData.companyIndustry,
-    companyScale: vueJobData.companyScale,
-    title: textOf(detailBox, '.job-detail-info .job-name'),
+    companyIndustry,
+    companyScale,
+    title:
+      textOf(detailBox, '.job-detail-info .job-name') ||
+      textOf(detailBox, '.name h1') ||
+      textOf(doc, '.name h1'),
     salary,
-    tags: collectTags(detailBox),
-    recruiter: textOf(detailBox, '.boss-info-attr'),
-    recruiterActive: textOf(detailBox, '.job-boss-info .boss-active-time'),
-    description:
-      detailBox.querySelector<HTMLElement>('.desc')?.innerText.trim() ?? '',
-    address: textOf(detailBox, '.job-address-desc'),
+    tags: tagsInBox.length > 0 ? tagsInBox : collectTags(doc),
+    recruiter:
+      textOf(detailBox, '.boss-info-attr') || textOf(doc, '.boss-info-attr'),
+    recruiterActive:
+      textOf(detailBox, '.job-boss-info .boss-active-time') ||
+      textOf(detailBox, '.boss-online-tag') ||
+      textOf(doc, '.boss-online-tag'),
+    description: descriptionText,
+    address:
+      textOf(detailBox, '.job-address-desc') ||
+      textOf(detailBox, '.location-address') ||
+      textOf(doc, '.location-address'),
     url,
   };
 };

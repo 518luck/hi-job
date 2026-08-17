@@ -1,6 +1,11 @@
 // # AI 调用日志：组装日志字段并写入仓储
 import { aiLogStore } from '@/shared/infra/storage';
-import type { AiLogSource, AiVendorRecord, ThinkingMode } from '@/shared/zod';
+import type {
+  AiLogSource,
+  AiVendorRecord,
+  ReplyJd,
+  ThinkingMode,
+} from '@/shared/zod';
 
 // openai 兼容的思考关闭参数：DeepSeek 官方 API 的 thinking 开关字段
 type ThinkingProviderOptions = {
@@ -25,6 +30,7 @@ interface RecordAiLogInput {
   promptTask?: string; // 提示词任务描述（打招呼生成时记录）
   promptRequirement?: string; // 提示词生成要求（打招呼生成时记录）
   resume?: string; // 用户简历文本，未上传时为空串
+  jd?: ReplyJd; // 本次调用使用的职位信息，核查生成上下文用
   startedAt: number; // 调用开始时间戳（毫秒）
   ok: boolean; // 调用是否成功
   output?: string; // 成功时的返回文本
@@ -43,6 +49,7 @@ const recordAiLog = async ({
   promptTask,
   promptRequirement,
   resume,
+  jd,
   startedAt,
   ok,
   output,
@@ -62,6 +69,7 @@ const recordAiLog = async ({
       promptTask,
       promptRequirement,
       resume,
+      jd,
       ok,
       durationMs: Date.now() - startedAt,
       output,

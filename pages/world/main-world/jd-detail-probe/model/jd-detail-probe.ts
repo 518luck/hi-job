@@ -1,8 +1,8 @@
-// # 职位列表页数据探测（主世界，临时工具）：注入探测按钮，dump 职位页 Vue 数据
+// # 职位详情页数据探测（主世界，临时工具）：注入探测按钮，dump 详情页 Vue 数据与字段归属区域
 //
-// 目标：确认职位列表页 Vue 实例的挂载点与职位数据结构（右侧详情面板 .job-detail-box），
-// 为采集字段定来源，并排查「薪资/公司信息抓不到」类问题。
-// 独立详情页（/job_detail/）的探测在 jd-detail-probe 中单独实现。
+// 目标：定位独立详情页（/job_detail/）各字段的真实挂载点。该页字段分散在
+// banner（.job-primary.detail-box，标题/薪资）与详情区（描述/招聘者/地址），
+// 探测结果直接回答「哪个选择器在哪个区块能取到文本」，排查字段抓空类问题。
 
 import {
   WINDOW_NOTIFY_DEBUG_SETTINGS_CHANGED,
@@ -13,13 +13,46 @@ import { readProperty } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
 
-// 探测的 Vue 挂载点：职位列表页的右侧详情面板与列表主容器
-const DETAIL_SELECTOR = '.job-detail-box';
-const MAIN_SELECTOR = '.page-jobs-main';
+// 详情页候选 Vue 挂载点：按优先级逐个探测（SSR 静态页根是 #main，App 版根是 #app）
+const MOUNT_CANDIDATES = [
+  '#app',
+  '#main',
+  '.job-primary.detail-box',
+  '.job-detail',
+  '.job-detail-header',
+  '.job-boss-info',
+];
 
 // 按钮与面板元素标记，防重复注入
-const PROBE_BUTTON_FLAG = 'data-hijob-jd-probe';
-const PROBE_PANEL_FLAG = 'data-hijob-jd-probe-panel';
+const PROBE_BUTTON_FLAG = 'data-hijob-jd-detail-probe';
+const PROBE_PANEL_FLAG = 'data-hijob-jd-detail-probe-panel';
+
+// 采集链路字段 -> 候选选择器（banner 内优先，回退全文档），与 parse-jd 保持一致
+const FIELD_PROBES: { field: string; selectors: string[] }[] = [
+  {
+    field: '标题 title',
+    selectors: ['.job-detail-info .job-name', '.name h1'],
+  },
+  {
+    field: '薪资 salary',
+    selectors: ['.job-detail-info .job-salary', '.name .salary'],
+  },
+  { field: '招聘者 recruiter', selectors: ['.boss-info-attr'] },
+  {
+    field: '招聘者活跃 recruiterActive',
+    selectors: ['.job-boss-info .boss-active-time', '.boss-online-tag'],
+  },
+  { field: '描述 description', selectors: ['.job-sec-text', '.desc'] },
+  {
+    field: '地址 address',
+    selectors: ['.job-address-desc', '.location-address'],
+  },
+  { field: '公司规模 companyScale', selectors: ['.sider-company .icon-scale'] },
+  {
+    field: '公司行业 companyIndustry',
+    selectors: ['.sider-company .icon-industry'],
+  },
+];
 
 // 把任意值压成可读摘要：字符串截断、数组记长度、对象标类型
 const briefOf = (value: unknown): string => {
@@ -53,80 +86,6 @@ const fieldsOf = (obj: unknown): Record<string, string> => {
   return out;
 };
 
-// 深一层字段概览：顶层字段中的嵌套对象再展开一层，便于看 jobInfo/bossInfo 内部
-const deepFieldsOf = (obj: unknown): Record<string, unknown> => {
-  if (obj === null || typeof obj !== 'object') {
-    return {};
-  }
-  const out: Record<string, unknown> = {};
-  for (const key of Object.keys(obj).slice(0, 40)) {
-    const value = readProperty(obj, key);
-    out[key] =
-      value !== null && typeof value === 'object' && !Array.isArray(value)
-        ? fieldsOf(value)
-        : briefOf(value);
-  }
-  return out;
-};
-
-// 读取元素挂载的 Vue 实例
-const vueOf = (selector: string): unknown =>
-  readProperty(document.querySelector(selector), '__vue__');
-
-// 读取实例数据：$data 为空时回退实例自身的 data 字段（部分数据挂在非响应式字段上）
-const dataOf = (instance: unknown): unknown => {
-  const data = readProperty(instance, '$data');
-  if (
-    data !== null &&
-    typeof data === 'object' &&
-    Object.keys(data).length > 0
-  ) {
-    return data;
-  }
-  return readProperty(instance, 'data');
-};
-
-// jobList 概览：数组长度 + 首个卡片的字段结构
-const briefList = (jobList: unknown): unknown => {
-  if (!Array.isArray(jobList)) {
-    return briefOf(jobList);
-  }
-  return {
-    length: jobList.length,
-    first: jobList.length > 0 ? fieldsOf(jobList[0]) : undefined,
-  };
-};
-
-// 深挖值结构：带深度与环保护的嵌套展开，用于看清 $props.data 这类深层挂载数据
-const deepDump = (
-  value: unknown,
-  depth: number,
-  seen: Set<unknown>,
-): unknown => {
-  if (depth <= 0 || value === null || typeof value !== 'object') {
-    return briefOf(value);
-  }
-  if (seen.has(value)) {
-    return '[循环引用]';
-  }
-  seen.add(value);
-  if (Array.isArray(value)) {
-    return {
-      length: value.length,
-      items: value.slice(0, 10).map((item) => deepDump(item, depth - 1, seen)),
-    };
-  }
-  const out: Record<string, unknown> = {};
-  for (const key of Object.keys(value).slice(0, 40)) {
-    const item = readProperty(value, key);
-    if (typeof item === 'function' || typeof item === 'symbol') {
-      continue;
-    }
-    out[key] = deepDump(item, depth - 1, seen);
-  }
-  return out;
-};
-
 // 单个实例的组件名：$options.name 优先，回退 $vnode.tag
 const componentNameOf = (instance: unknown): string => {
   const options = readProperty(instance, '$options');
@@ -141,81 +100,112 @@ const componentNameOf = (instance: unknown): string => {
   return typeof tag === 'string' ? tag : '';
 };
 
-// 子组件数据概览：组件名 + data/props 字段
-interface ChildOverview {
-  depth: number;
+// 单个实例的数据概览：组件名 + $data/setupState 字段概览
+const instanceOverview = (
+  instance: unknown,
+): {
   name: string;
   dataKeys: Record<string, string>;
-  propsKeys: Record<string, string>;
-}
+  setupKeys: Record<string, string>;
+} => ({
+  name: componentNameOf(instance),
+  dataKeys: fieldsOf(readProperty(instance, '$data')),
+  setupKeys: fieldsOf(readProperty(instance, 'setupState')),
+});
 
-// 收集子树中携带数据的组件：定位 jobInfo/brandComInfo 等数据的真实挂载位置
-const collectDataChildren = (
+// 递归收集实例树中有数据的实例（Vue2 $children 遍历，限制深度）
+const collectDataInstances = (
   instance: unknown,
   depth: number,
-  out: ChildOverview[],
+  out: Record<string, unknown>[],
 ): void => {
-  if (depth > 3) {
+  if (depth > 4 || instance === null || typeof instance !== 'object') {
     return;
+  }
+  const overview = instanceOverview(instance);
+  const hasData =
+    Object.keys(overview.dataKeys).length > 0 ||
+    Object.keys(overview.setupKeys).length > 0;
+  if (hasData) {
+    out.push({ depth, ...overview });
   }
   const children = readProperty(instance, '$children');
-  if (!Array.isArray(children)) {
-    return;
-  }
-  for (const child of children) {
-    if (child === null || typeof child !== 'object') {
-      continue;
+  if (Array.isArray(children)) {
+    for (const child of children) {
+      collectDataInstances(child, depth + 1, out);
     }
-    const dataKeys = fieldsOf(readProperty(child, '$data'));
-    const propsKeys = fieldsOf(readProperty(child, '$props'));
-    if (Object.keys(dataKeys).length > 0 || Object.keys(propsKeys).length > 0) {
-      out.push({ depth, name: componentNameOf(child), dataKeys, propsKeys });
-    }
-    collectDataChildren(child, depth + 1, out);
   }
 };
 
-// 探测职位页 Vue 数据：详情面板数据展开两层，列表根的 currentJob 与 jobList 概览
-const probeJdData = (): Record<string, unknown> => {
-  const detailVue = vueOf(DETAIL_SELECTOR);
-  const mainVue = vueOf(MAIN_SELECTOR);
-  const detailChildren: ChildOverview[] = [];
-  if (detailVue !== undefined) {
-    collectDataChildren(detailVue, 0, detailChildren);
+// 探测详情页各字段归属区域：banner 内命中优先，未命中再到全文档，未命中标记 none
+const probeFieldRegions = (): Record<string, unknown>[] => {
+  const banner = document.querySelector<HTMLElement>('.job-primary.detail-box');
+  const excerptOf = (el: HTMLElement): string => {
+    // 图标元素自身无文本（如 .icon-scale），回退父级 <p> 的 innerText
+    const picked =
+      el.innerText.trim() || el.parentElement?.innerText.trim() || '';
+    return picked.length > 120 ? `${picked.slice(0, 120)}…` : picked;
+  };
+  return FIELD_PROBES.map(({ field, selectors }) => {
+    // 先看字段是否落在 banner 内，再回退全文档
+    for (const selector of selectors) {
+      const inBanner = banner?.querySelector<HTMLElement>(selector);
+      if (inBanner !== undefined && inBanner !== null) {
+        return {
+          field,
+          selector,
+          box: 'banner' as const,
+          excerpt: excerptOf(inBanner),
+        };
+      }
+      const docMatch = document.querySelector<HTMLElement>(selector);
+      if (docMatch !== null) {
+        return {
+          field,
+          selector,
+          box: 'doc' as const,
+          excerpt: excerptOf(docMatch),
+        };
+      }
+    }
+    return {
+      field,
+      selector: selectors.join(' / '),
+      box: 'none' as const,
+      excerpt: '',
+    };
+  });
+};
+
+// 探测详情页 Vue 数据：各挂载点实例概览 + 数据实例树 + 字段归属区域概览
+const probeDetailData = (): Record<string, unknown> => {
+  const mounts: Record<string, unknown>[] = [];
+  const dataInstances: Record<string, unknown>[] = [];
+  for (const selector of MOUNT_CANDIDATES) {
+    const element = document.querySelector(selector);
+    if (element === null) {
+      continue;
+    }
+    const vue = readProperty(element, '__vue__');
+    if (vue === undefined) {
+      continue;
+    }
+    mounts.push({ selector, ...instanceOverview(vue) });
+    collectDataInstances(vue, 0, dataInstances);
   }
-  // 面板 $props.data 是完整职位数据（含描述等），深挖其结构定位描述来源
-  const propsData =
-    detailVue === undefined
-      ? undefined
-      : readProperty(readProperty(detailVue, '$props'), 'data');
-  const panelTextOf = (selector: string): string =>
-    document
-      .querySelector<HTMLElement>(`.job-detail-box ${selector}`)
-      ?.innerText.trim() ?? '';
+  // 详情页锚点链接与标签量：确认采集链路里的 url 与 tags 来源
+  const moreJobUrl =
+    document.querySelector<HTMLAnchorElement>('.more-job-btn')?.href ?? null;
+  const tagCount = document.querySelectorAll(
+    '.job-detail-header .tag-list li, .job-label-list li',
+  ).length;
   return {
-    'job-detail-box.__vue__.data':
-      detailVue === undefined ? '元素不存在' : deepFieldsOf(dataOf(detailVue)),
-    'job-detail-box.__vue__.$props':
-      detailVue === undefined
-        ? '元素不存在'
-        : fieldsOf(readProperty(detailVue, '$props')),
-    'job-detail-box $props.data 深入':
-      propsData === undefined
-        ? '元素不存在'
-        : deepDump(propsData, 3, new Set()),
-    'job-detail-box 子组件数据': detailChildren.slice(0, 30),
-    '列表面板 DOM 描述位': {
-      jobSecText: panelTextOf('.job-sec-text'),
-      desc: panelTextOf('.desc'),
-    },
-    'page-jobs-main.__vue__.currentJob':
-      mainVue === undefined
-        ? '元素不存在'
-        : fieldsOf(readProperty(mainVue, 'currentJob')),
-    'page-jobs-main.__vue__.jobList':
-      mainVue === undefined
-        ? '元素不存在'
-        : briefList(readProperty(mainVue, 'jobList')),
+    url: document.location?.href ?? '',
+    mounts,
+    dataInstances: dataInstances.slice(0, 40),
+    fields: probeFieldRegions(),
+    moreJobUrl,
+    tagCount,
   };
 };
 
@@ -265,14 +255,14 @@ const showProbePanel = (): void => {
     return;
   }
   const panel = document.createElement('div');
-  panel.dataset.hijobJdProbePanel = '1';
+  panel.dataset.hijobJdDetailProbePanel = '1';
   panel.style.cssText =
     'position:fixed;right:16px;bottom:56px;z-index:2147483646;width:420px;max-height:70vh;display:flex;flex-direction:column;border:1px solid #ddd;border-radius:8px;background:#fafafa;box-shadow:0 4px 16px rgba(0,0,0,.25);overflow:hidden;';
   const header = document.createElement('div');
   header.style.cssText =
     'display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #eee;background:#f5f5f5;';
   const title = document.createElement('span');
-  title.textContent = '职位页数据探测结果';
+  title.textContent = '职位详情页数据探测结果';
   title.style.cssText = 'font-size:13px;font-weight:600;color:#333;';
   const close = document.createElement('button');
   close.textContent = '关闭';
@@ -282,7 +272,7 @@ const showProbePanel = (): void => {
   header.append(title, close);
   panel.append(header);
   document.body.append(panel);
-  renderResult(panel, probeJdData());
+  renderResult(panel, probeDetailData());
   renderLogs(panel);
 };
 
@@ -303,8 +293,8 @@ const injectProbeButton = (): void => {
     return;
   }
   const button = document.createElement('button');
-  button.dataset.hijobJdProbe = '1';
-  button.textContent = '探测职位数据';
+  button.dataset.hijobJdDetailProbe = '1';
+  button.textContent = '探测职位详情数据';
   button.style.cssText =
     'position:fixed;right:16px;bottom:16px;z-index:2147483646;padding:8px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);';
   button.addEventListener('click', () => {
@@ -319,21 +309,18 @@ const injectProbeButton = (): void => {
 };
 
 // 按调试开关应用探测按钮：开启注入，关闭移除
-const applyJdProbe = async (): Promise<void> => {
+const applyJdDetailProbe = async (): Promise<void> => {
   const settings = await extensionApi.getDebugSettings();
-  if (!settings.jdProbeEnabled) {
+  if (!settings.detailProbeEnabled) {
     removeProbeButton();
     return;
   }
   injectProbeButton();
 };
 
-// 启动探测：仅职位列表页激活，注册调试开关通知并首次应用按钮
-const startJdProbe = (): void => {
-  if (
-    !location.pathname.includes('/web/geek/job') &&
-    document.querySelector(`${MAIN_SELECTOR}, ${DETAIL_SELECTOR}`) === null
-  ) {
+// 启动探测：仅职位详情页激活，注册调试开关通知并首次应用按钮
+const startJdDetailProbe = (): void => {
+  if (!location.pathname.includes('/job_detail/')) {
     return;
   }
   // 调试开关变更时即时注入/移除按钮
@@ -342,10 +329,10 @@ const startJdProbe = (): void => {
       return;
     }
     if (isDebugSettingsChangedNotify(event.data)) {
-      void applyJdProbe();
+      void applyJdDetailProbe();
     }
   });
-  void applyJdProbe();
+  void applyJdDetailProbe();
 };
 
-export { startJdProbe };
+export { startJdDetailProbe };

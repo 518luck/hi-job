@@ -9,6 +9,7 @@ const useDebugSettings = (): {
   settings: DebugSettings;
   setChatProbeEnabled: (enabled: boolean) => Promise<void>;
   setJdProbeEnabled: (enabled: boolean) => Promise<void>;
+  setDetailProbeEnabled: (enabled: boolean) => Promise<void>;
 } => {
   const [settings, setSettings] = useState<DebugSettings>(
     DEFAULT_DEBUG_SETTINGS,
@@ -28,6 +29,7 @@ const useDebugSettings = (): {
     settings,
     setChatProbeEnabled: (enabled) => update({ chatProbeEnabled: enabled }),
     setJdProbeEnabled: (enabled) => update({ jdProbeEnabled: enabled }),
+    setDetailProbeEnabled: (enabled) => update({ detailProbeEnabled: enabled }),
   };
 };
 

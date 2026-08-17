@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 import { THINKING_MODES } from './ai-preference';
+import { replyJdSchema } from './reply';
 
 // 表 aiLog（AI 调用日志）落库实体：主键 id 自增
 const aiLogSchema = z.object({
@@ -18,6 +19,7 @@ const aiLogSchema = z.object({
   promptTask: z.string().optional(), // 提示词任务描述（打招呼生成时记录），旧记录缺省
   promptRequirement: z.string().optional(), // 提示词生成要求（打招呼生成时记录），旧记录缺省
   resume: z.string().optional(), // 用户简历文本，未上传时为空串
+  jd: replyJdSchema.optional(), // 本次调用使用的职位信息快照，核查生成上下文用
   ok: z.boolean(), // 调用是否成功
   durationMs: z.number(), // 调用耗时（毫秒）
   output: z.string().optional(), // 成功时的返回文本，失败时缺省

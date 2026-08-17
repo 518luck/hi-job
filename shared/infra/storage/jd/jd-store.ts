@@ -21,7 +21,7 @@ const saveSelectedJd = async ({ jd }: { jd: SelectedJd }): Promise<void> => {
   });
 };
 
-// 合成下一版 jd 行：初见整份落库；再见冻结职位快照，只追新公司级属性并累计元信息
+// 合成下一版 jd 行：初见整份落库；再见用新采集值回填旧记录的空字段并累计元信息
 const nextJdRecord = ({
   jd,
   existing,
@@ -34,12 +34,19 @@ const nextJdRecord = ({
   if (existing === undefined) {
     return { ...jd, firstSeenAt: now, lastSeenAt: now, seenCount: 1 };
   }
+  // 逐字段取非空值：修复旧记录因采集缺陷留下的空字段，同时保留好的旧值
   return {
     ...existing,
-    companyName: jd.companyName,
+    companyName: freshOr(jd.companyName, existing.companyName),
     companyIndustry: freshOr(jd.companyIndustry, existing.companyIndustry),
     companyScale: freshOr(jd.companyScale, existing.companyScale),
+    title: freshOr(jd.title, existing.title),
+    salary: freshOr(jd.salary, existing.salary),
+    tags: jd.tags.length > 0 ? jd.tags : existing.tags,
+    recruiter: freshOr(jd.recruiter, existing.recruiter),
     recruiterActive: freshOr(jd.recruiterActive, existing.recruiterActive),
+    description: freshOr(jd.description, existing.description),
+    address: freshOr(jd.address, existing.address),
     lastSeenAt: now,
     seenCount: existing.seenCount + 1,
   };

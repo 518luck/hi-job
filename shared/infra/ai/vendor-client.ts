@@ -3,7 +3,12 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
 
-import type { AiLogSource, AiVendorRecord, ThinkingMode } from '@/shared/zod';
+import type {
+  AiLogSource,
+  AiVendorRecord,
+  ReplyJd,
+  ThinkingMode,
+} from '@/shared/zod';
 
 import { recordAiLog, type ThinkingArgs } from './ai-log';
 
@@ -117,6 +122,7 @@ const chatWithVendor = async ({
   promptTask,
   promptRequirement,
   resumeText,
+  jd,
   requestPermission = true,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
@@ -128,6 +134,7 @@ const chatWithVendor = async ({
   promptTask?: string; // 提示词任务描述（打招呼生成时记录日志）
   promptRequirement?: string; // 提示词生成要求（打招呼生成时记录日志）
   resumeText?: string; // 用户简历文本（记录日志用），未上传时缺省
+  jd?: ReplyJd; // 本次调用使用的职位信息（记录日志用），核查生成上下文
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
 }): Promise<string> => {
   const resolvedArgs = resolveThinkingArgs(vendor.apiFormat, thinkingMode);
@@ -176,6 +183,7 @@ const chatWithVendor = async ({
       promptTask,
       promptRequirement,
       resume: resumeText ?? '',
+      jd,
       startedAt,
       ok: false,
       error: finalError.message,

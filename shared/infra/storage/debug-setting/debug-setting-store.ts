@@ -8,6 +8,7 @@ import { db } from '../db';
 const DEFAULT_DEBUG_SETTINGS: DebugSettings = {
   chatProbeEnabled: false,
   jdProbeEnabled: false,
+  detailProbeEnabled: false,
 };
 
 // 保存调试设置：单行覆盖写入
@@ -24,10 +25,11 @@ const readDebugSettings = async (): Promise<DebugSettings> => {
   if (record === undefined) {
     return DEFAULT_DEBUG_SETTINGS;
   }
-  // 去掉存储主键，只返回开关字段
+  // 去掉存储主键，只返回开关字段；旧数据缺失的开关字段回退默认关闭
   return {
-    chatProbeEnabled: record.chatProbeEnabled,
-    jdProbeEnabled: record.jdProbeEnabled,
+    chatProbeEnabled: record.chatProbeEnabled ?? false,
+    jdProbeEnabled: record.jdProbeEnabled ?? false,
+    detailProbeEnabled: record.detailProbeEnabled ?? false,
   };
 };
 

@@ -42,8 +42,12 @@ type DebugView = 'home' | 'aiLog';
 
 // 调试页：控制探测按钮开关，日志入口按钮后续扩展程序日志
 function DebugPage() {
-  const { settings, setChatProbeEnabled, setJdProbeEnabled } =
-    useDebugSettings();
+  const {
+    settings,
+    setChatProbeEnabled,
+    setJdProbeEnabled,
+    setDetailProbeEnabled,
+  } = useDebugSettings();
   const [view, setView] = useState<DebugView>('home');
 
   if (view === 'aiLog') {
@@ -65,10 +69,16 @@ function DebugPage() {
           onCheckedChange={setChatProbeEnabled}
         />
         <ToggleRow
-          title="职位页探测按钮"
-          description="在职位页右下角显示「探测职位数据」悬浮按钮"
+          title="职位列表页探测按钮"
+          description="在职位列表页右下角显示「探测职位数据」悬浮按钮"
           checked={settings.jdProbeEnabled}
           onCheckedChange={setJdProbeEnabled}
+        />
+        <ToggleRow
+          title="职位详情页探测按钮"
+          description="在职位详情页右下角显示「探测职位数据」悬浮按钮"
+          checked={settings.detailProbeEnabled}
+          onCheckedChange={setDetailProbeEnabled}
         />
       </div>
       <div className="flex flex-col gap-2">

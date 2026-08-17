@@ -42,6 +42,10 @@ const saveHrs = async (inputs: HrInput[]): Promise<void> => {
 const readAllHrs = (): Promise<Hr[]> =>
   db.hr.orderBy('lastMsgAt').reverse().toArray();
 
+// 读取最近打开的 HR 档案：工作台当前会话卡片展示
+const readLatestHr = (): Promise<Hr | undefined> =>
+  db.hr.orderBy('lastChatAt').last();
+
 // 读取被排除的 HR id 列表：聊天页渲染「已 Pass」遮罩
 const readExcludedHrIds = (): Promise<string[]> =>
   db.hr.where('status').equals('excluded').primaryKeys();
@@ -67,6 +71,7 @@ const hrStore = {
   saveHr, // 上报当前 HR
   saveHrs, // 批量同步 HR
   readAllHrs, // 读取全部 HR
+  readLatestHr, // 读取最近打开 HR
   readExcludedHrIds, // 读取被排除名单
   toggleExcluded, // 切换排除标记
   clearAllHrs, // 清空全部 HR

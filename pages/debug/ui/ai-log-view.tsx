@@ -197,6 +197,21 @@ function AiLogView({ onBack }: AiLogViewProps) {
                       思考：{THINKING_MODE_LABELS[log.thinkingMode]} · 耗时{' '}
                       {log.durationMs}ms
                     </div>
+                    {log.jd !== undefined && (
+                      <div className="w-full text-xs">
+                        <span className="truncate">{log.jd.title}</span>
+                        <span className="text-muted-foreground">
+                          {' '}
+                          · {log.jd.companyName}
+                        </span>
+                        {log.jd.salary !== '' && (
+                          <span className="text-primary">
+                            {' '}
+                            · {log.jd.salary}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </AccordionTrigger>
                   <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">
                     {log.system !== undefined && log.system !== '' && (
@@ -247,6 +262,16 @@ function AiLogView({ onBack }: AiLogViewProps) {
                         </span>
                         <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
                           {log.resume}
+                        </pre>
+                      </>
+                    )}
+                    {log.jd !== undefined && (
+                      <>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          职位信息
+                        </span>
+                        <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap">
+                          {JSON.stringify(log.jd, null, 2)}
                         </pre>
                       </>
                     )}
