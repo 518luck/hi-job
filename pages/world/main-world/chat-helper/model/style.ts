@@ -1,8 +1,7 @@
 // # 注入样式（主世界）：会话遮盖层、总数标签、AI 回复悬浮按钮与聊天窗等注入元素的统一样式
 //
-// 颜色与弧度对齐侧边栏 shadcn 主题（黑白灰 + 直角）；宿主页面恒为浅色，注入元素固定浅色一套，
-// 不随系统 prefers-color-scheme 切换，避免深色系统下白底按钮隐入浅色页面；
-// 变量使用 hijob 前缀，避免与宿主页面同名变量冲突。
+// 颜色与弧度对齐侧边栏 shadcn 主题（黑白灰 + 直角）；悬浮按钮贴着恒为浅色的宿主页面，固定浅色玻璃不随系统切换，
+// 聊天窗是独立卡片，固定深色一套；变量使用 hijob 前缀，避免与宿主页面同名变量冲突。
 
 // 注入元素统一前缀：类名与标记属性共用，避免与宿主页面冲突
 const HIJOB_PREFIX = 'hijob';
@@ -25,6 +24,18 @@ const ensureStyle = (): void => {
     '--hijob-muted-fg:#71717a;',
     '--hijob-border:#e4e4e7;',
     '--hijob-danger:#dc2626;',
+    '}',
+    // 聊天窗固定深色（不随系统/侧边栏切换）：变量覆盖仅作用于聊天窗子树；
+    // 悬浮按钮不在子树内，保持浅色玻璃——它的对比对象是恒为浅色的宿主页面
+    '.hijob-chat-window{',
+    '--hijob-primary:#fafafa;',
+    '--hijob-primary-hover:#ffffff;',
+    '--hijob-primary-fg:#18181b;',
+    '--hijob-bg:#18181b;',
+    '--hijob-fg:#fafafa;',
+    '--hijob-muted:#27272a;',
+    '--hijob-muted-fg:#a1a1aa;',
+    '--hijob-border:#3f3f46;',
     '}',
     '.friend-content{position:relative;}',
     '.hijob-pass-mask{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.92);color:#999;font-size:14px;font-weight:600;letter-spacing:1px;z-index:5;}',
