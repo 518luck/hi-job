@@ -1,5 +1,7 @@
-// # AI 日志视图：摘要列表，点击行展开实际传递参数与错误详情
-import { useState } from 'react';
+// # AI 日志视图：摘要列表虚拟滚动，点击行展开实际传递参数与错误详情
+
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useMemo, useRef, useState } from 'react';
 
 import { Accordion } from '@/shared/ui/accordion';
 import { Button } from '@/shared/ui/button';
@@ -16,15 +18,28 @@ interface AiLogViewProps {
   onBack: () => void;
 }
 
-// AI 日志视图：来源分层筛选 + 手风琴列表展开详情，提供复制全部与清空入口
+// AI 日志视图：来源分层筛选 + 手风琴列表虚拟滚动展开详情，提供复制全部与清空入口
 function AiLogView({ onBack }: AiLogViewProps) {
   const { logs, clear } = useAiLogs();
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<LogFilter>('all');
+  const listRef = useRef<HTMLDivElement>(null);
 
   // 按来源分层过滤后的日志列表
-  const filteredLogs =
-    filter === 'all' ? logs : logs.filter((log) => log.source === filter);
+  const filteredLogs = useMemo(
+    () =>
+      filter === 'all' ? logs : logs.filter((log) => log.source === filter),
+    [logs, filter],
+  );
+
+  // 日志列表虚拟滚动：卡片高度随展开动态变化，由 measureElement 实测校正
+  const logVirtualizer = useVirtualizer({
+    count: filteredLogs.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 140,
+    overscan: 6,
+    getItemKey: (index) => filteredLogs[index]?.id ?? index,
+  });
 
   // 一键复制当前列表日志到剪贴板，短暂切换按钮文案
   const handleCopyAll = async (): Promise<void> => {
@@ -35,8 +50,11 @@ function AiLogView({ onBack }: AiLogViewProps) {
     }, 1500);
   };
 
+  // 当前视口内的虚拟条目
+  const virtualItems = logVirtualizer.getVirtualItems();
+
   return (
-    <div className="flex flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <Button
@@ -76,11 +94,13 @@ function AiLogView({ onBack }: AiLogViewProps) {
         )}
       </div>
       <Tabs
-        className="w-full"
+        className="flex min-h-0 flex-1 flex-col gap-2"
         value={filter}
         onValueChange={(next) => {
           if (next !== null) {
             setFilter(next as LogFilter);
+            // 切换筛选后回到列表顶部，避免残留上个分类的滚动位置
+            listRef.current?.scrollTo({ top: 0 });
           }
         }}
       >
@@ -101,7 +121,10 @@ function AiLogView({ onBack }: AiLogViewProps) {
             请教反馈
           </TabsTrigger>
         </TabsList>
-        <TabsContent value={filter} className="flex flex-col gap-2">
+        <TabsContent
+          value={filter}
+          className="flex min-h-0 flex-1 flex-col gap-2"
+        >
           <p className="text-xs text-muted-foreground">
             {FILTER_DESCRIPTIONS[filter]}
           </p>
@@ -110,10 +133,43 @@ function AiLogView({ onBack }: AiLogViewProps) {
               {logs.length === 0 ? '暂无 AI 调用日志' : '该分类暂无日志'}
             </p>
           ) : (
-            <Accordion className="flex flex-col gap-1">
-              {filteredLogs.map((log) => (
-                <LogCard key={log.id} log={log} />
-              ))}
+            <Accordion className="flex min-h-0 flex-1 flex-col">
+              {/* 日志列表滚动容器：overflow-anchor 关闭，避免新日志插入顶部时视口跳动 */}
+              <div
+                ref={listRef}
+                className="min-h-0 flex-1 overflow-y-auto [overflow-anchor:none]"
+              >
+                {/* 虚拟化占位层：总高度撑开滚动范围 */}
+                <div
+                  className="relative w-full"
+                  style={{ height: logVirtualizer.getTotalSize() }}
+                >
+                  {/* 块平移：整块按首条偏移定位，条目正常流，平滑滚动时未测量条目不错位 */}
+                  <div
+                    className="absolute inset-x-0 top-0"
+                    style={{
+                      transform: `translateY(${virtualItems[0]?.start ?? 0}px)`,
+                    }}
+                  >
+                    {virtualItems.map((virtualItem) => {
+                      const log = filteredLogs[virtualItem.index];
+                      if (log === undefined) {
+                        return null;
+                      }
+                      return (
+                        <div
+                          key={virtualItem.key}
+                          data-index={virtualItem.index}
+                          ref={logVirtualizer.measureElement}
+                          className="w-full pb-1"
+                        >
+                          <LogCard log={log} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </Accordion>
           )}
         </TabsContent>

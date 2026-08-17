@@ -92,73 +92,77 @@ function LogCard({ log }: { log: AiLog }) {
           </>
         )}
       </AccordionTrigger>
-      <AccordionContent className="flex flex-col gap-1 border-t px-2 pt-2">
-        <Accordion className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted-foreground">
-            系统提示词
-          </span>
-          {log.system !== undefined && log.system !== '' && (
-            <DetailField value="system" label="角色描述" text={log.system} />
+      {/* 虚拟滚动场景跳过高度动画：展开高度即时生效，供外层 measureElement 实测；间距类放内容包裹层，避免经 className 同时落在面板与内层 div 上 */}
+      <AccordionContent disableAnimation className="[&>div]:h-auto">
+        <div className="flex flex-col gap-1 border-t px-2 pt-2">
+          <Accordion className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-muted-foreground">
+              系统提示词
+            </span>
+            {log.system !== undefined && log.system !== '' && (
+              <DetailField value="system" label="角色描述" text={log.system} />
+            )}
+            {prompt !== undefined && (
+              <>
+                <span className="text-xs font-medium text-muted-foreground">
+                  用户提示词
+                </span>
+                {promptText !== undefined && promptText !== '' && (
+                  <DetailField
+                    value="promptText"
+                    label="用户提示词全文"
+                    text={promptText}
+                  />
+                )}
+                <DetailField value="task" label="任务描述" text={prompt.task} />
+                <DetailField
+                  value="requirement"
+                  label="生成要求"
+                  text={prompt.requirement}
+                />
+                <DetailField
+                  value="jd"
+                  label="职位详情"
+                  text={JSON.stringify(prompt.jd, null, 2)}
+                />
+                {prompt.hr !== undefined && (
+                  <DetailField
+                    value="hr"
+                    label="当前 HR 信息"
+                    text={JSON.stringify(prompt.hr, null, 2)}
+                  />
+                )}
+                {prompt.resumeText !== undefined &&
+                  prompt.resumeText !== '' && (
+                    <DetailField
+                      value="resumeText"
+                      label="求职者简历"
+                      text={prompt.resumeText}
+                    />
+                  )}
+                {(prompt.sections ?? []).map((section) => (
+                  <DetailField
+                    key={section}
+                    value={section}
+                    label={sectionLabelOf(section)}
+                    text={section}
+                  />
+                ))}
+              </>
+            )}
+            <DetailField
+              value="resolvedArgs"
+              label="模型思考等级参数"
+              text={JSON.stringify(log.resolvedArgs, null, 2)}
+            />
+            {log.output !== undefined && log.output !== '' && (
+              <DetailField value="output" label="AI 回复" text={log.output} />
+            )}
+          </Accordion>
+          {log.error !== undefined && (
+            <p className="text-xs break-all text-destructive">{log.error}</p>
           )}
-          {prompt !== undefined && (
-            <>
-              <span className="text-xs font-medium text-muted-foreground">
-                用户提示词
-              </span>
-              {promptText !== undefined && promptText !== '' && (
-                <DetailField
-                  value="promptText"
-                  label="用户提示词全文"
-                  text={promptText}
-                />
-              )}
-              <DetailField value="task" label="任务描述" text={prompt.task} />
-              <DetailField
-                value="requirement"
-                label="生成要求"
-                text={prompt.requirement}
-              />
-              <DetailField
-                value="jd"
-                label="职位详情"
-                text={JSON.stringify(prompt.jd, null, 2)}
-              />
-              {prompt.hr !== undefined && (
-                <DetailField
-                  value="hr"
-                  label="当前 HR 信息"
-                  text={JSON.stringify(prompt.hr, null, 2)}
-                />
-              )}
-              {prompt.resumeText !== undefined && prompt.resumeText !== '' && (
-                <DetailField
-                  value="resumeText"
-                  label="求职者简历"
-                  text={prompt.resumeText}
-                />
-              )}
-              {(prompt.sections ?? []).map((section) => (
-                <DetailField
-                  key={section}
-                  value={section}
-                  label={sectionLabelOf(section)}
-                  text={section}
-                />
-              ))}
-            </>
-          )}
-          <DetailField
-            value="resolvedArgs"
-            label="模型思考等级参数"
-            text={JSON.stringify(log.resolvedArgs, null, 2)}
-          />
-          {log.output !== undefined && log.output !== '' && (
-            <DetailField value="output" label="AI 回复" text={log.output} />
-          )}
-        </Accordion>
-        {log.error !== undefined && (
-          <p className="text-xs break-all text-destructive">{log.error}</p>
-        )}
+        </div>
       </AccordionContent>
     </AccordionItem>
   );
