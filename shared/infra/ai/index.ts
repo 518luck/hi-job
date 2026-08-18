@@ -21,6 +21,7 @@ export {
   resumeSectionOf,
 } from './scenes';
 export {
+  AUTH_ERROR_MARKER,
   chatWithVendor,
   createVendorClient,
   fetchVendorModels,

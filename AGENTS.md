@@ -54,6 +54,7 @@ manifest 由 `entrypoints/` 下的文件名约定自动生成，**无需手写 m
 | `sidepanel/index.html` | 侧边栏面板 | Chrome Side Panel，点工具栏图标在浏览器左侧展开 |
 | `xxx.content.ts(x)` | 内容脚本   | 注入匹配网页，`matches` 写在文件内         |
 | `options/index.html`| 设置页     | 扩展选项页（按需新增）                     |
+| `auth/index.html`  | 授权小窗   | 独立 popup 页，AI 厂商跨域权限的一键授权    |
 
 - 入口带配套文件（组件、样式等）时，放 `entrypoints/<name>/` 目录，以 `index.*` 为入口。
 - WXT API（`defineBackground`、`defineContentScript`、`browser` 等）自动导入，无需手写 import。

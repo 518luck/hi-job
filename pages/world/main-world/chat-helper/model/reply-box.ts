@@ -1,4 +1,5 @@
 // # AI 回复助手（主世界）：悬浮按钮 + 聊天窗，问候/跟进/反馈/回复/复制，悬停气泡显示使用时机
+import { AUTH_ERROR_MARKER } from '@/shared/infra/ai';
 import { stringOf } from '@/shared/lib/page-property';
 
 import { extensionApi } from './background-rpc';
@@ -36,9 +37,6 @@ const restoreButtonText = (button: HTMLButtonElement, text: string): void => {
   button.textContent = text;
 };
 
-// 未授权错误的文案标记：与后台 resolveGenerationContext 的报错保持一致
-const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
-
 // 正文区展示错误信息；未授权错误附「去授权」按钮，一键打开授权小窗
 const showBodyError = (bodyEl: HTMLElement, message: string): void => {
   bodyEl.textContent = message;
@@ -49,7 +47,12 @@ const showBodyError = (bodyEl: HTMLElement, message: string): void => {
   authButton.className = `${HIJOB_PREFIX}-auth-button`;
   authButton.textContent = '去授权';
   authButton.addEventListener('click', () => {
-    void extensionApi.openAiVendorAuth();
+    // 点击期间禁用防重复开窗，失败时恢复可重试
+    authButton.disabled = true;
+    void extensionApi.openAiVendorAuth().catch(() => {
+      authButton.disabled = false;
+      authButton.textContent = '打开失败，点击重试';
+    });
   });
   bodyEl.append(authButton);
 };
@@ -238,16 +241,30 @@ const handleRejectionFeedback = async ({
   }
 };
 
+// 复制恢复定时器：单例聊天窗内全局保存，连点时不叠加多个恢复计时
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
+
 // 复制聊天窗正文到剪贴板：复制中显示旋转图标，成功后短暂显示对勾再恢复
 const copyReplyText = async (
   bodyEl: HTMLElement,
   copyButton: HTMLButtonElement,
 ): Promise<void> => {
+  window.clearTimeout(copyResetTimer);
   copyButton.disabled = true;
   showButtonLoading(copyButton);
   let copied = false;
   try {
-    await navigator.clipboard.writeText(bodyEl.textContent ?? '');
+    // 只复制正文文本：错误态下排除「去授权」按钮等注入元素
+    const text = [...bodyEl.childNodes]
+      .filter(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE ||
+          (node instanceof HTMLElement &&
+            !node.classList.contains(`${HIJOB_PREFIX}-auth-button`)),
+      )
+      .map((node) => node.textContent ?? '')
+      .join('');
+    await navigator.clipboard.writeText(text);
     copied = true;
   } catch {
     // 剪贴板不可用时静默失败，恢复文案不打断聊天窗
@@ -257,7 +274,7 @@ const copyReplyText = async (
     restoreButtonText(copyButton, copied ? '✓' : '复制');
   }
   if (copied) {
-    setTimeout(() => {
+    copyResetTimer = setTimeout(() => {
       restoreButtonText(copyButton, '复制');
     }, 1200);
   }

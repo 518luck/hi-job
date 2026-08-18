@@ -36,6 +36,14 @@ function AuthPage({ origin }: AuthPageProps) {
     );
   }
 
+  // 按钮文案随状态切换
+  const buttonLabel =
+    state === 'granted'
+      ? '已授权，窗口即将关闭'
+      : state === 'denied'
+        ? '已拒绝，点击重试'
+        : '授权访问';
+
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-3 p-6 text-center">
       <h1 className="text-base font-medium">授权访问 AI 厂商</h1>
@@ -52,11 +60,7 @@ function AuthPage({ origin }: AuthPageProps) {
           void requestAuth();
         }}
       >
-        {state === 'granted'
-          ? '已授权，窗口即将关闭'
-          : state === 'denied'
-            ? '已拒绝，点击重试'
-            : '授权访问'}
+        {buttonLabel}
       </Button>
     </div>
   );

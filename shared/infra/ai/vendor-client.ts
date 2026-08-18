@@ -14,6 +14,9 @@ import type {
 import { recordAiLog, type ThinkingArgs } from './ai-log';
 import { assemblePromptText } from './scenes/prompt-parts';
 
+// 未授权错误标记：后台报错与聊天窗「去授权」按钮的跨世界约定，双方共用同一常量
+const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
+
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
   baseUrl: string; // API 基础地址
@@ -199,4 +202,4 @@ const chatWithVendor = async ({
   return result;
 };
 
-export { chatWithVendor, createVendorClient, fetchVendorModels };
+export { AUTH_ERROR_MARKER, chatWithVendor, createVendorClient, fetchVendorModels };

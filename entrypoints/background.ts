@@ -2,6 +2,7 @@
 import { z } from 'zod';
 
 import {
+  AUTH_ERROR_MARKER,
   generateFollowUp,
   generateGreeting,
   generateRejectionFeedback,
@@ -41,21 +42,30 @@ import {
   selectedJdSchema,
 } from '@/shared/zod';
 
+// 解析当前选中厂商：授权小窗与生成上下文共用同一厂商选择逻辑，避免选择漂移
+const resolveActiveVendor = async (): Promise<AiVendorRecord> => {
+  const vendors = await aiVendorStore.readAllVendors();
+  const preference = await aiPreferenceStore.readAiPreference();
+  const vendor =
+    vendors.find((item) => item.vendorId === preference.vendorId) ?? vendors[0];
+  if (vendor === undefined) {
+    throw new Error('未配置 AI 厂商：请先到侧边栏「AI 厂商」页添加并拉取模型');
+  }
+  return vendor;
+};
+
 // 解析生成上下文：全局偏好选中的厂商/模型/思考档位 + 权限预检（无手势环境用 contains）
 const resolveGenerationContext = async (): Promise<{
   vendor: AiVendorRecord;
   modelId: string;
   thinkingMode: ThinkingMode;
 }> => {
-  const vendors = await aiVendorStore.readAllVendors();
-  // 优先用工作台全局选择的厂商与模型，无选择或选择失效时回退第一个厂商第一个模型
+  const vendor = await resolveActiveVendor();
   const preference = await aiPreferenceStore.readAiPreference();
-  const vendor =
-    vendors.find((item) => item.vendorId === preference.vendorId) ?? vendors[0];
   const modelId =
-    vendor?.models.find((model) => model === preference.modelId) ??
-    vendor?.models[0];
-  if (vendor === undefined || modelId === undefined) {
+    vendor.models.find((model) => model === preference.modelId) ??
+    vendor.models[0];
+  if (modelId === undefined) {
     throw new Error('未配置 AI 厂商：请先到侧边栏「AI 厂商」页添加并拉取模型');
   }
   // > 后台无用户手势不能申请权限：用 contains 预检（无手势限制），未授权时给出可读指引
@@ -65,7 +75,7 @@ const resolveGenerationContext = async (): Promise<{
   });
   if (!granted) {
     throw new Error(
-      '未授权访问 AI 厂商地址：请先在侧边栏「AI 厂商」页拉取一次模型完成授权',
+      `${AUTH_ERROR_MARKER}：请先在侧边栏「AI 厂商」页拉取一次模型完成授权`,
     );
   }
   return {
@@ -140,17 +150,9 @@ const handleRejectionFeedback = async (
   });
 };
 
-// 解析当前选中厂商的接口地址：授权小窗与生成上下文共用同一选中逻辑（此处不含权限预检）
-const resolveActiveVendorOrigin = async (): Promise<string> => {
-  const vendors = await aiVendorStore.readAllVendors();
-  const preference = await aiPreferenceStore.readAiPreference();
-  const vendor =
-    vendors.find((item) => item.vendorId === preference.vendorId) ?? vendors[0];
-  if (vendor === undefined) {
-    throw new Error('未配置 AI 厂商：请先到侧边栏「AI 厂商」页添加并拉取模型');
-  }
-  return new URL(vendor.baseUrl).origin;
-};
+// 解析当前选中厂商的接口地址：授权小窗据此打开对应授权页
+const resolveActiveVendorOrigin = async (): Promise<string> =>
+  new URL((await resolveActiveVendor()).baseUrl).origin;
 
 // 广播通知：向各 Boss直聘 标签页的桥推送指定类型，由桥转发给主世界
 const broadcastNotify = async (type: string): Promise<void> => {
