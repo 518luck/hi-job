@@ -22,6 +22,10 @@ const emptyJobData = (): VueJobData => ({
   brandName: '',
   bossOnline: false,
   bossActiveDesc: '',
+  encryptBossId: '',
+  securityId: '',
+  encryptJobId: '',
+  lid: '',
 });
 
 // 向主世界请求职位原始数据；薪资为空则重试

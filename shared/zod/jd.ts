@@ -36,6 +36,10 @@ const vueJobDataSchema = recordedJdSchema
     brandName: z.string(), // 公司名，取自 currentJob.brandName，读不到为空串
     bossOnline: z.boolean().optional(), // HR 是否在线，页面值缺失时缺省（展示为未知）
     bossActiveDesc: z.string(), // HR 活跃状态文本（如 刚刚活跃），取自详情面板 bossInfo，读不到为空串
+    encryptBossId: z.string(), // HR 加密 id，取自 currentJob.encryptBossId，构造会话直达链接用
+    securityId: z.string(), // 会话安全 id，取自 currentJob.securityId，构造会话直达链接用
+    encryptJobId: z.string(), // 职位加密 id，取自 currentJob.encryptJobId，构造会话直达链接用
+    lid: z.string(), // 链接来源埋点标识，取自 currentJob.lid，读不到为空串
   });
 
 // 页面职位上下文：工作台查询当前 BOSS 标签页的页面类型与当前职位数据

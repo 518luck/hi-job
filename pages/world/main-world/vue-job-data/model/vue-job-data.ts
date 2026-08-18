@@ -47,6 +47,10 @@ const extractJobData = (currentJob: unknown): VueJobData => {
       stringOf(currentJob, 'brandName') || stringOf(bossInfo, 'brandName'),
     bossOnline,
     bossActiveDesc: stringOf(bossInfo, 'activeTimeDesc'),
+    encryptBossId: stringOf(currentJob, 'encryptBossId'),
+    securityId: stringOf(currentJob, 'securityId'),
+    encryptJobId: stringOf(currentJob, 'encryptJobId'),
+    lid: stringOf(currentJob, 'lid'),
   };
 };
 

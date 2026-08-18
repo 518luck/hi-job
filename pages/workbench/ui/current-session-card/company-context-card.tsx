@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 
 import { sendMessage } from '@/shared/infra/messaging';
+import { jobUrlOf } from '@/shared/lib/boss-url';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Icons } from '@/shared/ui/icons';
 import type { VueJobData } from '@/shared/zod';
 
 // 职位列表页上下文卡片的 props
@@ -69,9 +71,20 @@ function CompanyContextCard({ job }: CompanyContextCardProps) {
             <Badge variant="outline">{job.companyIndustry}</Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          HR 活跃状态：{activeText}
-        </p>
+        {/* // > 去沟通：直达会话被风控拦截，绕行职位详情页由用户点「立即沟通」发起 */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            HR 活跃状态：{activeText}
+          </p>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => window.open(jobUrlOf(job), '_blank')}
+          >
+            <Icons.promptText data-icon="inline-start" />
+            <span>去沟通</span>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

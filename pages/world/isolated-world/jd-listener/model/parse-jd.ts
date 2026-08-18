@@ -11,6 +11,10 @@ const EMPTY_VUE_JOB_DATA: VueJobData = {
   brandName: '',
   bossOnline: false,
   bossActiveDesc: '',
+  encryptBossId: '',
+  securityId: '',
+  encryptJobId: '',
+  lid: '',
 };
 
 // 取第一个匹配元素的文本，找不到返回空串
