@@ -202,4 +202,9 @@ const chatWithVendor = async ({
   return result;
 };
 
-export { AUTH_ERROR_MARKER, chatWithVendor, createVendorClient, fetchVendorModels };
+export {
+  AUTH_ERROR_MARKER,
+  chatWithVendor,
+  createVendorClient,
+  fetchVendorModels,
+};
