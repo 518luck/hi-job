@@ -1,0 +1,51 @@
+# 落地页部署流水线：site/ 变更时构建 site/ 并发布 GitHub Pages
+name: deploy-site
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/deploy-site.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages 同一时间只保留一个部署，新部署取消旧部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 仓库不入库 lockfile，关闭 frozen 校验
+      - name: Install site dependencies
+        run: pnpm install --no-frozen-lockfile --dir site
+
+      - name: Build site
+        run: pnpm --dir site run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
