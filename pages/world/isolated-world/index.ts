@@ -3,6 +3,7 @@
 export {
   startJdRecorder,
   startJobCardBlocker,
+  startJobCardChatted,
   startJobCardDecorator,
   startJobChangeWatcher,
 } from './jd-listener';

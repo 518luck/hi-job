@@ -50,6 +50,17 @@ const readLatestHr = (): Promise<Hr | undefined> =>
 const readExcludedHrIds = (): Promise<string[]> =>
   db.hr.where('status').equals('excluded').primaryKeys();
 
+// 读取已沟通公司名集合（去重、去空串）：职位列表卡「已沟通」标记用
+const readChattedBrandNames = async (): Promise<string[]> => {
+  const names = new Set<string>();
+  for (const { brandName } of await db.hr.toArray()) {
+    if (brandName !== '') {
+      names.add(brandName);
+    }
+  }
+  return [...names];
+};
+
 // 切换排除标记：已排除则恢复，未排除则标记，返回切换后的状态
 const toggleExcluded = async (encryptBossId: string): Promise<boolean> => {
   const hr = await db.hr.get(encryptBossId);
@@ -73,6 +84,7 @@ const hrStore = {
   readAllHrs, // 读取全部 HR
   readLatestHr, // 读取最近打开 HR
   readExcludedHrIds, // 读取被排除名单
+  readChattedBrandNames, // 读取已沟通公司名集合
   toggleExcluded, // 切换排除标记
   clearAllHrs, // 清空全部 HR
 };

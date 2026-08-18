@@ -228,6 +228,8 @@ export default defineBackground(() => {
       throw new Error('INVALID_PARAMS: HR 批量同步参数不合法');
     }
     await hrStore.saveHrs(parsed.data);
+    // 广播到各标签页：职位列表页「已沟通」标记按最新 HR 档案重拉
+    await broadcastNotify('hrs-changed');
   });
   onMessage('saveChatMessages', async ({ data }) => {
     const parsed = z.array(chatMessageInputSchema).safeParse(data);
@@ -241,6 +243,7 @@ export default defineBackground(() => {
       .readExcludedHrIds()
       .then((ids) => excludedHrIdsResponseSchema.parse(ids)),
   );
+  onMessage('getChattedCompanyNames', () => hrStore.readChattedBrandNames());
   onMessage('hrsChanged', () => broadcastNotify('hrs-changed'));
   onMessage('getBlockedCompanyNames', () =>
     blockedCompanyStore.readBlockedCompanies(),
