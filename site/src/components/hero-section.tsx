@@ -12,9 +12,9 @@ export function HeroSection() {
         更好用的 boss 直聘
       </h1>
       <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        把求职过程的高频动作变得可控、可追踪——浏览过的职位自动记录，沟通中的 HR
-        自动建档，AI
-        帮你生成打招呼与回复，不喜欢的公司一键屏蔽。最终是否沟通、是否发送，始终由你掌控。
+        结合你的目标职位与简历，AI 快速生成量身定制的打招呼与回复话术，帮你打动
+        HR、拿到更多回复，提升求职成功率。浏览过的职位自动记录，沟通中的 HR
+        自动建档，不喜欢的公司一键屏蔽，求职过程有条不紊。最终是否发送，始终由你掌控。
       </p>
       <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
         <span className="rounded-full border px-3 py-1">免费开源</span>
