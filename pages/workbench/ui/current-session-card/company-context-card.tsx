@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 import { sendMessage } from '@/shared/infra/messaging';
-import { jobUrlOf } from '@/shared/lib/boss-url';
+import { JOB_GREET_HASH, jobUrlOf } from '@/shared/lib/boss-url';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -79,7 +79,7 @@ function CompanyContextCard({ job }: CompanyContextCardProps) {
           <Button
             variant="outline"
             size="xs"
-            onClick={() => window.open(jobUrlOf(job), '_blank')}
+            onClick={() => window.open(jobUrlOf(job) + JOB_GREET_HASH, '_blank')}
           >
             <Icons.promptText data-icon="inline-start" />
             <span>去沟通</span>

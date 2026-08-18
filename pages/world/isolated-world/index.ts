@@ -6,4 +6,5 @@ export {
   startJobCardDecorator,
   startJobChangeWatcher,
 } from './jd-listener';
+export { startJdDetailGreet } from './jd-detail-greet';
 export { startRuntimeBridge } from './runtime-bridge';

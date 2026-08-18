@@ -6,6 +6,9 @@ interface JobUrlSource {
   securityId: string; // 会话安全 id，为空串时省略参数
 }
 
+// 去沟通 hash 标记：侧边栏「去沟通」与详情页自动打招呼模块之间的触发协议
+const JOB_GREET_HASH = '#hijob-greet';
+
 // 构造职位详情跳转链接：路径段即 encryptJobId，securityId 为空时省略参数
 const jobUrlOf = ({ encryptJobId, securityId }: JobUrlSource): string => {
   const base = `https://www.zhipin.com/job_detail/${encryptJobId}.html`;
@@ -14,4 +17,4 @@ const jobUrlOf = ({ encryptJobId, securityId }: JobUrlSource): string => {
     : `${base}?securityId=${encodeURIComponent(securityId)}`;
 };
 
-export { jobUrlOf };
+export { JOB_GREET_HASH, jobUrlOf };

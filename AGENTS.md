@@ -18,7 +18,7 @@ hi-job/
 │   ├── workbench/          # 工作台页：最近职位卡片流 + AI 打招呼的厂商/模型选择，index.ts=公有 API
 │   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
 │       ├── rpc/            # 两世界共享 RPC：window-rpc 传输与方法表（Vue DTO 在 shared/zod）
-│       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、runtime-bridge 桥转发
+│       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、jd-detail-greet 详情页自动打招呼、runtime-bridge 桥转发
 │       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe、jd-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层

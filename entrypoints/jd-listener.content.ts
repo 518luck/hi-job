@@ -1,5 +1,6 @@
 // # Boss直聘 内容脚本（隔离世界）：监听用户点开的职位并自动记录
 import {
+  startJdDetailGreet,
   startJdRecorder,
   startJobCardBlocker,
   startJobCardDecorator,
@@ -20,5 +21,7 @@ export default defineContentScript({
     startJobChangeWatcher({ doc: document });
     // 主世界聊天页脚本的扩展 API 请求转发（主世界拿不到 chrome API）
     startRuntimeBridge();
+    // 带 hash 标记打开的详情页自动点「立即沟通」与「继续沟通」
+    startJdDetailGreet();
   },
 });
