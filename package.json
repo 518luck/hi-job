@@ -2,7 +2,7 @@
   "name": "better-boss-zhipin",
   "description": "更好用的 boss 直聘：BOSS直聘求职辅助",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
