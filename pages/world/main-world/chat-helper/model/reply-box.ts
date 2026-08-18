@@ -212,16 +212,29 @@ const handleRejectionFeedback = async ({
   }
 };
 
-// 复制聊天窗正文到剪贴板，按钮短暂切换文案
+// 复制聊天窗正文到剪贴板：复制中显示旋转图标，成功后短暂显示对勾再恢复
 const copyReplyText = async (
   bodyEl: HTMLElement,
   copyButton: HTMLButtonElement,
 ): Promise<void> => {
-  await navigator.clipboard.writeText(bodyEl.textContent ?? '');
-  copyButton.textContent = '已复制';
-  setTimeout(() => {
-    copyButton.textContent = '复制';
-  }, 1500);
+  copyButton.disabled = true;
+  showButtonLoading(copyButton);
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(bodyEl.textContent ?? '');
+    copied = true;
+  } catch {
+    // 剪贴板不可用时静默失败，恢复文案不打断聊天窗
+  } finally {
+    copyButton.disabled = false;
+    // > 对勾是单窄字符：成功反馈不会把按钮撑到比「复制」更宽，避免换行撑高
+    restoreButtonText(copyButton, copied ? '✓' : '复制');
+  }
+  if (copied) {
+    setTimeout(() => {
+      restoreButtonText(copyButton, '复制');
+    }, 1200);
+  }
 };
 
 // 聊天窗定位：打开时放到悬浮按钮附近，优先上方、放不下则下方；水平方向按按钮所在半边对齐，不超出视口
