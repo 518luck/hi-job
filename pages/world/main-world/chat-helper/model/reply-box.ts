@@ -36,6 +36,24 @@ const restoreButtonText = (button: HTMLButtonElement, text: string): void => {
   button.textContent = text;
 };
 
+// 未授权错误的文案标记：与后台 resolveGenerationContext 的报错保持一致
+const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
+
+// 正文区展示错误信息；未授权错误附「去授权」按钮，一键打开授权小窗
+const showBodyError = (bodyEl: HTMLElement, message: string): void => {
+  bodyEl.textContent = message;
+  if (!message.includes(AUTH_ERROR_MARKER)) {
+    return;
+  }
+  const authButton = document.createElement('button');
+  authButton.className = `${HIJOB_PREFIX}-auth-button`;
+  authButton.textContent = '去授权';
+  authButton.addEventListener('click', () => {
+    void extensionApi.openAiVendorAuth();
+  });
+  bodyEl.append(authButton);
+};
+
 // 生成下一条回复：收集当前会话信息与聊天记录，经后台生成后展示在聊天窗正文
 const handleGenerateReply = async (
   bodyEl: HTMLElement,
@@ -64,8 +82,10 @@ const handleGenerateReply = async (
     });
     bodyEl.textContent = response;
   } catch (error) {
-    bodyEl.textContent =
-      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+    showBodyError(
+      bodyEl,
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败',
+    );
   } finally {
     generateButton.disabled = false;
     restoreButtonText(generateButton, '回复');
@@ -93,8 +113,10 @@ const handleGreeting = async (
     });
     bodyEl.textContent = response;
   } catch (error) {
-    bodyEl.textContent =
-      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+    showBodyError(
+      bodyEl,
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败',
+    );
   } finally {
     greetingButton.disabled = false;
     restoreButtonText(greetingButton, '问候');
@@ -133,8 +155,10 @@ const handleFollowUp = async (
     });
     bodyEl.textContent = response;
   } catch (error) {
-    bodyEl.textContent =
-      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+    showBodyError(
+      bodyEl,
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败',
+    );
   } finally {
     followUpButton.disabled = false;
     restoreButtonText(followUpButton, '提醒');
@@ -204,8 +228,10 @@ const handleRejectionFeedback = async ({
       bodyEl.textContent = '会话已切换，已忽略上一会话的生成结果';
       return;
     }
-    bodyEl.textContent =
-      error instanceof Error ? `生成失败：${error.message}` : '生成失败';
+    showBodyError(
+      bodyEl,
+      error instanceof Error ? `生成失败：${error.message}` : '生成失败',
+    );
   } finally {
     feedbackButton.disabled = false;
     restoreButtonText(feedbackButton, '反馈');

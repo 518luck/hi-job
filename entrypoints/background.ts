@@ -140,6 +140,18 @@ const handleRejectionFeedback = async (
   });
 };
 
+// 解析当前选中厂商的接口地址：授权小窗与生成上下文共用同一选中逻辑（此处不含权限预检）
+const resolveActiveVendorOrigin = async (): Promise<string> => {
+  const vendors = await aiVendorStore.readAllVendors();
+  const preference = await aiPreferenceStore.readAiPreference();
+  const vendor =
+    vendors.find((item) => item.vendorId === preference.vendorId) ?? vendors[0];
+  if (vendor === undefined) {
+    throw new Error('未配置 AI 厂商：请先到侧边栏「AI 厂商」页添加并拉取模型');
+  }
+  return new URL(vendor.baseUrl).origin;
+};
+
 // 广播通知：向各 Boss直聘 标签页的桥推送指定类型，由桥转发给主世界
 const broadcastNotify = async (type: string): Promise<void> => {
   const tabs = await browser.tabs.query({ url: '*://*.zhipin.com/*' });
@@ -258,6 +270,18 @@ export default defineBackground(() => {
     await broadcastNotify('blocked-companies-changed');
   });
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
+  // 打开授权小窗：聊天页未授权报错的一键入口，开窗无手势限制，权限申请在小窗内点击完成
+  onMessage('openAiVendorAuth', async () => {
+    const origin = await resolveActiveVendorOrigin();
+    await browser.windows.create({
+      type: 'popup',
+      url: browser.runtime.getURL(
+        `/auth.html?origin=${encodeURIComponent(origin)}`,
+      ),
+      width: 400,
+      height: 320,
+    });
+  });
   onMessage('getPageDebugLogs', () => handlePageDebugLogs());
   onMessage('getPageJobContext', () => handlePageJobContext());
   onMessage('jobContextChanged', () => broadcastJobContextChanged());

@@ -38,6 +38,8 @@ const extensionApi = {
     callBackground('saveChatMessages', data),
   getExcludedHrIds: (): Promise<string[]> =>
     callBackground('getExcludedHrIds', undefined),
+  openAiVendorAuth: (): Promise<void> =>
+    callBackground('openAiVendorAuth', undefined),
   greeting: (data: GreetingInput): Promise<string> =>
     callBackground('greeting', data),
   followUp: (data: FollowUpInput): Promise<string> =>

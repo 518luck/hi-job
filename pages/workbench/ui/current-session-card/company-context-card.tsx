@@ -80,7 +80,9 @@ function CompanyContextCard({ job }: CompanyContextCardProps) {
             variant="outline"
             size="xs"
             disabled={job.encryptJobId === ''}
-            onClick={() => window.open(jobUrlOf(job) + JOB_GREET_HASH, '_blank')}
+            onClick={() =>
+              window.open(jobUrlOf(job) + JOB_GREET_HASH, '_blank')
+            }
           >
             <Icons.promptText data-icon="inline-start" />
             <span>去沟通</span>
