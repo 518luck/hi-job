@@ -53,7 +53,7 @@ function ResumeUpload() {
     <div className="flex flex-col gap-2 rounded-md border border-border p-2">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-medium">简历</p>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap justify-end gap-1">
           <Button
             variant="outline"
             size="xs"
