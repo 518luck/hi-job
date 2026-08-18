@@ -17,7 +17,7 @@ function ScreenshotFigure({
     <figure className="flex flex-col gap-3">
       <div className="overflow-hidden rounded-xl border bg-card">
         {missing ? (
-          <div className="flex aspect-[16/10] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-muted-foreground">
+          <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-muted-foreground">
             <ImageIcon className="size-8" aria-hidden />
             <span className="text-sm">截图待补充：{caption}</span>
           </div>
@@ -25,7 +25,7 @@ function ScreenshotFigure({
           <img
             src={src}
             alt={alt}
-            className="aspect-[16/10] w-full object-cover object-top"
+            className="aspect-[3/4] w-full object-cover object-top"
             onError={() => setMissing(true)}
           />
         )}
