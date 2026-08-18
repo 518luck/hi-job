@@ -122,6 +122,14 @@ pnpm run lint     # 代码检查
 pnpm run fix      # 自动修复与格式化
 ```
 
+发版（在 main 上执行：bump 版本 + commit + 打 tag + 推送，tag 推送自动触发 release 流水线发布 GitHub Release）：
+
+```bash
+pnpm release:patch  # 0.1.0 → 0.1.1（修 bug）
+pnpm release:minor  # 0.1.0 → 0.2.0（加功能）
+pnpm release:major  # 0.1.0 → 1.0.0（大改）
+```
+
 ## 隐私与合规
 
 - **数据本地存储**：职位记录、HR 档案、聊天消息、简历、屏蔽名单全部保存在浏览器本地（IndexedDB），不上传任何服务器；删除扩展即彻底清除
