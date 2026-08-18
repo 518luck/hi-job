@@ -31,8 +31,9 @@ export function InstallSection() {
           <DownloadButton />
         </div>
         <p className="mt-6 rounded-lg bg-muted p-4 text-sm leading-relaxed text-muted-foreground">
-          更新方式：有新版本时重新下载 zip、解压到新目录，再到
-          chrome://extensions/ 重新加载。扩展 ID 已固定，职位记录、HR
+          更新方式：有新版本时重新下载 zip 并解压，到 chrome://extensions/
+          再次点击「加载已解压的扩展程序」选择新目录即可——扩展 ID
+          已固定，会在原条目上原地更新，职位记录、HR
           档案等数据不会丢失；旧目录确认新版可用后可删除。解压后的目录别删别挪，扩展需要持续读取它。
         </p>
       </div>

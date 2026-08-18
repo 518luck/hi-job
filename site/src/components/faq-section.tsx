@@ -1,3 +1,5 @@
+import { ChevronDown } from 'lucide-react';
+
 // FAQ 条目：用户最关心的四个问题
 const FAQS: readonly { question: string; answer: string }[] = [
   {
@@ -34,8 +36,13 @@ export function FaqSection() {
             key={question}
             className="group rounded-xl border bg-card p-5"
           >
-            <summary className="cursor-pointer list-none text-sm font-medium marker:hidden">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium marker:hidden">
               {question}
+              {/* // @ 展开指示箭头：open 状态下旋转 180 度 */}
+              <ChevronDown
+                className="ml-auto size-4 shrink-0 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
             </summary>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               {answer}

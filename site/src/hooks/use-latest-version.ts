@@ -18,7 +18,10 @@ export const useLatestVersion = (): { version: string; failed: boolean } => {
         if (typeof data.tag_name === 'string') setVersion(data.tag_name);
         else throw new Error('unexpected response shape');
       })
-      .catch(() => setFailed(true));
+      // 清理触发的 abort 不是真实失败，避免误显兜底文案
+      .catch(() => {
+        if (!controller.signal.aborted) setFailed(true);
+      });
     return () => controller.abort();
   }, []);
 
