@@ -30,7 +30,7 @@
 - Create: `site/vite.config.ts`、`site/tsconfig.json`、`site/index.html`
 - Create: `site/src/main.tsx`、`site/src/app.tsx`（临时占位）、`site/src/app.css`
 - Create: `site/src/lib/utils.ts`、`site/src/lib/site.ts`
-- Create: `site/public/screenshots/.gitkeep`
+- Create: `site/public/screenshots/.gitkeep`、`site/.gitignore`
 
 **Interfaces:**
 - Consumes: 无（首任务）
@@ -45,6 +45,13 @@
 ```bash
 mkdir -p site/src/lib site/src/hooks site/src/components site/public/screenshots
 touch site/public/screenshots/.gitkeep
+```
+
+`site/.gitignore`（根 `.gitignore` 无 `dist` 规则，构建产物必须在这里挡住）：
+
+```gitignore
+node_modules
+dist
 ```
 
 `site/package.json`：
@@ -300,7 +307,7 @@ export const ISSUES_URL = 'https://github.com/518luck/hi-job/issues';
 cd site && pnpm build && pnpm typecheck && cd ..
 pnpm run fix
 pnpm --dir site run dev # 浏览器确认空白页正常、无控制台报错，Ctrl-C 退出
-git add site .gitignore
+git add site
 git commit -m "feat: 新增 site 落地页脚手架与主题基座"
 ```
 
@@ -340,9 +347,12 @@ export const useLatestVersion = (): { version: string; failed: boolean } => {
     fetch(API_LATEST_RELEASE, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<{ tag_name: string }>;
+        return response.json();
       })
-      .then((data) => setVersion(data.tag_name))
+      .then((data: { tag_name?: unknown }) => {
+        if (typeof data.tag_name === 'string') setVersion(data.tag_name);
+        else throw new Error('unexpected response shape');
+      })
       .catch(() => setFailed(true));
     return () => controller.abort();
   }, []);
@@ -503,7 +513,6 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
-import { cn } from '../lib/utils';
 
 // 功能卡片数据：图标 + 标题 + 描述 + 要点
 const FEATURES: { icon: LucideIcon; title: string; description: string; points: readonly string[] }[] = [
@@ -563,11 +572,7 @@ export function FeatureSection() {
             className="rounded-xl border bg-card p-6"
           >
             <div className="mb-3 flex items-center gap-2.5">
-              <span
-                className={cn(
-                  'inline-flex size-9 items-center justify-center rounded-lg bg-accent',
-                )}
-              >
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-accent">
                 <Icon className="size-4.5" aria-hidden />
               </span>
               <h3 className="font-semibold">{title}</h3>
@@ -1014,7 +1019,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile --dir site
 
       - name: Build site
-        run: pnpm run build --dir site
+        run: pnpm --dir site run build
 
       - uses: actions/configure-pages@v5
 
