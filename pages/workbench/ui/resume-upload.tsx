@@ -56,12 +56,12 @@ function ResumeUpload() {
         <div className="flex flex-wrap justify-end gap-1">
           <Button
             variant="outline"
-            size="xs"
+            size="icon-xs"
+            aria-label={resume === undefined ? '上传简历' : '重新上传'}
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
           >
-            <Icons.upload data-icon="inline-start" />
-            <span>{resume === undefined ? '上传简历' : '重新上传'}</span>
+            <Icons.upload />
           </Button>
           {resume !== undefined && (
             <Button
@@ -84,18 +84,19 @@ function ResumeUpload() {
                 void restore();
               }}
             >
-              <span>恢复原版</span>
+              <span>恢复</span>
             </Button>
           )}
           {resume !== undefined && (
             <Button
               variant="destructive"
-              size="xs"
+              size="icon-xs"
+              aria-label="删除简历"
               onClick={() => {
                 void clear();
               }}
             >
-              <span>删除</span>
+              <Icons.remove />
             </Button>
           )}
         </div>
