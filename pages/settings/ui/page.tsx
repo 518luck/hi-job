@@ -90,6 +90,10 @@ function SettingsPage({ focusSection, onSectionFocused }: SettingsPageProps) {
             {paragraph}
           </p>
         ))}
+        {/* 版本号：读取已安装扩展的 manifest，与 package.json 构建时自动同步 */}
+        <p className="pt-1 text-xs text-muted-foreground/60">
+          v{browser.runtime.getManifest().version}
+        </p>
       </section>
     </div>
   );
