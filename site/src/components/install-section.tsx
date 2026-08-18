@@ -1,3 +1,5 @@
+import { TriangleAlert } from 'lucide-react';
+
 import { DownloadButton } from './download-button';
 
 // 安装五步：zip 侧载流程，面向无开发背景用户
@@ -36,6 +38,26 @@ export function InstallSection() {
           已固定，会在原条目上原地更新，职位记录、HR
           档案等数据不会丢失；旧目录确认新版可用后可删除。解压后的目录别删别挪，扩展需要持续读取它。
         </p>
+        {/* // ! 更新注意事项：误点移除或先删旧目录都会丢数据，与上方流程说明区分警示等级 */}
+        <div
+          className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4"
+          role="note"
+        >
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
+            <TriangleAlert className="size-4 shrink-0" aria-hidden />
+            更新注意事项
+          </div>
+          <ul className="space-y-1.5 text-sm leading-relaxed text-muted-foreground">
+            <li>
+              不要点扩展卡片上的「移除」按钮——删除会连同职位记录、HR
+              档案等全部本地数据一起清除，且不可恢复。
+            </li>
+            <li>
+              新版本加载成功并确认可用之前，不要删除旧的解压文件夹；顺序永远是：加载新版
+              → 确认能用 → 再删旧文件夹。
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
   );
