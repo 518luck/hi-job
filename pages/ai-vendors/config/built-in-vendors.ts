@@ -8,6 +8,7 @@ import openaiIcon from '@/assets/vendor-icons/openai.png';
 import opencodeIcon from '@/assets/vendor-icons/opencode.png';
 import qwenIcon from '@/assets/vendor-icons/qwen.png';
 import volcengineIcon from '@/assets/vendor-icons/volcengine.png';
+import xiaomiIcon from '@/assets/vendor-icons/xiaomi.png';
 import zhipuIcon from '@/assets/vendor-icons/zhipu.png';
 
 // 内置厂商预设结构：作为表单初始值使用，不直接落库
@@ -77,6 +78,14 @@ const BUILT_IN_VENDORS: BuiltInVendor[] = [
     apiFormat: 'openai',
     models: ['doubao-seed-1.6'],
     icon: volcengineIcon,
+  },
+  {
+    key: 'xiaomi',
+    name: '小米 MiMo',
+    baseUrl: 'https://api.xiaomimimo.com/v1',
+    apiFormat: 'openai',
+    models: ['mimo-v2.5-pro', 'mimo-v2.5'],
+    icon: xiaomiIcon,
   },
   {
     key: 'openai',

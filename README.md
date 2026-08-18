@@ -10,7 +10,7 @@
 
 ### 🤖 AI 求职助手
 
-- **多厂商支持**：内置 10 家厂商预设（智谱 GLM、DeepSeek、Kimi、通义千问、MiniMax、腾讯混元、火山方舟、OpenAI、Anthropic、OpenCode Go），一键启用；也支持自定义任意 OpenAI 兼容 / Anthropic 接口
+- **多厂商支持**：内置 11 家厂商预设（智谱 GLM、DeepSeek、Kimi、通义千问、MiniMax、腾讯混元、火山方舟、小米 MiMo、OpenAI、Anthropic、OpenCode Go），一键启用；也支持自定义任意 OpenAI 兼容 / Anthropic 接口
 - **四种生成场景**：打招呼、聊天回复、跟进消息、请教反馈，均结合职位、HR 档案与简历生成
 - **思考模式**：默认 / 关闭 / 低 / 中 / 高五档，按厂商能力自由切换
 - **用量统计**：AI 调用日志完整记录，调试页展示平均 TPM 与总 Token 消耗
@@ -92,6 +92,7 @@
 | MiniMax | `https://api.minimaxi.com/v1` |
 | 腾讯混元 | `https://api.hunyuan.cloud.tencent.com/v1` |
 | 火山方舟（豆包） | `https://ark.cn-beijing.volces.com/api/v3` |
+| 小米 MiMo | `https://api.xiaomimimo.com/v1` |
 | OpenAI | `https://api.openai.com/v1` |
 | Anthropic | `https://api.anthropic.com` |
 | OpenCode Go | `https://opencode.ai/zen/go/v1` |
