@@ -118,10 +118,10 @@ function AiLogView({ onBack }: AiLogViewProps) {
             跟进
           </TabsTrigger>
           <TabsTrigger value="rejectionFeedback" className="flex-1">
-            请教反馈
+            反馈
           </TabsTrigger>
           <TabsTrigger value="resumeOrganize" className="flex-1">
-            梳理简历
+            简历
           </TabsTrigger>
         </TabsList>
         <TabsContent
