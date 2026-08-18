@@ -1,0 +1,50 @@
+# 扩展发版流水线：打 v* tag 时构建 zip 并发布 GitHub Release
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 仓库不入库 lockfile，关闭 frozen 校验
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      # 防“发错版”：tag 与 package.json 版本必须一致
+      - name: Verify tag matches package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "::error::tag v$TAG 与 package.json version $PKG_VERSION 不一致"
+            exit 1
+          fi
+
+      - name: Build and zip extension
+        run: pnpm zip
+
+      # WXT 默认产物名带版本号，重命名为固定名以支撑 releases/latest 固定直链
+      - name: Rename artifact
+        run: mv .output/*.zip hi-job-chrome.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: hi-job-chrome.zip
+          generate_release_notes: true
