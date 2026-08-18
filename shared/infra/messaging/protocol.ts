@@ -34,6 +34,7 @@ interface ProtocolMap {
   followUp(data: FollowUpInput): string; // 主世界脚本（经桥）	后台	生成跟进消息
   generateReply(data: ReplyInput): string; // 隔离世界脚本	后台	调 AI 生成回复
   rejectionFeedback(data: RejectionFeedbackInput): string; // 主世界脚本（经桥）	后台	生成请教反馈消息
+  organizeResume(): string; // 侧边栏	后台	AI 梳理简历，返回整理后的 Markdown（简历从库读，无入参）
 }
 
 // 类型安全消息收发：隔离世界内容脚本与后台使用

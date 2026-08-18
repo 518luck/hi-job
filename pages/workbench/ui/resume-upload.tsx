@@ -1,4 +1,4 @@
-// 简历上传区：md/docx 上传解析、Markdown 渲染预览、重新上传与清空
+// 简历上传区：md/docx 上传解析、Markdown 渲染预览、AI 梳理、重新上传与清空
 import { useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -14,8 +14,9 @@ const PREVIEW_CLASSES =
 
 // 简历上传区：未上传显示上传按钮，已上传显示渲染预览与操作
 function ResumeUpload() {
-  const { resume, upload, clear } = useResume();
+  const { resume, upload, organize, restore, clear } = useResume();
   const [uploading, setUploading] = useState(false);
+  const [organizing, setOrganizing] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +36,19 @@ function ResumeUpload() {
     }
   };
 
+  // AI 梳理：后台生成整理版并落库（原件自动备份），失败透出可读提示
+  const handleOrganize = async (): Promise<void> => {
+    setOrganizing(true);
+    setError('');
+    try {
+      await organize();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'AI 梳理失败');
+    } finally {
+      setOrganizing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border p-2">
       <div className="flex items-center justify-between gap-2">
@@ -49,6 +63,30 @@ function ResumeUpload() {
             <Icons.upload data-icon="inline-start" />
             <span>{resume === undefined ? '上传简历' : '重新上传'}</span>
           </Button>
+          {resume !== undefined && (
+            <Button
+              variant="outline"
+              size="xs"
+              disabled={organizing || uploading}
+              onClick={() => {
+                void handleOrganize();
+              }}
+            >
+              <Icons.aiOrganize data-icon="inline-start" />
+              <span>{organizing ? '梳理中…' : 'AI 梳理'}</span>
+            </Button>
+          )}
+          {resume?.originalContent !== undefined && (
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                void restore();
+              }}
+            >
+              <span>恢复原版</span>
+            </Button>
+          )}
           {resume !== undefined && (
             <Button
               variant="destructive"
@@ -80,10 +118,17 @@ function ResumeUpload() {
         </p>
       )}
       {uploading && <p className="text-xs text-muted-foreground">解析中…</p>}
+      {organizing && (
+        <p className="text-xs text-muted-foreground">AI 梳理中…</p>
+      )}
       {error !== '' && <p className="text-xs text-destructive">{error}</p>}
       {resume !== undefined && (
         <>
-          <p className="text-xs text-muted-foreground">{resume.fileName}</p>
+          <p className="text-xs text-muted-foreground">
+            {resume.fileName}
+            {resume.originalContent !== undefined &&
+              '（已 AI 梳理，原版已备份）'}
+          </p>
           <div
             className={`max-h-80 overflow-y-auto rounded-md bg-muted/50 p-2 text-xs ${PREVIEW_CLASSES}`}
           >

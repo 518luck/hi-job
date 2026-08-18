@@ -34,8 +34,11 @@ const promptFieldOf = ({ label, value = '' }: PromptFieldOptions): string => {
   return normalizedValue === '' ? '' : `${label}：${normalizedValue}`;
 };
 
-// 将职位的生成相关字段整理为独立事实区块
+// 将职位的生成相关字段整理为独立事实区块，无职位场景（如简历梳理）返回空
 const jdSectionOf = ({ jd }: Pick<ScenePrompt, 'jd'>): string => {
+  if (jd === undefined) {
+    return '';
+  }
   const tags = (jd.tags ?? [])
     .map((tag) => tag.trim())
     .filter((tag) => tag !== '')

@@ -5,6 +5,7 @@ import {
   AUTH_ERROR_MARKER,
   generateFollowUp,
   generateGreeting,
+  generateOrganizedResume,
   generateRejectionFeedback,
   generateReply,
 } from '@/shared/infra/ai';
@@ -146,6 +147,17 @@ const handleRejectionFeedback = async (
     modelId,
     thinkingMode,
     hr: input.hr,
+    requestPermission: false,
+  });
+};
+
+// AI 梳理简历：用全局厂商/模型/思考档位整理库中简历，梳理结果由侧边栏落库并备份原件
+const handleOrganizeResume = async (): Promise<string> => {
+  const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
+  return generateOrganizedResume({
+    vendor,
+    modelId,
+    thinkingMode,
     requestPermission: false,
   });
 };
@@ -324,4 +336,5 @@ export default defineBackground(() => {
     }
     return handleRejectionFeedback(parsed.data);
   });
+  onMessage('organizeResume', () => handleOrganizeResume());
 });

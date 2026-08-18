@@ -25,3 +25,9 @@ export {
   DEFAULT_REPLY_TASK,
   generateReply,
 } from './reply';
+export {
+  DEFAULT_RESUME_ORGANIZE_REQUIREMENT,
+  DEFAULT_RESUME_ORGANIZE_SYSTEM,
+  DEFAULT_RESUME_ORGANIZE_TASK,
+  generateOrganizedResume,
+} from './resume-organize';

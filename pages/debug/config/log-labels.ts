@@ -15,6 +15,7 @@ const SOURCE_LABELS: Record<AiLog['source'], string> = {
   reply: '回复',
   followUp: '跟进',
   rejectionFeedback: '请教反馈',
+  resumeOrganize: '梳理简历',
 };
 
 // 日志分层筛选：全部或按来源
@@ -27,6 +28,7 @@ const FILTER_DESCRIPTIONS: Record<LogFilter, string> = {
   reply: '结合当前聊天记录生成的下一条回复（聊天窗「回复」）。',
   followUp: '招聘沟通暂时中断时生成的跟进消息（聊天窗「提醒」）。',
   rejectionFeedback: '招聘流程结束后生成的反馈请教消息（聊天窗「反馈」）。',
+  resumeOrganize: '工作台简历卡发起的 AI 梳理调用（「AI 梳理」按钮）。',
 };
 
 export type { LogFilter };

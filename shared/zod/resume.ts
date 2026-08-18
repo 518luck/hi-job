@@ -5,7 +5,8 @@ import { z } from 'zod';
 const resumeSchema = z.object({
   key: z.literal('global'), // 单行固定主键
   fileName: z.string(), // 简历文件名（md 等）
-  content: z.string(), // 简历全文文本
+  content: z.string(), // 简历全文文本（AI 梳理后为梳理版）
+  originalContent: z.string().optional(), // AI 梳理前的原件备份，可一键恢复
   updatedAt: z.number(), // 更新时间戳（毫秒）
 });
 

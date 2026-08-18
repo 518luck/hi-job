@@ -120,6 +120,9 @@ function AiLogView({ onBack }: AiLogViewProps) {
           <TabsTrigger value="rejectionFeedback" className="flex-1">
             请教反馈
           </TabsTrigger>
+          <TabsTrigger value="resumeOrganize" className="flex-1">
+            梳理简历
+          </TabsTrigger>
         </TabsList>
         <TabsContent
           value={filter}
