@@ -79,6 +79,7 @@ function CompanyContextCard({ job }: CompanyContextCardProps) {
           <Button
             variant="outline"
             size="xs"
+            disabled={job.encryptJobId === ''}
             onClick={() => window.open(jobUrlOf(job) + JOB_GREET_HASH, '_blank')}
           >
             <Icons.promptText data-icon="inline-start" />

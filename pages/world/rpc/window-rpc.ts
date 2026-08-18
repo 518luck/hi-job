@@ -8,7 +8,7 @@ const WINDOW_RPC_NAMESPACE_BACKGROUND = 'hi-job/window-rpc/background';
 // 页面内单向通知：后台推送经隔离世界桥转发给主世界，无请求响应结构
 const WINDOW_NOTIFY_NAMESPACE = 'hi-job/window-notify';
 
-// 通知类型：HR 排除标记已变更，主世界收到后重拉排除名单
+// 通知类型：HR 档案已变更，聊天页重拉排除名单、列表页重拉已沟通标记
 const WINDOW_NOTIFY_HRS_CHANGED = 'hrs-changed';
 
 // 通知类型：调试开关已变更，主世界收到后重新应用探测按钮

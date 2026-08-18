@@ -1,4 +1,5 @@
 // # 职位卡片已沟通标记（隔离世界）：按 HR 档案给沟通过公司的卡片标「已沟通」
+import { WINDOW_NOTIFY_HRS_CHANGED } from '@/pages/world/rpc';
 import { sendMessage } from '@/shared/infra/messaging';
 import { readProperty } from '@/shared/lib/page-property';
 
@@ -7,9 +8,6 @@ const DEBOUNCE_MS = 500;
 
 // 标记类名：hijob 前缀避免与宿主页面冲突
 const CHATTED_CLASS = 'hijob-chatted-tag';
-
-// HR 档案变更通知类型：与后台 broadcastNotify 约定一致
-const NOTIFY_TYPE = 'hrs-changed';
 
 // 已沟通公司名缓存：去首尾空格后的公司名（保留大小写，匹配时再规范化）
 const chattedNames: string[] = [];
@@ -118,7 +116,7 @@ const startJobCardChatted = ({ doc }: { doc: Document }): void => {
 
   // HR 档案变更通知：后台广播经 tabs 送达隔离世界，直接重拉名单
   browser.runtime.onMessage.addListener((message: unknown) => {
-    if (readProperty(message, 'hiJobNotify') === NOTIFY_TYPE) {
+    if (readProperty(message, 'hiJobNotify') === WINDOW_NOTIFY_HRS_CHANGED) {
       void loadChattedNames({ doc });
     }
   });
