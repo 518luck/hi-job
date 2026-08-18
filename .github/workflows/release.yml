@@ -1,50 +1,85 @@
-# 扩展发版流水线：打 v* tag 时构建 zip 并发布 GitHub Release
+# ============================================================
+# 扩展发版流水线（原理速览）
+#
+# GitHub Actions 是事件驱动的自动化：文件放在 .github/workflows/ 下，
+# GitHub 就开始监听 on: 声明的事件；事件发生时分配一台临时 Linux
+# 虚拟机（runner），按 steps 从上到下逐条执行——uses 是运行别人写好的
+# 现成 action，run 是直接执行 shell 命令；任一步失败整条流水线标红。
+# 本文件：推送 v* 格式的 tag → 构建 Chrome 扩展 zip → 发布 GitHub Release。
+# ============================================================
+
+# workflow 显示在 Actions 页面的名字（纯展示，不影响行为）
 name: release
 
+# 触发器：监听所有「推送」事件，但只匹配 v 开头的 tag（如 v0.1.0）；
+# 平时推普通 commit 到任何分支都不会触发本流水线
 on:
   push:
     tags: ['v*']
 
+# 权限收敛：GitHub 默认给流水线发一枚仓库令牌（GITHUB_TOKEN），
+# 这里声明本流水线只需要「写仓库内容」这一项（创建 Release 必须），
+# 其余一律不给——最小权限原则，令牌泄露时损失面最小
 permissions:
   contents: write
 
+# jobs：任务的集合，一个 job 在一台全新虚拟机上运行
 jobs:
-  release:
+  release: # job 的 id，Actions 页面用它命名运行记录
+    # 虚拟机镜像：GitHub 托管的最新版 Ubuntu（自带 git 等常用工具，
+    # 但没有 pnpm，所以下面要自己装）
     runs-on: ubuntu-latest
+    # steps：按书写顺序执行，每一步独立计时，失败即停
     steps:
+      # uses = 运行现成 action；checkout 把当前 commit 完整检出到虚拟机
       - uses: actions/checkout@v4
 
+      # 安装指定版本的 pnpm 包管理器（@v4 是这个 action 自身的版本号）
       - uses: pnpm/action-setup@v4
-        with:
+        with: # with = 给 action 传参数
           version: 11
 
+      # 安装 Node.js 并加入 PATH；没开依赖缓存是因为仓库不提交
+      # pnpm-lock.yaml，没有 lockfile 就没有缓存 key 可算
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 仓库不入库 lockfile，关闭 frozen 校验
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      # 仓库不入库 lockfile，关闭 frozen 校验（CI 默认要求 lockfile 存在
+      # 且与 package.json 完全一致，没有 lockfile 就必须关掉）
+      - name: Install dependencies # 本步骤显示名（run 步骤建议起名，好认）
+        run: pnpm install --no-frozen-lockfile # run = 直接在 shell 里执行
 
-      # 防“发错版”：tag 与 package.json 版本必须一致
+      # 防「发错版」：tag 与 package.json 版本必须一致
       - name: Verify tag matches package version
+        # run: | 是多行块语法：整段原样交给 bash 执行
         run: |
+          # GITHUB_REF_NAME 是 GitHub 注入的环境变量：触发本流水线的
+          # ref 名，这里是 tag 名（如 v0.1.0）；${var#v} 去掉 v 前缀
           TAG="${GITHUB_REF_NAME#v}"
+          # node -p 求值 JS 表达式并打印：读出 package.json 的版本号
           PKG_VERSION=$(node -p "require('./package.json').version")
           if [ "$TAG" != "$PKG_VERSION" ]; then
+            # ::error:: 是 GitHub 的 workflow 命令：这行在 Actions 页面
+            # 显示为红色错误标注；exit 1 让本步骤失败、流水线中止
             echo "::error::tag v$TAG 与 package.json version $PKG_VERSION 不一致"
             exit 1
           fi
 
+      # WXT 的 zip 命令 = 先生产构建再打包，产物输出在 .output/ 下
       - name: Build and zip extension
         run: pnpm zip
 
-      # WXT 默认产物名带版本号，重命名为固定名以支撑 releases/latest 固定直链
+      # WXT 默认产物名带版本号（如 better-boss-zhipin-0.1.0-chrome.zip），
+      # 重命名为固定名，落地页的固定直链 .../releases/latest/download/
+      # hi-job-chrome.zip 才能永远命中最新版
       - name: Rename artifact
         run: mv .output/*.zip hi-job-chrome.zip
 
       - name: Create GitHub Release
+        # 社区最常用的发 Release action：自动用刚推的 tag 创建 Release
         uses: softprops/action-gh-release@v2
         with:
-          files: hi-job-chrome.zip
+          files: hi-job-chrome.zip # 把重命名后的 zip 挂为 Release 附件
+          # 让 GitHub 按 commit 历史自动生成变更说明（含版本间 diff 链接）
           generate_release_notes: true

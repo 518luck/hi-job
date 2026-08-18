@@ -1,51 +1,90 @@
-# 落地页部署流水线：site/ 变更时构建 site/ 并发布 GitHub Pages
+# ============================================================
+# 落地页部署流水线（原理速览）
+#
+# 事件驱动模型同 release.yml：这里监听「推送到 main 且 site/ 目录
+# （或本文件自身）有改动」。构建 site/ 后走 GitHub 官方 Pages 部署
+# 三连（configure-pages → upload-pages-artifact → deploy-pages），
+# 产出 https://518luck.github.io/hi-job/
+# ============================================================
+
+# workflow 显示在 Actions 页面的名字
 name: deploy-site
 
+# 触发器（本流水线配了两种）
 on:
   push:
+    # 只监听 main 分支的推送
     branches: [main]
+    # 路径过滤：只有这些路径下的文件有变更才触发——改扩展代码不该
+    # 重新发官网；把本文件自己也列进来，改流水线本身也能立即生效验证
     paths: ['site/**', '.github/workflows/deploy-site.yml']
+  # 手动触发入口：Actions 页面会出现「Run workflow」按钮，随时可点
   workflow_dispatch:
 
+# 权限收敛（本流水线比 release 多要两项）：
+#   contents: read  —— 读代码够用
+#   pages: write    —— 写 Pages 服务
+#   id-token: write —— 申请 OIDC 短期身份令牌，deploy-pages 靠它向
+#                      Pages 服务证明「我就是这次运行」，官方 Pages
+#                      部署链路的标准要求
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Pages 同一时间只保留一个部署，新部署取消旧部署
+# 并发控制：同一 group 同时只允许一个运行，后来者优先。
+# Pages 部署有先后覆盖关系，必须保证「最新提交的部署最后完成」，
+# 否则早先触发的旧部署可能晚到，把新部署覆盖回旧版
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: true # 新运行开始时，取消同组尚未完成的旧运行
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  deploy: # job id
+    runs-on: ubuntu-latest # 临时 Ubuntu 虚拟机
+    # environment：把 job 挂到 GitHub 的「部署环境」github-pages 下，
+    # 仓库 Settings → Environments 能看到部署历史；url 声明本环境的
+    # 访问地址，运行完成后 Actions 页面会出现可点的站点链接
     environment:
       name: github-pages
+      # ${{ }} 是 workflow 表达式语法：引用步骤输出或上下文变量。
+      # 这里取下方 id: deployment 那一步输出的最终站点 URL
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # 检出代码到虚拟机
       - uses: actions/checkout@v4
 
+      # 安装 pnpm 11
       - uses: pnpm/action-setup@v4
         with:
           version: 11
 
+      # 安装 Node 22
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 仓库不入库 lockfile，关闭 frozen 校验
+      # 仓库不入库 lockfile，关闭 frozen 校验；--dir site 表示在 site/
+      # 子目录里执行（那里有独立的 package.json，与扩展依赖互不混合）
       - name: Install site dependencies
         run: pnpm install --no-frozen-lockfile --dir site
 
+      # 构建 site/，静态产物输出到 site/dist/（vite.config.ts 里
+      # base: '/hi-job/' 已把所有资源路径前缀写对）
       - name: Build site
         run: pnpm --dir site run build
 
+      # 官方 Pages 部署三连之一：读取仓库的 Pages 配置（前提是你已把
+      # Settings → Pages → Source 设为 GitHub Actions，否则这步报错）
       - uses: actions/configure-pages@v5
 
+      # 三连之二：把 site/dist 打包成名为 github-pages 的部署构件，
+      # 上传到 GitHub 内部暂存（此刻还没真正发布）
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
 
+      # 三连之三：把暂存构件正式发布到 Pages；id: deployment 是给这步
+      # 起的名，上面 environment.url 取的就是这步输出的 page_url
       - id: deployment
         uses: actions/deploy-pages@v4
