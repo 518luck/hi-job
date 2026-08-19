@@ -48,7 +48,7 @@ export function MessagePair({
         className={cn(
           'max-w-[85%] self-end text-[13px]',
           variant === 'bubble'
-            ? cn(paper, 'rounded-lg px-2.5 py-1.5')
+            ? cn(paper, 'rounded-2xl px-3.5 py-2')
             : 'text-foreground/90 text-end',
         )}
       >
