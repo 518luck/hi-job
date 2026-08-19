@@ -153,6 +153,48 @@
   }
 }
 
+/* 等待首个 token 的「正在输入」指示：三点错峰跳动，模拟对方正在输入 */
+.hijob-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hijob-typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #a1a1aa;
+  animation: hijob-typing-bounce 1.2s ease-in-out infinite;
+}
+.hijob-typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.hijob-typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* 三点跳动关键帧：中段上移并提亮，首尾回落变暗 */
+@keyframes hijob-typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* 系统「减弱动态」：三点停止跳动，保持半透明静态显示 */
+@media (prefers-reduced-motion: reduce) {
+  .hijob-typing-dots span {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
 /* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角/容器/断点工具类不再随宿主 <html> 字号漂移 */
 @theme {
   --spacing: 4px;

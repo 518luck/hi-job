@@ -217,6 +217,16 @@ function ChatWindow({
             </div>
           </div>
         )}
+        {/* // 等待首个 token：思考与正文都未到时，显示跳动的「正在输入」指示，避免静止无反馈 */}
+        {bodyStatus === 'streaming' && reasoning === '' && text === '' && (
+          <div className="flex justify-start">
+            <div className="hijob-typing-dots rounded-lg bg-[#27272a] px-2.5 py-2">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+        )}
         {reasoning !== '' && (
           <ReasoningRow
             reasoning={reasoning}
