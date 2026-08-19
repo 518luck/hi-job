@@ -174,7 +174,12 @@ function ChatWindow({
       );
     }
     if (messages.length === 0) {
-      return '点击下方「生成回复」，获取下一条回复建议';
+      // 空态居中弱化：玻璃面板上的安静邀请，而不是贴顶的裸文本
+      return (
+        <div className="flex h-full items-center justify-center px-4 text-center text-[#a1a1aa]">
+          点击下方「生成回复」，获取下一条回复建议
+        </div>
+      );
     }
     // 消息对整体：场景发起即挂载（用户气泡立刻在场），思考与等待指示插在气泡与正文之间，
     // 保持「请求 → 思考 → 正文」的阅读顺序；两者互斥且无内容时不传插槽，避免占位空隙拉开正文间距
@@ -233,13 +238,14 @@ function ChatWindow({
           height: CHAT_WINDOW_HEIGHT,
           ...style,
         }}
-        // 半透明玻璃面板：深色底降不透明度 + 背景模糊，宿主页面在毛玻璃后隐约透出
-        className="fixed z-2147483646 flex flex-col overflow-hidden border border-[#3f3f46]/80 bg-[#18181b]/75 text-[#fafafa] shadow-[0_8px_32px_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.08)] backdrop-blur-xl"
+        // 玻璃材料统一在根定义：深底 70% + 12px 背景模糊 + 饱和度提纯，透出的宿主内容隐约可辨而非灰泥；
+        // 外框白色高光边 + 上沿内侧受光线 + 大软阴影让玻璃浮起，圆角与玻璃材料共生
+        className="fixed z-2147483646 flex flex-col overflow-hidden rounded-[12px] border border-white/10 bg-[#09090b]/70 text-[#fafafa] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_64px_-16px_rgba(0,0,0,0.55),0_4px_16px_rgba(0,0,0,0.3)] backdrop-blur-md backdrop-saturate-150"
       >
-        {/* Card 自带的实心底中和为透明，通透感由窗体根元素统一承担 */}
+        {/* Card 自带的实心底中和为透明，玻璃材料由窗体根统一承担 */}
         <Card className="size-full gap-0 bg-transparent py-0 ring-0">
-          {/* // @ 标题栏 */}
-          <CardHeader className="items-center bg-[#27272a]/70 px-3.5 py-2.5">
+          {/* // @ 标题栏：玻璃上的微亮层（不再是灰块），结构与正文用发丝线分层 */}
+          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5">
             <CardTitle className="text-[13px] font-semibold">AI 回复</CardTitle>
             <CardAction className="self-center">
               <Button
@@ -254,15 +260,15 @@ function ChatWindow({
               </Button>
             </CardAction>
           </CardHeader>
-          {/* // @ 正文区：消息流（消息对/思考面板/加载指示），错误与占位单独分支 */}
+          {/* // @ 正文区：消息流（消息对/思考面板/加载指示），直接落在玻璃上，发丝线与条栏分层 */}
           <CardContent
             ref={bodyRef}
-            className="hijob-chat-scroll flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8]"
+            className="hijob-chat-scroll flex-1 overflow-y-auto px-3.5 py-3 text-[13px] leading-[1.8]"
           >
             {renderBody()}
           </CardContent>
-          {/* // @ 操作区：场景按钮 + 复制 */}
-          <CardFooter className="gap-2 border-border bg-[#27272a]/70 px-3.5 py-2.5">
+          {/* // @ 操作区：玻璃上的微亮层 + 发丝线，场景按钮 + 复制 */}
+          <CardFooter className="gap-2 border-t border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5">
             {SCENE_BUTTONS.map(({ label, method, tip, align }) => (
               <Tooltip key={method}>
                 <TooltipTrigger
