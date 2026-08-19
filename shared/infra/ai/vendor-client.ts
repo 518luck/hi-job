@@ -6,6 +6,7 @@ import { generateText, streamText } from 'ai';
 
 import type {
   AiLogSource,
+  AiStreamUsage,
   AiVendorRecord,
   ScenePrompt,
   ThinkingMode,
@@ -21,10 +22,7 @@ const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
 interface AiStreamCallbacks {
   onChunk: (delta: string) => void; // 正文增量回调
   onReasoning?: (delta: string) => void; // 思考增量回调：模型未产出思考时不会触发
-  onUsage?: (usage: {
-    inputTokens: number; // 输入 token 数
-    outputTokens: number; // 输出 token 数
-  }) => void; // 用量上报回调：供应商未上报时不会触发
+  onUsage?: (usage: AiStreamUsage) => void; // 用量上报回调：供应商未上报时不会触发
   abortSignal: AbortSignal; // 取消信号，中止在途生成
 }
 

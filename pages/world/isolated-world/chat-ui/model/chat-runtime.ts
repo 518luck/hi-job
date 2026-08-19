@@ -30,7 +30,7 @@ interface UseChatRuntimeResult {
   bodyStatus: StreamStatus; // 正文状态：场景准备失败折算为 error，其余跟随流式状态
   sceneError: string; // 场景准备失败原因（会话缺失/无聊天记录/末条校验）
   busyMethod: AiStreamMethod | null; // 生成中的场景方法，对应按钮转圈
-  timing: AiTimingStats | null; // 最近一轮生成的耗时与用量统计（done 态有值），供顶栏展示
+  timing: AiTimingStats | null; // 耗时用量统计：发起即建立实时跳动、done 定格，供顶栏展示
   errorMessage: string; // 视图展示的失败原因：场景准备失败优先，其次流式失败
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景方法，终态保留，供重新生成重跑
 }

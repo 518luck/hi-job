@@ -15,8 +15,16 @@ export {
   THINKING_MODES,
 } from './ai-preference';
 // ai-stream 消息：AI 流式生成事件 DTO（后台推送信封内层）
-export type { AiStreamEvent, AiStreamHandle } from './ai-stream';
-export { aiStreamEventSchema, aiStreamHandleSchema } from './ai-stream';
+export type {
+  AiStreamEvent,
+  AiStreamHandle,
+  AiStreamUsage,
+} from './ai-stream';
+export {
+  aiStreamEventSchema,
+  aiStreamHandleSchema,
+  aiStreamUsageSchema,
+} from './ai-stream';
 // aiVendor 表：落库实体 + 厂商表单派生
 export type {
   AiVendorRecord,

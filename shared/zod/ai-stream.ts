@@ -6,6 +6,12 @@ const aiStreamHandleSchema = z.object({
   requestId: z.string().min(1), // 流式请求唯一 id
 });
 
+// 流式用量：模型上报的 token 计数，供应商未上报时缺失
+const aiStreamUsageSchema = z.object({
+  inputTokens: z.number().nonnegative(), // 输入 token 用量
+  outputTokens: z.number().nonnegative(), // 输出 token 用量
+});
+
 // 流式事件判别联合：reasoning 思考增量、chunk 正文增量、end 结束全文、error 失败原因
 const aiStreamEventSchema = z.discriminatedUnion('kind', [
   z.object({
@@ -22,12 +28,7 @@ const aiStreamEventSchema = z.discriminatedUnion('kind', [
     requestId: z.string().min(1), // 关联的流式请求 id
     kind: z.literal('end'), // 结束事件
     text: z.string(), // 完整生成文本（修剪后）
-    usage: z
-      .object({
-        inputTokens: z.number().nonnegative(), // 输入 token 用量
-        outputTokens: z.number().nonnegative(), // 输出 token 用量
-      })
-      .optional(), // 模型上报的 token 用量，供应商未上报时缺失
+    usage: aiStreamUsageSchema.optional(), // 模型上报的 token 用量，供应商未上报时缺失
   }),
   z.object({
     requestId: z.string().min(1), // 关联的流式请求 id
@@ -38,6 +39,7 @@ const aiStreamEventSchema = z.discriminatedUnion('kind', [
 
 type AiStreamHandle = z.infer<typeof aiStreamHandleSchema>;
 type AiStreamEvent = z.infer<typeof aiStreamEventSchema>;
+type AiStreamUsage = z.infer<typeof aiStreamUsageSchema>;
 
-export type { AiStreamEvent, AiStreamHandle };
-export { aiStreamEventSchema, aiStreamHandleSchema };
+export type { AiStreamEvent, AiStreamHandle, AiStreamUsage };
+export { aiStreamEventSchema, aiStreamHandleSchema, aiStreamUsageSchema };

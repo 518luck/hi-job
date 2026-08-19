@@ -45,7 +45,7 @@ interface UseAiStreamResult {
   text: string; // 已生成的文本（流式累加，end 事件替换为全文）
   reasoning: string; // 已累积的思考文本，流式累加
   error: string; // 失败原因（error 状态时有值）
-  timing: AiTimingStats | null; // 最近一轮的耗时与用量统计（done 态有值）
+  timing: AiTimingStats | null; // 耗时用量统计：发起即建立实时跳动，done 定格，取消/出错清空
   start: <K extends AiStreamMethod>(
     method: K,
     data: GetDataType<ProtocolMap[K]>,

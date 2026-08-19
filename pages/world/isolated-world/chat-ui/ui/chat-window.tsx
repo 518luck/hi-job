@@ -51,7 +51,7 @@ interface ChatWindowProps {
   bodyStatus: StreamStatus; // 正文状态（含场景准备失败折算的 error）
   errorMessage: string; // 失败原因（error 态时有值）
   busyMethod: AiStreamMethod | null; // 生成中的场景，对应按钮转圈
-  timing: AiTimingStats | null; // 最近一轮的耗时与用量统计（done 态有值），顶栏展示
+  timing: AiTimingStats | null; // 耗时用量统计：发起即建立实时跳动、done 定格，顶栏展示
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景，供重新生成重跑
   onScene: (method: AiStreamMethod) => void; // 发起场景生成
   onClose: () => void; // 关闭聊天窗

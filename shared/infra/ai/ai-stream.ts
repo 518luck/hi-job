@@ -3,18 +3,12 @@
 // 启动消息立即返回 requestId，生成在后台异步执行；reasoning/chunk/end/error 事件经
 // tabs.sendMessage 的 hiJobStream 信封推送到发起生成的标签页，聊天 UI 按 requestId 关联消费。
 
-import type { AiStreamEvent } from '@/shared/zod';
+import type { AiStreamEvent, AiStreamUsage } from '@/shared/zod';
 
 // 进行中的流：中止控制器与推送目标标签页
 interface ActiveStream {
   controller: AbortController; // 中止在途生成
   tabId?: number; // 发起生成的标签页 id，事件推送目标
-}
-
-// 流式用量：模型上报的 token 计数
-interface AiStreamUsage {
-  inputTokens: number; // 输入 token 数
-  outputTokens: number; // 输出 token 数
 }
 
 // 流式任务入参：增量回调与中止信号由编排层注入
