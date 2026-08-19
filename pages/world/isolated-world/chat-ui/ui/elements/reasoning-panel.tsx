@@ -54,6 +54,7 @@ export function ReasoningPanel({
     >
       <CollapsibleTrigger className="group/trigger text-foreground/55 hover:text-foreground/90 flex items-center gap-1.5 py-1 text-[13px] transition-[color,scale] outline-none active:scale-[0.98]">
         <SwapLabel active={streaming ? 0 : 1} className="text-start">
+          {/* biome-ignore lint/complexity/noUselessFragments: 误报——SwapLabel 的 children 契约是二元组 [ReactNode, ReactNode]，Fragment 把多元素收拢为一个槽位；删除后元组越界，string 会被分配给 undefined 报 TS 错，规则无法感知该类型契约 */}
           <>
             <ShimmerLabel
               active={streaming}
@@ -67,6 +68,7 @@ export function ReasoningPanel({
               </span>
             )}
           </>
+          {/* biome-ignore lint/complexity/noUselessFragments: 误报——单元素也需 Fragment 占位二元组的第二个槽位，裸传 string 会落到元组越界槽位报 TS 错 */}
           <>{restingLabel}</>
         </SwapLabel>
         <ChevronDownIcon className="size-3.5 shrink-0 opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-open/trigger:rotate-180 group-data-panel-open/trigger:rotate-180 motion-reduce:transition-none" />
