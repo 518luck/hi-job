@@ -237,12 +237,14 @@ interface GlassMaps {
   specOpacity: number; // 高光不透明度
 }
 
-// 玻璃观感调参（小胶囊、浅色宿主页面）：位移强度靠 scaleRatio 收，避免小尺寸过度扭曲
-const GLASS_IOR = 1.5; // 折射率
-const GLASS_THICKNESS = 6; // 玻璃厚度
-const GLASS_SCALE_RATIO = 0.6; // 位移缩放比例
-const SPEC_SATURATION = 1.6; // 折射饱和度（demo 为 4，小按钮收敛）
-const SPEC_OPACITY = 0.45; // 高光不透明度
+// 玻璃观感调参（小胶囊、浅色宿主页面）
+// bezelRatio 收窄折射带：折射集中在外缘、留出清澈中心，呈现「边缘折射」而非整片均匀扭曲
+const GLASS_BEZEL_RATIO = 0.45; // 折射带宽度占半径比例，越小折射越贴边
+const GLASS_IOR = 2.0; // 折射率，越大边缘弯曲越强
+const GLASS_THICKNESS = 8; // 玻璃厚度，越大边缘位移越强
+const GLASS_SCALE_RATIO = 0.9; // 位移缩放比例，让边缘弯曲在小胶囊上可见
+const SPEC_SATURATION = 1.6; // 折射饱和度
+const SPEC_OPACITY = 0.6; // 高光不透明度，让边缘反光更明显
 
 // 由元素尺寸生成位移图、高光图与滤镜数值：供 SVG 滤镜的 feImage 使用
 const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => {
@@ -257,7 +259,11 @@ const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => 
     };
   }
   const bezel = Math.max(
-    Math.min(radius * 0.85, radius - 1, Math.min(width, height) / 2 - 1),
+    Math.min(
+      radius * GLASS_BEZEL_RATIO,
+      radius - 1,
+      Math.min(width, height) / 2 - 1,
+    ),
     1,
   );
   const profile = calculateRefractionProfile({
