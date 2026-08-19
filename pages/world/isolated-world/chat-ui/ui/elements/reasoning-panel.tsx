@@ -79,8 +79,7 @@ export function ReasoningPanel({
               </span>
             )}
           </>
-          {/* biome-ignore lint/complexity/noUselessFragments: 误报——单元素也需 Fragment 占位二元组的第二个槽位，裸传 string 会落到元组越界槽位报 TS 错 */}
-          <>{restingLabel}</>
+          {restingLabel}
         </SwapLabel>
         <ChevronDownIcon className="size-3.5 shrink-0 opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-open/trigger:rotate-180 group-data-panel-open/trigger:rotate-180 motion-reduce:transition-none" />
       </CollapsibleTrigger>

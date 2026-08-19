@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
 
-import { useStreamTick, useWordSegments } from '../model/stream-driver';
+import { useElapsedSeconds, useWordSegments } from '../model/stream-driver';
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
 import { MessagePair } from './elements/message-pair';
 import { ReasoningPanel } from './elements/reasoning-panel';
@@ -120,8 +120,8 @@ function ChatWindow({
   const userText = readUserText(messages);
   const { reasoning, text } = readAssistantContent(messages);
   const segments = useWordSegments(text);
-  // 流式节拍：驱动加载指示动画与思考计时
-  const { elapsedSeconds } = useStreamTick({ active: isRunning });
+  // 思考计时：流式期间驱动思考面板的耗时展示
+  const { elapsedSeconds } = useElapsedSeconds({ active: isRunning });
 
   // 思考步骤：思考文本非空行 map 成步骤标题（无正文）
   const reasoningSteps = useMemo(
@@ -212,7 +212,8 @@ function ChatWindow({
       return '点击下方「生成回复」，获取下一条回复建议';
     }
     // 消息对整体：场景发起即挂载（用户气泡立刻在场），思考与等待指示插在气泡与正文之间，
-    // 保持「请求 → 思考 → 正文」的阅读顺序，正文到达时不再有元素中途插入
+    // 保持「请求 → 思考 → 正文」的阅读顺序；两者互斥且无内容时不传插槽，避免占位空隙拉开正文间距
+    const isWaitingFirstToken = isRunning && reasoning === '' && text === '';
     return (
       <MessagePair
         userMessage={userText}
@@ -222,12 +223,11 @@ function ChatWindow({
         onCopy={() => void handleCopy()}
         onRegenerate={handleRegenerate}
       >
-        <div className="w-full space-y-3">
-          {/* // 等待首个 token：思考与正文都未到时，裸三点输入指示靠左小占位，避免静止无反馈 */}
-          {isRunning && reasoning === '' && text === '' && (
+        {(isWaitingFirstToken || reasoning !== '') &&
+          (isWaitingFirstToken ? (
+            // 等待首个 token：裸三点输入指示靠左小占位，避免静止无反馈
             <TypingIndicator variant="bare" className="py-2" />
-          )}
-          {reasoning !== '' && (
+          ) : (
             <ReasoningPanel
               steps={reasoningSteps}
               visibleSteps={reasoningSteps.length}
@@ -239,8 +239,7 @@ function ChatWindow({
                 isRunning && text === '' ? `${elapsedSeconds}s` : undefined
               }
             />
-          )}
-        </div>
+          ))}
       </MessagePair>
     );
   };

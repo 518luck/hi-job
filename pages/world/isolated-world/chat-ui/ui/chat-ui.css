@@ -58,11 +58,11 @@
   --radius: 0;
 }
 
-/* > 正文区滚动条：深色细条贴合窗体，默认与边框同色、悬停加深，轨道透明不占视觉；
+/* > 正文区滚动条：深色细条贴合窗体，默认与边框同色（走 token）、悬停加深，轨道透明不占视觉；
    Firefox 构建走 scrollbar-width/color 标准属性，Chrome 走 webkit 前缀伪元素 */
 .hijob-chat-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f46 transparent;
+  scrollbar-color: var(--border) transparent;
 }
 .hijob-chat-scroll::-webkit-scrollbar {
   width: 6px;
@@ -71,7 +71,7 @@
   background: transparent;
 }
 .hijob-chat-scroll::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: var(--border);
   border-radius: 3px;
 }
 .hijob-chat-scroll::-webkit-scrollbar-thumb:hover {
