@@ -34,6 +34,7 @@ type AiStreamMethod = {
 interface UseAiStreamResult {
   status: StreamStatus; // 当前流式状态
   text: string; // 已生成的文本（流式累加，end 事件替换为全文）
+  reasoning: string; // 已累积的思考文本，流式累加
   error: string; // 失败原因（error 状态时有值）
   start: <K extends AiStreamMethod>(
     method: K,
@@ -54,6 +55,7 @@ const readStreamEvent = (message: unknown): AiStreamEvent | null => {
 const useAiStream = (): UseAiStreamResult => {
   const [status, setStatus] = useState<StreamStatus>('idle');
   const [text, setText] = useState('');
+  const [reasoning, setReasoning] = useState('');
   const [error, setError] = useState('');
 
   const requestIdRef = useRef<string | null>(null);
@@ -102,6 +104,7 @@ const useAiStream = (): UseAiStreamResult => {
     teardown();
     setStatus('idle');
     setText('');
+    setReasoning('');
     setError('');
   }, [teardown]);
 
@@ -113,6 +116,7 @@ const useAiStream = (): UseAiStreamResult => {
     ): Promise<void> => {
       teardown();
       setText('');
+      setReasoning('');
       setError('');
       setStatus('streaming');
       try {
@@ -138,8 +142,9 @@ const useAiStream = (): UseAiStreamResult => {
       if (event === null || event.requestId !== requestIdRef.current) {
         return;
       }
-      // 思考增量：不计入正文，仅刷新断流计时，避免长思考被误判断流
+      // 思考增量：累加到思考文本并刷新断流计时，避免长思考被误判断流
       if (event.kind === 'reasoning') {
+        setReasoning((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
         return;
       }
@@ -167,7 +172,7 @@ const useAiStream = (): UseAiStreamResult => {
   // 组件卸载时终止在途请求，避免后台空跑
   useEffect(() => teardown, [teardown]);
 
-  return { status, text, error, start, cancel };
+  return { status, text, reasoning, error, start, cancel };
 };
 
 export type { AiStreamMethod, StreamStatus };
