@@ -6,12 +6,17 @@ const aiStreamHandleSchema = z.object({
   requestId: z.string().min(1), // 流式请求唯一 id
 });
 
-// 流式事件判别联合：chunk 增量、end 结束全文、error 失败原因
+// 流式事件判别联合：reasoning 思考增量、chunk 正文增量、end 结束全文、error 失败原因
 const aiStreamEventSchema = z.discriminatedUnion('kind', [
   z.object({
     requestId: z.string().min(1), // 关联的流式请求 id
-    kind: z.literal('chunk'), // 增量事件
-    delta: z.string(), // 本次追加的文本增量
+    kind: z.literal('reasoning'), // 思考增量事件
+    delta: z.string(), // 本次追加的思考文本增量
+  }),
+  z.object({
+    requestId: z.string().min(1), // 关联的流式请求 id
+    kind: z.literal('chunk'), // 正文增量事件
+    delta: z.string(), // 本次追加的正文文本增量
   }),
   z.object({
     requestId: z.string().min(1), // 关联的流式请求 id

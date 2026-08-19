@@ -138,6 +138,11 @@ const useAiStream = (): UseAiStreamResult => {
       if (event === null || event.requestId !== requestIdRef.current) {
         return;
       }
+      // 思考增量：不计入正文，仅刷新断流计时，避免长思考被误判断流
+      if (event.kind === 'reasoning') {
+        armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
+        return;
+      }
       if (event.kind === 'chunk') {
         setText((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);

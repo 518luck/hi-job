@@ -17,9 +17,10 @@ import { assemblePromptText } from './scenes/prompt-parts';
 // 未授权错误标记：后台报错与聊天窗「去授权」按钮的跨世界约定，双方共用同一常量
 const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
 
-// 流式回调：传入 chatWithVendor 即走流式生成，增量逐块回调、中止信号透传底层 SDK
+// 流式回调：传入 chatWithVendor 即走流式生成，思考与正文增量逐块回调、中止信号透传底层 SDK
 interface AiStreamCallbacks {
-  onChunk: (delta: string) => void; // 文本增量回调
+  onChunk: (delta: string) => void; // 正文增量回调
+  onReasoning?: (delta: string) => void; // 思考增量回调：模型未产出思考时不会触发
   abortSignal: AbortSignal; // 取消信号，中止在途生成
 }
 
@@ -174,7 +175,7 @@ const chatWithVendor = async ({
       apiKey: vendor.apiKey,
       apiFormat: vendor.apiFormat,
     });
-    // 流式：逐块回调增量，结束取全文与用量；一次性：generateText 等待完整响应
+    // 流式：遍历 fullStream 分流回调思考与正文增量，结束取全文与用量；一次性：generateText 等待完整响应
     if (stream !== undefined) {
       const streamResult = streamText({
         model: provider(modelId),
@@ -183,9 +184,11 @@ const chatWithVendor = async ({
         abortSignal: stream.abortSignal,
         ...resolvedArgs,
       });
-      for await (const delta of streamResult.textStream) {
-        if (delta !== '') {
-          stream.onChunk(delta);
+      for await (const part of streamResult.fullStream) {
+        if (part.type === 'reasoning-delta' && part.text !== '') {
+          stream.onReasoning?.(part.text);
+        } else if (part.type === 'text-delta' && part.text !== '') {
+          stream.onChunk(part.text);
         }
       }
       result = (await streamResult.text).trim();
