@@ -11,19 +11,12 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { requestChatContext } from './chat-context';
+import { pickScenePhrase } from './scene-phrases';
 import {
   type AiStreamMethod,
   type StreamStatus,
   useAiStream,
 } from './use-ai-stream';
-
-// 场景方法到中文名的映射：消息流用户侧消息措辞使用
-export const SCENE_LABELS: Record<AiStreamMethod, string> = {
-  greeting: '问候',
-  followUp: '提醒',
-  rejectionFeedback: '反馈',
-  generateReply: '回复',
-};
 
 // assistant 正文片段类型：思考与文本两类 part
 type AssistantPart = ReasoningMessagePart | TextMessagePart;
@@ -36,7 +29,6 @@ interface UseChatRuntimeResult {
   bodyStatus: StreamStatus; // 正文状态：场景准备失败折算为 error，其余跟随流式状态
   sceneError: string; // 场景准备失败原因（会话缺失/无聊天记录/末条校验）
   busyMethod: AiStreamMethod | null; // 生成中的场景方法，对应按钮转圈
-  sceneLabel: string; // 当前场景中文名，终态保留、下次发起场景时覆盖
   errorMessage: string; // 视图展示的失败原因：场景准备失败优先，其次流式失败
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景方法，终态保留，供重新生成重跑
 }
@@ -64,8 +56,8 @@ const readAssistantStatus = ({
 // 组装聊天 runtime：持有场景状态与流式状态机，external store 消息快照驱动消息流
 const useChatRuntime = (): UseChatRuntimeResult => {
   const [busyMethod, setBusyMethod] = useState<AiStreamMethod | null>(null);
-  // 当前场景中文名：消息流用户侧消息展示，终态保留、下次发起场景时覆盖
-  const [sceneLabel, setSceneLabel] = useState('');
+  // 当前轮的用户侧俏皮话：发起场景时随机挑一条，终态保留、下次发起覆盖
+  const [scenePhrase, setScenePhrase] = useState('');
   // 场景准备失败（无会话/无聊天记录）：与流式失败共用正文错误位
   const [sceneError, setSceneError] = useState('');
   // 最近一次实际发起的场景方法：终态保留（busyMethod 终态会被清除），供重新生成
@@ -107,7 +99,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
             return;
           }
           setBusyMethod(method);
-          setSceneLabel(SCENE_LABELS[method]);
+          setScenePhrase(pickScenePhrase(method));
           setLastMethod(method);
           const { jobId, jd, hr, messages } = context;
           if (method === 'greeting') {
@@ -127,7 +119,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
   const messages = useMemo<readonly ThreadMessageLike[]>(() => {
     // 无场景（未发起过或取消后回到空闲）时不渲染消息流
     const hasScene =
-      sceneLabel !== '' &&
+      scenePhrase !== '' &&
       (status !== 'idle' || text !== '' || reasoning !== '');
     if (!hasScene) {
       return [];
@@ -145,10 +137,8 @@ const useChatRuntime = (): UseChatRuntimeResult => {
         content: [
           {
             type: 'text',
-            text:
-              status === 'streaming'
-                ? `正在为你生成「${sceneLabel}」…`
-                : `为你生成「${sceneLabel}」`,
+            // 俏皮话读作用户对助手说的话：流式期间带省略号表示「正在办」
+            text: status === 'streaming' ? `${scenePhrase}…` : scenePhrase,
           },
         ],
       },
@@ -158,7 +148,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
         status: readAssistantStatus({ status, errorMessage: error }),
       },
     ];
-  }, [sceneLabel, status, text, reasoning, error]);
+  }, [scenePhrase, status, text, reasoning, error]);
 
   // 外部消息到 ThreadMessageLike 的恒等转换：消息已在快照内组装完成
   const convertMessage = useCallback(
@@ -189,11 +179,11 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     convertMessage,
   });
 
-  // 发起场景：记录方法后经 runtime 通道追加用户消息，由 onNew 消费执行
+  // 发起场景：记录方法后经 runtime 通道追加用户消息（内容仅作触发，实际展示走 scenePhrase），由 onNew 消费执行
   const startScene = useCallback(
     (method: AiStreamMethod): void => {
       pendingMethodRef.current = method;
-      runtime.thread.append(`为你生成「${SCENE_LABELS[method]}」`);
+      runtime.thread.append(pickScenePhrase(method));
     },
     [runtime],
   );
@@ -208,7 +198,6 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     bodyStatus,
     sceneError,
     busyMethod,
-    sceneLabel,
     errorMessage: sceneError !== '' ? sceneError : error,
     lastMethod,
   };
