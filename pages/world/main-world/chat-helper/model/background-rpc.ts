@@ -4,14 +4,7 @@ import {
   WINDOW_RPC_NAMESPACE_BACKGROUND,
 } from '@/pages/world/rpc';
 import type { ProtocolMap } from '@/shared/infra/messaging';
-import type {
-  ChatMessageInput,
-  FollowUpInput,
-  GreetingInput,
-  HrInput,
-  RejectionFeedbackInput,
-  ReplyInput,
-} from '@/shared/zod';
+import type { ChatMessageInput, HrInput } from '@/shared/zod';
 
 // 聊天页到隔离世界的直通 RPC 客户端
 const backgroundRpc = createWindowRpcClient<{
@@ -31,6 +24,7 @@ const callBackground = <K extends keyof ProtocolMap>(
     .then((result) => result as ReturnType<ProtocolMap[K]>);
 
 // 业务调用封装：方法名、参数与返回值集中受 ProtocolMap 约束
+// AI 生成已迁至隔离世界聊天 UI（直接 sendMessage），此处只留数据上报与名单读取
 const extensionApi = {
   saveHr: (data: HrInput): Promise<void> => callBackground('saveHr', data),
   syncHrs: (data: HrInput[]): Promise<void> => callBackground('syncHrs', data),
@@ -38,16 +32,6 @@ const extensionApi = {
     callBackground('saveChatMessages', data),
   getExcludedHrIds: (): Promise<string[]> =>
     callBackground('getExcludedHrIds', undefined),
-  openAiVendorAuth: (): Promise<void> =>
-    callBackground('openAiVendorAuth', undefined),
-  greeting: (data: GreetingInput): Promise<string> =>
-    callBackground('greeting', data),
-  followUp: (data: FollowUpInput): Promise<string> =>
-    callBackground('followUp', data),
-  generateReply: (data: ReplyInput): Promise<string> =>
-    callBackground('generateReply', data),
-  rejectionFeedback: (data: RejectionFeedbackInput): Promise<string> =>
-    callBackground('rejectionFeedback', data),
 };
 
 export { extensionApi };

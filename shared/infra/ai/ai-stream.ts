@@ -1,0 +1,125 @@
+// # AI 流式编排（后台）：requestId 注册表、增量攒批发送与主动取消
+//
+// 启动消息立即返回 requestId，生成在后台异步执行；chunk/end/error 事件经
+// tabs.sendMessage 的 hiJobStream 信封推送到发起生成的标签页，聊天 UI 按 requestId 关联消费。
+
+import type { AiStreamEvent } from '@/shared/zod';
+
+// 进行中的流：中止控制器与推送目标标签页
+interface ActiveStream {
+  controller: AbortController; // 中止在途生成
+  tabId?: number; // 发起生成的标签页 id，事件推送目标
+}
+
+// 流式任务入参：增量回调与中止信号由编排层注入
+interface StreamCallbacks {
+  onChunk: (delta: string) => void; // 逐块文本增量
+  abortSignal: AbortSignal; // 取消信号
+}
+
+// 流式生成任务：resolve 完整文本，reject 携带可展示错误
+type StreamTask = (callbacks: StreamCallbacks) => Promise<string>;
+
+// 启动选项
+interface StartAiStreamOptions {
+  tabId?: number; // 发起生成的标签页 id
+  task: StreamTask; // 生成任务
+}
+
+// chunk 攒批窗口：相邻增量合并一次推送，避免长回复打爆消息通道
+const CHUNK_FLUSH_MS = 80;
+
+// 进行中的流注册表：requestId → 流上下文
+const activeStreams = new Map<string, ActiveStream>();
+
+// 推送流事件到发起页：页面已关闭或未就绪时静默忽略
+const pushStreamEvent = async (
+  tabId: number | undefined,
+  event: AiStreamEvent,
+): Promise<void> => {
+  if (tabId === undefined) {
+    return;
+  }
+  await browser.tabs.sendMessage(tabId, { hiJobStream: event }).catch(() => {});
+};
+
+// 启动一次流式生成：立即返回 requestId，任务异步执行、结束自动清理注册
+const startAiStream = ({
+  tabId,
+  task,
+}: StartAiStreamOptions): { requestId: string } => {
+  const requestId = crypto.randomUUID();
+  const controller = new AbortController();
+  activeStreams.set(requestId, { controller, tabId });
+  void executeStream({ requestId, tabId, controller, task });
+  return { requestId };
+};
+
+// 执行选项
+interface ExecuteStreamOptions {
+  requestId: string; // 流式请求 id
+  tabId?: number; // 事件推送目标
+  controller: AbortController; // 中止控制器
+  task: StreamTask; // 生成任务
+}
+
+// 执行流式任务：增量攒批推送，成功推 end、失败推 error，始终清理注册
+const executeStream = async ({
+  requestId,
+  tabId,
+  controller,
+  task,
+}: ExecuteStreamOptions): Promise<void> => {
+  let buffer = '';
+  let flushTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearFlushTimer = (): void => {
+    if (flushTimer !== undefined) {
+      clearTimeout(flushTimer);
+      flushTimer = undefined;
+    }
+  };
+  try {
+    const text = await task({
+      abortSignal: controller.signal,
+      onChunk: (delta) => {
+        buffer += delta;
+        if (flushTimer !== undefined) {
+          return;
+        }
+        flushTimer = setTimeout(() => {
+          flushTimer = undefined;
+          const pending = buffer;
+          buffer = '';
+          void pushStreamEvent(tabId, {
+            requestId,
+            kind: 'chunk',
+            delta: pending,
+          });
+        }, CHUNK_FLUSH_MS);
+      },
+    });
+    clearFlushTimer();
+    if (buffer !== '') {
+      await pushStreamEvent(tabId, { requestId, kind: 'chunk', delta: buffer });
+    }
+    await pushStreamEvent(tabId, { requestId, kind: 'end', text });
+  } catch (error) {
+    clearFlushTimer();
+    buffer = '';
+    await pushStreamEvent(tabId, {
+      requestId,
+      kind: 'error',
+      message: error instanceof Error ? error.message : '生成失败',
+    });
+  } finally {
+    activeStreams.delete(requestId);
+  }
+};
+
+// 取消一次流式生成：发起页关闭窗口或重新发起时调用；未知 id 静默忽略
+const cancelAiStream = (requestId: string): void => {
+  activeStreams.get(requestId)?.controller.abort();
+};
+
+export type { StreamCallbacks };
+export { cancelAiStream, startAiStream };

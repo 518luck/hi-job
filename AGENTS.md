@@ -18,8 +18,8 @@ hi-job/
 │   ├── workbench/          # 工作台页：最近职位卡片流 + AI 打招呼的厂商/模型选择，index.ts=公有 API
 │   └── world/              # 内容脚本逻辑层：按「世界 → 领域」组织（非 UI 页面）
 │       ├── rpc/            # 两世界共享 RPC：window-rpc 传输与方法表（Vue DTO 在 shared/zod）
-│       ├── isolated-world/ # 隔离世界 slice：jd-listener 职位监听、jd-detail-greet 详情页自动打招呼、runtime-bridge 桥转发
-│       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper、chat-probe、jd-probe
+│       ├── isolated-world/ # 隔离世界 slice：chat-ui 聊天 UI（React + Shadow Root，不进聚合出口）、jd-listener 职位监听、jd-detail-greet 详情页自动打招呼、runtime-bridge 桥转发
+│       └── main-world/     # 主世界 slice：vue-job-data 数据提供、chat-helper（数据同步 + 聊天上下文服务）、chat-probe、jd-probe
 ├── widgets/                # 独立功能小组件（nav-bar 导航栏等）
 ├── shared/                 # 跨入口共享层
 │   ├── lib/                # 工具函数（cn、page-property 等）
@@ -93,8 +93,11 @@ shared 层的图标与 SVG 资源规范，参见 `shared/AGENTS.md`。
 | 扩展消息 | 隔离世界/侧边栏 | 后台 Service Worker | `@webext-core/messaging` 的 `ProtocolMap` |
 | Window RPC | 主世界 | 隔离世界 | `pages/world/rpc/window-rpc.ts` |
 | Window RPC | 隔离世界 | 主世界 | `pages/world/rpc/window-rpc.ts` |
+| 流式推送 | 后台 | 发起生成的标签页（聊天 UI） | `browser.tabs.sendMessage` 的 `hiJobStream` 信封（chunk/end/error，按 requestId 关联） |
 
-Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔离世界不逐方法登记，任何 ProtocolMap 消息原样转发后台，类型由调用处泛型与后台 handler 两端约束；`vue.*` 表示请求主世界读取页面 Vue 数据。所有 Window RPC 统一使用 namespace、version、request/response、request id、超时和错误结构；**两条通道各用独立 namespace（vue 数据服务 / 后台桥），服务端只应答本通道请求，同窗多服务端靠 namespace 区分，禁止共用**；业务代码不得直接拼接 `postMessage` 信封。另有单向通知通道（`hi-job/window-notify`）：后台推送经隔离世界桥转发主世界，用于标记变更等事件驱动同步，禁止用轮询替代。
+Window RPC 方法按执行边界命名：`background.call` 是哑管道——隔离世界不逐方法登记，任何 ProtocolMap 消息原样转发后台，类型由调用处泛型与后台 handler 两端约束；`vue.*` 表示请求主世界读取页面 Vue 数据。所有 Window RPC 统一使用 namespace、version、request/response、request id、超时和错误结构；**各通道用独立 namespace（vue 职位数据 / vue-chat 聊天上下文 / 后台桥），服务端只应答本通道请求，同窗多服务端靠 namespace 区分，禁止共用**；业务代码不得直接拼接 `postMessage` 信封。另有单向通知通道（`hi-job/window-notify`）：后台推送经隔离世界桥转发主世界，用于标记变更等事件驱动同步，禁止用轮询替代。
+
+AI 生成一律流式：聊天 UI 发起 `greeting`/`generateReply` 等启动消息立即返回 `{ requestId }`，后台 `streamText` 增量攒批经 `hiJobStream` 推回发起标签页（`shared/infra/ai/ai-stream.ts` 编排，`cancelAiStream` 取消）；UI 侧用「首 chunk + chunk 间隔」双段空闲超时判定卡死，不设总时长上限。
 
 两条铁律：
 

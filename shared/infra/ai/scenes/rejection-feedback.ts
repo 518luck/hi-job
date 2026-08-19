@@ -8,7 +8,7 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 
-import { chatWithVendor } from '../vendor-client';
+import { type AiStreamCallbacks, chatWithVendor } from '../vendor-client';
 import { transcriptSectionOf } from './prompt-parts';
 
 // 请教反馈的系统提示默认文案：接受结果并低负担地请教改进方向
@@ -30,6 +30,7 @@ const generateRejectionFeedback = async ({
   thinkingMode = 'default',
   hr,
   requestPermission = true,
+  stream,
 }: {
   jd: ReplyJd; // 目标职位（完整或最小字段均可）
   messages: ReplyMessage[]; // 最近聊天记录
@@ -38,6 +39,7 @@ const generateRejectionFeedback = async ({
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   hr?: HrInfo; // 当前会话的 HR 信息
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
+  stream?: AiStreamCallbacks; // 流式回调：传入时逐块推送而非一次性返回
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
@@ -49,6 +51,7 @@ const generateRejectionFeedback = async ({
       preference.rejectionFeedbackSystem ?? DEFAULT_REJECTION_FEEDBACK_SYSTEM,
     thinkingMode,
     requestPermission,
+    stream,
     // 结构化提示词：完整职位字段 + HR/简历 + 最近聊天记录
     prompt: {
       task: preference.rejectionFeedbackTask ?? DEFAULT_REJECTION_FEEDBACK_TASK,

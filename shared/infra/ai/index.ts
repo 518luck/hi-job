@@ -1,5 +1,7 @@
 // # ai 域公有 API：厂商客户端与生成场景
 
+export type { StreamCallbacks } from './ai-stream';
+export { cancelAiStream, startAiStream } from './ai-stream';
 export {
   DEFAULT_FOLLOW_UP_REQUIREMENT,
   DEFAULT_FOLLOW_UP_SYSTEM,
@@ -24,6 +26,7 @@ export {
   hrSectionOf,
   resumeSectionOf,
 } from './scenes';
+export type { AiStreamCallbacks } from './vendor-client';
 export {
   AUTH_ERROR_MARKER,
   chatWithVendor,

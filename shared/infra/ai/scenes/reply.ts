@@ -8,7 +8,7 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 
-import { chatWithVendor } from '../vendor-client';
+import { type AiStreamCallbacks, chatWithVendor } from '../vendor-client';
 import { transcriptSectionOf } from './prompt-parts';
 
 // 回复系统提示默认文案：以求职者本人身份延续对话，未配置时使用
@@ -30,6 +30,7 @@ const generateReply = async ({
   thinkingMode = 'default',
   hr,
   requestPermission = true,
+  stream,
 }: {
   jd: ReplyJd; // 目标职位信息
   messages: ReplyMessage[]; // 聊天记录，按时间正序
@@ -38,6 +39,7 @@ const generateReply = async ({
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   hr?: HrInfo; // 当前会话的 HR 信息
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
+  stream?: AiStreamCallbacks; // 流式回调：传入时逐块推送而非一次性返回
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
@@ -48,6 +50,7 @@ const generateReply = async ({
     system: preference.replySystem ?? DEFAULT_REPLY_SYSTEM,
     thinkingMode,
     requestPermission,
+    stream,
     // 结构化提示词：完整职位字段 + HR/简历 + 聊天记录，文本与日志字段由 chatWithVendor 内部推导
     prompt: {
       task: preference.replyTask ?? DEFAULT_REPLY_TASK,

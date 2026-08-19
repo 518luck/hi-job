@@ -8,7 +8,7 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 
-import { chatWithVendor } from '../vendor-client';
+import { type AiStreamCallbacks, chatWithVendor } from '../vendor-client';
 import { transcriptSectionOf } from './prompt-parts';
 
 // 跟进系统提示默认文案：承接中断的招聘沟通，未配置时使用
@@ -30,6 +30,7 @@ const generateFollowUp = async ({
   modelId,
   thinkingMode = 'default',
   requestPermission = true,
+  stream,
 }: {
   jd: ReplyJd; // 会话关联职位信息
   hr?: HrInfo; // 当前会话的 HR 信息
@@ -38,6 +39,7 @@ const generateFollowUp = async ({
   modelId: string; // 所选模型 id
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
+  stream?: AiStreamCallbacks; // 流式回调：传入时逐块推送而非一次性返回
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
@@ -48,6 +50,7 @@ const generateFollowUp = async ({
     system: preference.followUpSystem ?? DEFAULT_FOLLOW_UP_SYSTEM,
     thinkingMode,
     requestPermission,
+    stream,
     // 结构化提示词：完整职位字段 + HR/简历 + 当前页面最近聊天记录，跟进最近对话
     prompt: {
       task: preference.followUpTask ?? DEFAULT_FOLLOW_UP_TASK,

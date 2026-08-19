@@ -14,6 +14,9 @@ export {
   aiPreferenceSchema,
   THINKING_MODES,
 } from './ai-preference';
+// ai-stream 消息：AI 流式生成事件 DTO（后台推送信封内层）
+export type { AiStreamEvent, AiStreamHandle } from './ai-stream';
+export { aiStreamEventSchema, aiStreamHandleSchema } from './ai-stream';
 // aiVendor 表：落库实体 + 厂商表单派生
 export type {
   AiVendorRecord,
@@ -33,6 +36,9 @@ export {
   blockedCompanyNamesSchema,
   blockedCompanySchema,
 } from './blocked-company';
+// chat-context 消息：聊天页当前会话上下文 DTO
+export type { ChatContext } from './chat-context';
+export { chatContextSchema } from './chat-context';
 // chat-message 表：与 HR 的逐条聊天消息
 export type { ChatMessage, ChatMessageInput } from './chat-message';
 export { chatMessageInputSchema, chatMessageSchema } from './chat-message';

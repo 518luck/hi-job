@@ -1,8 +1,8 @@
-// # AI 厂商客户端：构造 AI SDK 供应商实例、模型列表拉取与文本生成
+// # AI 厂商客户端：构造 AI SDK 供应商实例、模型列表拉取与文本生成（一次性/流式）
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModelUsage } from 'ai';
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 
 import type {
   AiLogSource,
@@ -16,6 +16,12 @@ import { assemblePromptText } from './scenes/prompt-parts';
 
 // 未授权错误标记：后台报错与聊天窗「去授权」按钮的跨世界约定，双方共用同一常量
 const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
+
+// 流式回调：传入 chatWithVendor 即走流式生成，增量逐块回调、中止信号透传底层 SDK
+interface AiStreamCallbacks {
+  onChunk: (delta: string) => void; // 文本增量回调
+  abortSignal: AbortSignal; // 取消信号，中止在途生成
+}
 
 // 厂商连接参数：表单尚未保存时也可直接用于测试连接与拉取
 interface VendorConnection {
@@ -125,6 +131,7 @@ const chatWithVendor = async ({
   thinkingMode = 'default',
   source,
   requestPermission = true,
+  stream,
 }: {
   vendor: AiVendorRecord; // 厂商配置记录
   modelId: string; // 本次调用使用的模型 id
@@ -133,6 +140,7 @@ const chatWithVendor = async ({
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   source: AiLogSource; // 调用来源（打招呼/聊天页回复），写入日志
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
+  stream?: AiStreamCallbacks; // 流式回调：传入时逐块推送而非一次性返回全文
 }): Promise<string> => {
   // 拼平提示词文本：发送给模型的实际内容，同时记入日志 promptText 字段
   const promptText = assemblePromptText(prompt);
@@ -166,15 +174,38 @@ const chatWithVendor = async ({
       apiKey: vendor.apiKey,
       apiFormat: vendor.apiFormat,
     });
-    const generated = await generateText({
-      model: provider(modelId),
-      system,
-      prompt: promptText,
-      ...resolvedArgs,
-    });
-    result = generated.text.trim();
-    usage = generated.usage;
+    // 流式：逐块回调增量，结束取全文与用量；一次性：generateText 等待完整响应
+    if (stream !== undefined) {
+      const streamResult = streamText({
+        model: provider(modelId),
+        system,
+        prompt: promptText,
+        abortSignal: stream.abortSignal,
+        ...resolvedArgs,
+      });
+      for await (const delta of streamResult.textStream) {
+        if (delta !== '') {
+          stream.onChunk(delta);
+        }
+      }
+      result = (await streamResult.text).trim();
+      usage = await streamResult.usage;
+    } else {
+      const generated = await generateText({
+        model: provider(modelId),
+        system,
+        prompt: promptText,
+        ...resolvedArgs,
+      });
+      result = generated.text.trim();
+      usage = generated.usage;
+    }
   } catch (error) {
+    // 主动取消：记稳定文案，跳过思考档位提示（与取消无关）
+    if (stream?.abortSignal.aborted === true) {
+      await recordAiLog({ ...logEntry, ok: false, error: '已取消' });
+      throw new Error('已取消');
+    }
     const rawMessage = error instanceof Error ? error.message : '生成失败';
     // 思考档位下失败多为模型不支持思考参数：追加可读提示，便于切回默认档
     const finalError =
@@ -202,6 +233,7 @@ const chatWithVendor = async ({
   return result;
 };
 
+export type { AiStreamCallbacks };
 export {
   AUTH_ERROR_MARKER,
   chatWithVendor,

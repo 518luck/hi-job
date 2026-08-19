@@ -1,0 +1,32 @@
+// # ai-stream 消息：AI 流式生成的事件 DTO（后台推送信封 hiJobStream 的内层结构）
+import { z } from 'zod';
+
+// 流式请求句柄：启动消息立即返回，后续 chunk/end/error 事件按 requestId 关联
+const aiStreamHandleSchema = z.object({
+  requestId: z.string().min(1), // 流式请求唯一 id
+});
+
+// 流式事件判别联合：chunk 增量、end 结束全文、error 失败原因
+const aiStreamEventSchema = z.discriminatedUnion('kind', [
+  z.object({
+    requestId: z.string().min(1), // 关联的流式请求 id
+    kind: z.literal('chunk'), // 增量事件
+    delta: z.string(), // 本次追加的文本增量
+  }),
+  z.object({
+    requestId: z.string().min(1), // 关联的流式请求 id
+    kind: z.literal('end'), // 结束事件
+    text: z.string(), // 完整生成文本（修剪后）
+  }),
+  z.object({
+    requestId: z.string().min(1), // 关联的流式请求 id
+    kind: z.literal('error'), // 失败事件
+    message: z.string(), // 可展示的失败原因
+  }),
+]);
+
+type AiStreamHandle = z.infer<typeof aiStreamHandleSchema>;
+type AiStreamEvent = z.infer<typeof aiStreamEventSchema>;
+
+export type { AiStreamEvent, AiStreamHandle };
+export { aiStreamEventSchema, aiStreamHandleSchema };

@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 // RPC 通道命名空间：vue 数据服务与后台桥各自独立，同窗多服务端靠 namespace 区分，避免误应答
 const WINDOW_RPC_NAMESPACE_VUE = 'hi-job/window-rpc/vue';
+const WINDOW_RPC_NAMESPACE_VUE_CHAT = 'hi-job/window-rpc/vue-chat';
 const WINDOW_RPC_NAMESPACE_BACKGROUND = 'hi-job/window-rpc/background';
 
 // 页面内单向通知：后台推送经隔离世界桥转发给主世界，无请求响应结构
@@ -235,6 +236,7 @@ export {
   WINDOW_NOTIFY_NAMESPACE,
   WINDOW_RPC_NAMESPACE_BACKGROUND,
   WINDOW_RPC_NAMESPACE_VUE,
+  WINDOW_RPC_NAMESPACE_VUE_CHAT,
   WINDOW_RPC_VERSION,
   windowRpcRequestSchema,
   windowRpcResponseSchema,

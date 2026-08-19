@@ -7,7 +7,7 @@ import type {
   ThinkingMode,
 } from '@/shared/zod';
 
-import { chatWithVendor } from '../vendor-client';
+import { type AiStreamCallbacks, chatWithVendor } from '../vendor-client';
 
 // 打招呼系统提示默认文案：限定角色与输出形态，未配置时使用
 const DEFAULT_GREETING_SYSTEM =
@@ -26,6 +26,7 @@ const generateGreeting = async ({
   thinkingMode = 'default',
   hr,
   requestPermission = true,
+  stream,
 }: {
   jd: ReplyJd; // 目标职位（完整或最小字段均可）
   vendor: AiVendorRecord; // 所选厂商配置
@@ -33,6 +34,7 @@ const generateGreeting = async ({
   thinkingMode?: ThinkingMode; // 思考模式档位，默认不传任何思考参数
   hr?: HrInfo; // HR 信息，工作台场景通常没有
   requestPermission?: boolean; // 是否申请跨域权限；无手势环境（后台）传 false
+  stream?: AiStreamCallbacks; // 流式回调：传入时逐块推送而非一次性返回
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
@@ -43,6 +45,7 @@ const generateGreeting = async ({
     system: preference.greetingSystem ?? DEFAULT_GREETING_SYSTEM,
     thinkingMode,
     requestPermission,
+    stream,
     // 结构化提示词：完整职位字段 + HR/简历，文本与日志字段由 chatWithVendor 内部推导
     prompt: {
       task: preference.greetingTask ?? DEFAULT_GREETING_TASK,

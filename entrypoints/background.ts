@@ -1,13 +1,16 @@
-// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、屏蔽公司、AI 生成）
+// # 后台脚本：侧边栏行为 + 消息中枢（职位记录、HR 标记、调试开关、屏蔽公司、AI 流式生成）
 import { z } from 'zod';
 
 import {
   AUTH_ERROR_MARKER,
+  cancelAiStream,
   generateFollowUp,
   generateGreeting,
   generateOrganizedResume,
   generateRejectionFeedback,
   generateReply,
+  type StreamCallbacks,
+  startAiStream,
 } from '@/shared/infra/ai';
 import { onMessage } from '@/shared/infra/messaging';
 import {
@@ -87,7 +90,13 @@ const resolveGenerationContext = async (): Promise<{
 };
 
 // 生成下一条回复：优先用库中完整 JD，无记录时用输入兜底信息，带 HR 信息
-const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
+const handleGenerateReply = async ({
+  input,
+  stream,
+}: {
+  input: ReplyInput;
+  stream: StreamCallbacks;
+}): Promise<string> => {
   const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
@@ -99,11 +108,18 @@ const handleGenerateReply = async (input: ReplyInput): Promise<string> => {
     thinkingMode,
     hr: input.hr,
     requestPermission: false,
+    stream,
   });
 };
 
 // 生成跟进消息：沟通暂时中断时，结合 JD、HR、简历与当前聊天记录
-const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
+const handleFollowUp = async ({
+  input,
+  stream,
+}: {
+  input: FollowUpInput;
+  stream: StreamCallbacks;
+}): Promise<string> => {
   const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
@@ -115,11 +131,18 @@ const handleFollowUp = async (input: FollowUpInput): Promise<string> => {
     modelId,
     thinkingMode,
     requestPermission: false,
+    stream,
   });
 };
 
 // 生成打招呼语句：首次联系时，结合 JD 与 HR 信息
-const handleGreeting = async (input: GreetingInput): Promise<string> => {
+const handleGreeting = async ({
+  input,
+  stream,
+}: {
+  input: GreetingInput;
+  stream: StreamCallbacks;
+}): Promise<string> => {
   const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
@@ -130,13 +153,18 @@ const handleGreeting = async (input: GreetingInput): Promise<string> => {
     modelId,
     thinkingMode,
     requestPermission: false,
+    stream,
   });
 };
 
 // 生成请教反馈消息：优先用库中完整 JD，无记录时用输入兜底信息，带 HR 信息
-const handleRejectionFeedback = async (
-  input: RejectionFeedbackInput,
-): Promise<string> => {
+const handleRejectionFeedback = async ({
+  input,
+  stream,
+}: {
+  input: RejectionFeedbackInput;
+  stream: StreamCallbacks;
+}): Promise<string> => {
   const { vendor, modelId, thinkingMode } = await resolveGenerationContext();
   const recorded = await jdStore.readJdByJobId(input.jobId);
   const jd = recorded ?? input.jd;
@@ -146,8 +174,9 @@ const handleRejectionFeedback = async (
     vendor,
     modelId,
     thinkingMode,
-    hr: input.hr,
     requestPermission: false,
+    hr: input.hr,
+    stream,
   });
 };
 
@@ -308,33 +337,51 @@ export default defineBackground(() => {
     // 广播到各标签页，探测脚本即时注入/移除按钮
     await broadcastNotify('debug-settings-changed');
   });
-  onMessage('greeting', ({ data }) => {
+  // > AI 生成一律流式：启动即回 requestId，增量与终态经 hiJobStream 推送发起标签页
+  onMessage('greeting', ({ data, sender }) => {
     const parsed = greetingInputSchema.safeParse(data);
     if (!parsed.success) {
       throw new Error('打招呼参数不合法');
     }
-    return handleGreeting(parsed.data);
+    return startAiStream({
+      tabId: sender.tab?.id,
+      task: (stream) => handleGreeting({ input: parsed.data, stream }),
+    });
   });
-  onMessage('followUp', ({ data }) => {
+  onMessage('followUp', ({ data, sender }) => {
     const parsed = followUpInputSchema.safeParse(data);
     if (!parsed.success) {
       throw new Error('跟进参数不合法');
     }
-    return handleFollowUp(parsed.data);
+    return startAiStream({
+      tabId: sender.tab?.id,
+      task: (stream) => handleFollowUp({ input: parsed.data, stream }),
+    });
   });
-  onMessage('generateReply', ({ data }) => {
+  onMessage('generateReply', ({ data, sender }) => {
     const parsed = replyInputSchema.safeParse(data);
     if (!parsed.success) {
       throw new Error('回复生成参数不合法');
     }
-    return handleGenerateReply(parsed.data);
+    return startAiStream({
+      tabId: sender.tab?.id,
+      task: (stream) => handleGenerateReply({ input: parsed.data, stream }),
+    });
   });
-  onMessage('rejectionFeedback', ({ data }) => {
+  onMessage('rejectionFeedback', ({ data, sender }) => {
     const parsed = rejectionFeedbackInputSchema.safeParse(data);
     if (!parsed.success) {
       throw new Error('请教反馈参数不合法');
     }
-    return handleRejectionFeedback(parsed.data);
+    return startAiStream({
+      tabId: sender.tab?.id,
+      task: (stream) => handleRejectionFeedback({ input: parsed.data, stream }),
+    });
+  });
+  onMessage('cancelAiStream', ({ data }) => {
+    if (typeof data === 'string' && data !== '') {
+      cancelAiStream(data);
+    }
   });
   onMessage('organizeResume', () => handleOrganizeResume());
 });
