@@ -3,6 +3,7 @@
 // # 思考面板：AI 推理步骤折叠列表，流式中标题扫光并逐步显现
 
 import { ChevronDownIcon } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 import {
@@ -45,6 +46,16 @@ export function ReasoningPanel({
 }: ReasoningPanelProps) {
   const shown = take(steps, visibleSteps);
 
+  // 时间线滚动区：流式中贴底跟随最新步骤（与主窗体滚底行为一致）
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const timeline = timelineRef.current;
+    if (timeline === null || !streaming || steps.length === 0) {
+      return;
+    }
+    timeline.scrollTop = timeline.scrollHeight;
+  }, [steps, streaming]);
+
   return (
     <Collapsible
       data-slot="reasoning-panel"
@@ -74,38 +85,51 @@ export function ReasoningPanel({
         <ChevronDownIcon className="size-3.5 shrink-0 opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-open/trigger:rotate-180 group-data-panel-open/trigger:rotate-180 motion-reduce:transition-none" />
       </CollapsibleTrigger>
       <CollapsibleContent className={cn(collapsePanel, 'outline-none')}>
-        <ol className="flex flex-col gap-4 pt-3 pb-1">
-          {shown.map((step, i) => {
-            const active = streaming && i === shown.length - 1;
-            return (
-              <li
-                // biome-ignore lint/suspicious/noArrayIndexKey: 步骤列表只前缀追加不重排，且末步标题随流式增长，索引才是稳定身份（文本 key 会重挂重放入场动画）
-                key={i}
-                className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both flex gap-3 duration-300"
-              >
-                <span
-                  aria-hidden
-                  className={cn(
-                    'mt-[7px] size-[5px] shrink-0 rounded-full transition-colors duration-300',
-                    active
-                      ? 'animate-pulse bg-blue-500 dark:bg-blue-400'
-                      : 'bg-foreground/20',
-                  )}
-                />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <p className="text-foreground/90 text-[13px] font-medium">
-                    {step.title}
-                  </p>
-                  {step.body !== undefined && step.body !== '' && (
-                    <p className="text-foreground/50 mt-0.5 text-[13px] leading-relaxed break-words">
-                      {step.body}
-                    </p>
-                  )}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+        {/* // 时间线滚动区：高度封顶超出滚动（沿用窗内深色细滚动条），避免长思考无限撑高正文区 */}
+        <div
+          ref={timelineRef}
+          className="hijob-chat-scroll max-h-[180px] overflow-y-auto"
+        >
+          {/* // 引导线：贯穿全部步骤圆点的纵向细线，随内容同高滚动 */}
+          <div className="relative">
+            <span
+              aria-hidden
+              className="absolute top-[21px] bottom-[14px] left-[2px] w-px bg-foreground/15"
+            />
+            <ol className="flex flex-col gap-4 pt-3 pb-1">
+              {shown.map((step, i) => {
+                const active = streaming && i === shown.length - 1;
+                return (
+                  <li
+                    // biome-ignore lint/suspicious/noArrayIndexKey: 步骤列表只前缀追加不重排，且末步标题随流式增长，索引才是稳定身份（文本 key 会重挂重放入场动画）
+                    key={i}
+                    className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both flex gap-3 duration-300"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'mt-[7px] size-[5px] shrink-0 rounded-full transition-colors duration-300',
+                        active
+                          ? 'animate-pulse bg-blue-500 dark:bg-blue-400'
+                          : 'bg-foreground/20',
+                      )}
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <p className="text-muted-foreground text-[13px] font-medium">
+                        {step.title}
+                      </p>
+                      {step.body !== undefined && step.body !== '' && (
+                        <p className="text-foreground/50 mt-0.5 text-[13px] leading-relaxed break-words">
+                          {step.body}
+                        </p>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
