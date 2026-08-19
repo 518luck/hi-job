@@ -60,6 +60,7 @@ function ChatAssistant() {
     cancel,
     bodyStatus,
     busyMethod,
+    timing,
     errorMessage,
     lastMethod,
   } = useChatRuntime();
@@ -126,6 +127,7 @@ function ChatAssistant() {
             bodyStatus={bodyStatus}
             errorMessage={errorMessage}
             busyMethod={busyMethod}
+            timing={timing}
             lastMethod={lastMethod}
             onScene={startScene}
             onClose={() => setOpen(false)}

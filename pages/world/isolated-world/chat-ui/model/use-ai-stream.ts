@@ -29,12 +29,21 @@ type AiStreamMethod = {
     : never;
 }[keyof ProtocolMap];
 
+// 一轮生成的耗时与用量统计：tokens 缺失（供应商未上报）时对应项不展示
+interface AiTimingStats {
+  ttftMs: number; // 首 token 延迟：发起 → 首个增量事件到达
+  totalMs: number; // 总耗时：发起 → 结束事件到达
+  tokensPerSecond: number | null; // 输出速率：输出 tokens / 总耗时，用量缺失为 null
+  tokens: number | null; // 输入+输出 token 总数，用量缺失为 null
+}
+
 // Hook 返回结构
 interface UseAiStreamResult {
   status: StreamStatus; // 当前流式状态
   text: string; // 已生成的文本（流式累加，end 事件替换为全文）
   reasoning: string; // 已累积的思考文本，流式累加
   error: string; // 失败原因（error 状态时有值）
+  timing: AiTimingStats | null; // 最近一轮的耗时与用量统计（done 态有值）
   start: <K extends AiStreamMethod>(
     method: K,
     data: GetDataType<ProtocolMap[K]>,
@@ -56,8 +65,12 @@ const useAiStream = (): UseAiStreamResult => {
   const [text, setText] = useState('');
   const [reasoning, setReasoning] = useState('');
   const [error, setError] = useState('');
+  const [timing, setTiming] = useState<AiTimingStats | null>(null);
 
   const requestIdRef = useRef<string | null>(null);
+  // 计时锚点：发起时刻与首个增量到达时刻，end 时折算耗时统计
+  const startedAtRef = useRef<number | null>(null);
+  const firstEventAtRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -105,6 +118,7 @@ const useAiStream = (): UseAiStreamResult => {
     setText('');
     setReasoning('');
     setError('');
+    setTiming(null);
   }, [teardown]);
 
   // 发起一次流式生成：成功拿到 requestId 后进入生成态，失败直接进失败态
@@ -117,7 +131,11 @@ const useAiStream = (): UseAiStreamResult => {
       setText('');
       setReasoning('');
       setError('');
+      setTiming(null);
       setStatus('streaming');
+      // 计时从发起 RPC 起算：ttft 含后台往返，与用户体感一致
+      startedAtRef.current = Date.now();
+      firstEventAtRef.current = null;
       try {
         const { requestId } = await sendMessage(method, data);
         requestIdRef.current = requestId;
@@ -143,11 +161,13 @@ const useAiStream = (): UseAiStreamResult => {
       }
       // 思考增量：累加到思考文本并刷新断流计时，避免长思考被误判断流
       if (event.kind === 'reasoning') {
+        firstEventAtRef.current ??= Date.now();
         setReasoning((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
         return;
       }
       if (event.kind === 'chunk') {
+        firstEventAtRef.current ??= Date.now();
         setText((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
         return;
@@ -157,6 +177,22 @@ const useAiStream = (): UseAiStreamResult => {
       if (event.kind === 'end') {
         setText(event.text);
         setStatus('done');
+        // 折算耗时统计：首增量缺失时 ttft 以结束时刻兜底（空生成场景）
+        const startedAt = startedAtRef.current ?? Date.now();
+        const firstEventAt = firstEventAtRef.current ?? Date.now();
+        const totalMs = Date.now() - startedAt;
+        setTiming({
+          ttftMs: firstEventAt - startedAt,
+          totalMs,
+          tokensPerSecond:
+            event.usage !== undefined && totalMs > 0
+              ? (event.usage.outputTokens / totalMs) * 1000
+              : null,
+          tokens:
+            event.usage !== undefined
+              ? event.usage.inputTokens + event.usage.outputTokens
+              : null,
+        });
         return;
       }
       setStatus('error');
@@ -171,8 +207,8 @@ const useAiStream = (): UseAiStreamResult => {
   // 组件卸载时终止在途请求，避免后台空跑
   useEffect(() => teardown, [teardown]);
 
-  return { status, text, reasoning, error, start, cancel };
+  return { status, text, reasoning, error, timing, start, cancel };
 };
 
-export type { AiStreamMethod, StreamStatus };
+export type { AiStreamMethod, AiTimingStats, StreamStatus };
 export { useAiStream };

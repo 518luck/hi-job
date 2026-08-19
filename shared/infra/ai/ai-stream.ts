@@ -11,10 +11,17 @@ interface ActiveStream {
   tabId?: number; // 发起生成的标签页 id，事件推送目标
 }
 
+// 流式用量：模型上报的 token 计数
+interface AiStreamUsage {
+  inputTokens: number; // 输入 token 数
+  outputTokens: number; // 输出 token 数
+}
+
 // 流式任务入参：增量回调与中止信号由编排层注入
 interface StreamCallbacks {
   onChunk: (delta: string) => void; // 逐块正文增量
   onReasoning?: (delta: string) => void; // 逐块思考增量：模型未产出思考时不会触发
+  onUsage?: (usage: AiStreamUsage) => void; // 生成结束上报 token 用量：供应商未上报时缺失
   abortSignal: AbortSignal; // 取消信号
 }
 
@@ -130,6 +137,8 @@ const executeStream = async ({
     kind: 'reasoning',
   });
   const textBuffer = createDeltaBuffer({ requestId, tabId, kind: 'chunk' });
+  // 模型上报的用量：经 onUsage 回调捕获，随 end 事件推送到发起页
+  let usage: AiStreamUsage | undefined;
   try {
     const text = await task({
       abortSignal: controller.signal,
@@ -139,10 +148,13 @@ const executeStream = async ({
       onReasoning: (delta) => {
         reasoningBuffer.push(delta);
       },
+      onUsage: (reported) => {
+        usage = reported;
+      },
     });
     await reasoningBuffer.flush();
     await textBuffer.flush();
-    await pushStreamEvent(tabId, { requestId, kind: 'end', text });
+    await pushStreamEvent(tabId, { requestId, kind: 'end', text, usage });
   } catch (error) {
     reasoningBuffer.dispose();
     textBuffer.dispose();
@@ -161,5 +173,5 @@ const cancelAiStream = (requestId: string): void => {
   activeStreams.get(requestId)?.controller.abort();
 };
 
-export type { StreamCallbacks };
+export type { AiStreamUsage, StreamCallbacks };
 export { cancelAiStream, startAiStream };

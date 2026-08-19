@@ -33,7 +33,11 @@ import {
 } from '../config/chat-window';
 import { useElapsedSeconds, useWordSegments } from '../model/stream-driver';
 import { pickThinkingPhrase } from '../model/thinking-phrases';
-import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
+import type {
+  AiStreamMethod,
+  AiTimingStats,
+  StreamStatus,
+} from '../model/use-ai-stream';
 import { MessagePair } from './elements/message-pair';
 import { ReasoningPanel } from './elements/reasoning-panel';
 import { TypingIndicator } from './elements/typing-indicator';
@@ -47,6 +51,7 @@ interface ChatWindowProps {
   bodyStatus: StreamStatus; // 正文状态（含场景准备失败折算的 error）
   errorMessage: string; // 失败原因（error 态时有值）
   busyMethod: AiStreamMethod | null; // 生成中的场景，对应按钮转圈
+  timing: AiTimingStats | null; // 最近一轮的耗时与用量统计（done 态有值），顶栏展示
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景，供重新生成重跑
   onScene: (method: AiStreamMethod) => void; // 发起场景生成
   onClose: () => void; // 关闭聊天窗
@@ -60,6 +65,7 @@ function ChatWindow({
   bodyStatus,
   errorMessage,
   busyMethod,
+  timing,
   lastMethod,
   onScene,
   onClose,
@@ -215,6 +221,40 @@ function ChatWindow({
     );
   };
 
+  // 顶部时序统计：ttft/总耗时/输出速率/用量，生成结束后展示至下一轮（供应商未上报时省略对应项）
+  const renderTiming = (): ReactNode => {
+    if (timing === null) {
+      return null;
+    }
+    const stats = [
+      { label: 'ttft', value: `${(timing.ttftMs / 1000).toFixed(1)}s` },
+      { label: 'total', value: `${(timing.totalMs / 1000).toFixed(1)}s` },
+      ...(timing.tokensPerSecond === null
+        ? []
+        : [{ label: 'tok/s', value: `${Math.round(timing.tokensPerSecond)}` }]),
+      ...(timing.tokens === null
+        ? []
+        : [
+            {
+              label: 'tokens',
+              value: timing.tokens.toLocaleString('en-US'),
+            },
+          ]),
+    ];
+    return (
+      <div className="flex items-center gap-2.5 font-mono text-[11px] text-foreground/50 tabular-nums">
+        {stats.map(({ label, value }) => (
+          <span key={label} className="flex flex-col items-center leading-none">
+            <span className="text-foreground/30 mb-0.5 text-[10px]">
+              {label}
+            </span>
+            {value}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   // 复制按钮内容：复制中转圈、成功打对勾（图标尺寸由按钮 size 统一给）
   const renderCopyContent = (): ReactNode => {
     if (copyState === 'copying') {
@@ -244,11 +284,14 @@ function ChatWindow({
       >
         {/* Card 自带的实心底中和为透明，玻璃材料由窗体根统一承担 */}
         <Card className="size-full gap-0 bg-transparent py-0 ring-0">
-          {/* // @ 标题栏：玻璃上的微亮层（不再是灰块），结构与正文用发丝线分层；
-              [.border-b]:pb-2.5 压回 Card 内置 border-b 变体的 --card-spacing 下边距，保持上下对称 */}
-          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5 [.border-b]:pb-2.5">
-            <CardTitle className="text-[13px] font-semibold">AI 回复</CardTitle>
-            <CardAction className="self-center">
+          {/* // @ 标题栏：军师招牌 + 本轮耗时用量统计 + 关闭；玻璃上的微亮层，发丝线与正文分层；
+              [.border-b]:pb-2 压回 Card 内置 border-b 变体的 --card-spacing 下边距，保持上下紧凑对称 */}
+          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2 [.border-b]:pb-2">
+            <CardTitle className="text-[13px] font-semibold">
+              求职军师
+            </CardTitle>
+            <CardAction className="flex items-center gap-2 self-center">
+              {renderTiming()}
               <Button
                 type="button"
                 variant="ghost"

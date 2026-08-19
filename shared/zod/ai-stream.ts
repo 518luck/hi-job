@@ -22,6 +22,12 @@ const aiStreamEventSchema = z.discriminatedUnion('kind', [
     requestId: z.string().min(1), // 关联的流式请求 id
     kind: z.literal('end'), // 结束事件
     text: z.string(), // 完整生成文本（修剪后）
+    usage: z
+      .object({
+        inputTokens: z.number().nonnegative(), // 输入 token 用量
+        outputTokens: z.number().nonnegative(), // 输出 token 用量
+      })
+      .optional(), // 模型上报的 token 用量，供应商未上报时缺失
   }),
   z.object({
     requestId: z.string().min(1), // 关联的流式请求 id

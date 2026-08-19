@@ -14,6 +14,7 @@ import { requestChatContext } from './chat-context';
 import { pickScenePhrase } from './scene-phrases';
 import {
   type AiStreamMethod,
+  type AiTimingStats,
   type StreamStatus,
   useAiStream,
 } from './use-ai-stream';
@@ -29,6 +30,7 @@ interface UseChatRuntimeResult {
   bodyStatus: StreamStatus; // 正文状态：场景准备失败折算为 error，其余跟随流式状态
   sceneError: string; // 场景准备失败原因（会话缺失/无聊天记录/末条校验）
   busyMethod: AiStreamMethod | null; // 生成中的场景方法，对应按钮转圈
+  timing: AiTimingStats | null; // 最近一轮生成的耗时与用量统计（done 态有值），供顶栏展示
   errorMessage: string; // 视图展示的失败原因：场景准备失败优先，其次流式失败
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景方法，终态保留，供重新生成重跑
 }
@@ -62,7 +64,8 @@ const useChatRuntime = (): UseChatRuntimeResult => {
   const [sceneError, setSceneError] = useState('');
   // 最近一次实际发起的场景方法：终态保留（busyMethod 终态会被清除），供重新生成
   const [lastMethod, setLastMethod] = useState<AiStreamMethod | null>(null);
-  const { status, text, reasoning, error, start, cancel } = useAiStream();
+  const { status, text, reasoning, error, timing, start, cancel } =
+    useAiStream();
   // 经 runtime 通道传递的待执行场景方法：startScene 记录、onNew 消费
   const pendingMethodRef = useRef<AiStreamMethod | null>(null);
 
@@ -198,6 +201,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     bodyStatus,
     sceneError,
     busyMethod,
+    timing,
     errorMessage: sceneError !== '' ? sceneError : error,
     lastMethod,
   };

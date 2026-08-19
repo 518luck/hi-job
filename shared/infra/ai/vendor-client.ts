@@ -21,6 +21,10 @@ const AUTH_ERROR_MARKER = '未授权访问 AI 厂商地址';
 interface AiStreamCallbacks {
   onChunk: (delta: string) => void; // 正文增量回调
   onReasoning?: (delta: string) => void; // 思考增量回调：模型未产出思考时不会触发
+  onUsage?: (usage: {
+    inputTokens: number; // 输入 token 数
+    outputTokens: number; // 输出 token 数
+  }) => void; // 用量上报回调：供应商未上报时不会触发
   abortSignal: AbortSignal; // 取消信号，中止在途生成
 }
 
@@ -193,6 +197,16 @@ const chatWithVendor = async ({
       }
       result = (await streamResult.text).trim();
       usage = await streamResult.usage;
+      // 用量上报：两项计数齐全才回调，供应商缺报时调用方收不到（对应展示省略）
+      if (
+        usage?.inputTokens !== undefined &&
+        usage.outputTokens !== undefined
+      ) {
+        stream.onUsage?.({
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+        });
+      }
     } else {
       const generated = await generateText({
         model: provider(modelId),
