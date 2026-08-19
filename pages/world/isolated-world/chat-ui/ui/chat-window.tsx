@@ -213,9 +213,13 @@ function ChatWindow({
     }
     return (
       <div className="space-y-3">
-        {/* // 等待首个 token：思考与正文都未到时，九宫格加载指示避免静止无反馈 */}
+        {/* // 等待首个 token：思考与正文都未到时，九宫格加载指示靠左小占位，避免静止无反馈 */}
         {isRunning && reasoning === '' && text === '' && (
-          <GenerationLoader label="正在生成" tick={tick} />
+          <GenerationLoader
+            label="正在生成"
+            tick={tick}
+            className="items-start gap-1.5"
+          />
         )}
         {reasoning !== '' && (
           <ReasoningPanel
