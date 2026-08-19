@@ -18,6 +18,8 @@ export interface MessagePairProps
   visibleWords: number; // 当前可见词数，驱动逐词显现进度
   streaming: boolean; // 是否仍在流式生成中（尾随光标与新鲜词高亮）
   variant?: 'bubble' | 'flat'; // 用户消息形态：气泡或纯文本右对齐
+  onCopy?: () => void; // 悬停复制回调：复制 AI 正文全文
+  onRegenerate?: () => void; // 悬停重新生成回调：重跑当前场景
 }
 
 // 消息对：上方用户消息、下方 AI 流式正文与悬停操作按钮
@@ -27,6 +29,8 @@ export function MessagePair({
   visibleWords,
   streaming,
   variant = 'bubble',
+  onCopy,
+  onRegenerate,
   className,
   ...props
 }: MessagePairProps) {
@@ -82,6 +86,7 @@ export function MessagePair({
           <button
             type="button"
             aria-label="复制回复"
+            onClick={onCopy}
             className={cn(ghostButton, 'size-7')}
           >
             <CopyIcon className="size-3.5" />
@@ -89,6 +94,7 @@ export function MessagePair({
           <button
             type="button"
             aria-label="重新生成"
+            onClick={onRegenerate}
             className={cn(ghostButton, 'size-7')}
           >
             <RefreshCwIcon className="size-3.5" />

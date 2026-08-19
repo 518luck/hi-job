@@ -17,7 +17,7 @@ import { collapsePanel, mono, ShimmerLabel, SwapLabel } from './surfaces';
 // 推理步骤
 export interface ReasoningStep {
   title: string; // 步骤标题
-  body: string; // 步骤正文
+  body?: string; // 步骤正文（无正文的行可省略）
 }
 
 // 思考面板属性
@@ -94,9 +94,11 @@ export function ReasoningPanel({
                   <p className="text-foreground/90 text-[13px] font-medium">
                     {step.title}
                   </p>
-                  <p className="text-foreground/50 mt-0.5 text-[13px] leading-relaxed break-words">
-                    {step.body}
-                  </p>
+                  {step.body !== undefined && step.body !== '' && (
+                    <p className="text-foreground/50 mt-0.5 text-[13px] leading-relaxed break-words">
+                      {step.body}
+                    </p>
+                  )}
                 </span>
               </li>
             );

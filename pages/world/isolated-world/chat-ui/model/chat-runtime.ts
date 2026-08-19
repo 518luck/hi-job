@@ -18,7 +18,7 @@ import {
 } from './use-ai-stream';
 
 // 场景方法到中文名的映射：消息流用户侧消息措辞使用
-const SCENE_LABELS: Record<AiStreamMethod, string> = {
+export const SCENE_LABELS: Record<AiStreamMethod, string> = {
   greeting: '问候',
   followUp: '提醒',
   rejectionFeedback: '反馈',
@@ -37,6 +37,8 @@ interface UseChatRuntimeResult {
   sceneError: string; // 场景准备失败原因（会话缺失/无聊天记录/末条校验）
   busyMethod: AiStreamMethod | null; // 生成中的场景方法，对应按钮转圈
   sceneLabel: string; // 当前场景中文名，终态保留、下次发起场景时覆盖
+  errorMessage: string; // 视图展示的失败原因：场景准备失败优先，其次流式失败
+  lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景方法，终态保留，供重新生成重跑
 }
 
 // 流式状态到 assistant 消息状态映射参数
@@ -66,6 +68,8 @@ const useChatRuntime = (): UseChatRuntimeResult => {
   const [sceneLabel, setSceneLabel] = useState('');
   // 场景准备失败（无会话/无聊天记录）：与流式失败共用正文错误位
   const [sceneError, setSceneError] = useState('');
+  // 最近一次实际发起的场景方法：终态保留（busyMethod 终态会被清除），供重新生成
+  const [lastMethod, setLastMethod] = useState<AiStreamMethod | null>(null);
   const { status, text, reasoning, error, start, cancel } = useAiStream();
   // 经 runtime 通道传递的待执行场景方法：startScene 记录、onNew 消费
   const pendingMethodRef = useRef<AiStreamMethod | null>(null);
@@ -104,6 +108,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
           }
           setBusyMethod(method);
           setSceneLabel(SCENE_LABELS[method]);
+          setLastMethod(method);
           const { jobId, jd, hr, messages } = context;
           if (method === 'greeting') {
             await start('greeting', { jobId, jd, hr });
@@ -204,6 +209,8 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     sceneError,
     busyMethod,
     sceneLabel,
+    errorMessage: sceneError !== '' ? sceneError : error,
+    lastMethod,
   };
 };
 

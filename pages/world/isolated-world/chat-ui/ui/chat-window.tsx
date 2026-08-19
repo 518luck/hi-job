@@ -1,9 +1,9 @@
-// # AI 回复聊天窗（聊天 UI）：标题栏 + 正文消息流 + 场景操作区，消息流展示用户侧概要、AI 思考与正文
+// # AI 回复聊天窗（聊天 UI）：标题栏 + 正文消息流 + 场景操作区，正文经 useAuiState 读 runtime 线程消息
 
+import { type AssistantState, useAuiState } from '@assistant-ui/react';
 import { Check, Copy, Loader2, X } from 'lucide-react';
 import type { CSSProperties, ReactNode, RefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { useSmoothStream } from 'smooth-stream-text/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AUTH_ERROR_MARKER } from '@/shared/infra/ai';
 import { sendMessage } from '@/shared/infra/messaging';
@@ -23,8 +23,11 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
 
+import { useStreamTick, useWordSegments } from '../model/stream-driver';
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
-import { ReasoningRow } from './reasoning-row';
+import { GenerationLoader } from './elements/loading-state';
+import { MessagePair } from './elements/message-pair';
+import { ReasoningPanel } from './elements/reasoning-panel';
 
 // 聊天窗尺寸：与父级定位计算保持一致
 const CHAT_WINDOW_WIDTH = 340;
@@ -39,21 +42,8 @@ const COPY_RESET_MS = 1200;
 // 悬停气泡层级：窗口自身为 z-2147483646，气泡挂 shadow 根需更高层才能压住窗口
 const TOOLTIP_Z_CLASS = 'z-[2147483647]';
 
-// 是否启用动画：跟随系统「减弱动态」设置，聊天 UI 不渲染不动画内容
-const usePrefersReducedMotion = (): boolean => {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onChange = (event: MediaQueryListEvent): void => {
-      setReduced(event.matches);
-    };
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
-  }, []);
-  return reduced;
-};
+// 消息流条目类型：经 AssistantState 的 thread scope 推导（含 parts 的消息状态，非 legacy MessageState）
+type ChatThreadMessage = AssistantState['thread']['messages'][number];
 
 // 场景按钮元数据：文案、协议方法与使用时机说明（tip 用作悬停气泡内容；
 // align 控制气泡对齐：按按钮在窗内位置钳制 240px 气泡不溢出窗宽/视口）
@@ -93,25 +83,22 @@ const SCENE_BUTTONS: {
 interface ChatWindowProps {
   style: CSSProperties; // 定位样式，父级按悬浮按钮位置计算
   bodyStatus: StreamStatus; // 正文状态（含场景准备失败折算的 error）
-  text: string; // 已生成文本，流式累加
-  reasoning: string; // 已累积的 AI 思考文本，流式累加
-  sceneLabel: string; // 当前场景中文名（问候/提醒/反馈/回复），消息流用户侧消息展示
   errorMessage: string; // 失败原因（error 态时有值）
   busyMethod: AiStreamMethod | null; // 生成中的场景，对应按钮转圈
+  lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景，供重新生成重跑
   onScene: (method: AiStreamMethod) => void; // 发起场景生成
   onClose: () => void; // 关闭聊天窗
   tooltipContainerRef: RefObject<HTMLDivElement | null>; // 悬停气泡挂载容器（shadow 根元素）
 }
 
 // AI 回复聊天窗：正文区按状态渲染（错误/占位/消息流），操作区发起各场景生成
+// ! 必须渲染在 AssistantRuntimeProvider 内：正文经 useAuiState 读 runtime 线程消息
 function ChatWindow({
   style,
   bodyStatus,
-  text,
-  reasoning,
-  sceneLabel,
   errorMessage,
   busyMethod,
+  lastMethod,
   onScene,
   onClose,
   tooltipContainerRef,
@@ -124,25 +111,36 @@ function ChatWindow({
   );
   const [authPending, setAuthPending] = useState(false);
   const [authFailed, setAuthFailed] = useState(false);
+  // 思考面板展开态：默认收起
+  const [reasoningOpen, setReasoningOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
-  // 流式生成中经库层匀速打字机显示，终态/减弱动态时直接显示全文
-  const reduceMotion = usePrefersReducedMotion();
-  const { text: shownText } = useSmoothStream(text, {
-    done: bodyStatus !== 'streaming' || reduceMotion,
-  });
+  // runtime 线程状态：消息流驱动正文渲染，运行标记驱动加载与流式态
+  const messages = useAuiState((s) => s.thread.messages);
+  const isRunning = useAuiState((s) => s.thread.isRunning);
+  const userText = readUserText(messages);
+  const { reasoning, text } = readAssistantContent(messages);
+  const segments = useWordSegments(text);
+  // 流式节拍：驱动加载指示动画与思考计时
+  const { tick, elapsedSeconds } = useStreamTick({ active: isRunning });
+
+  // 思考步骤：思考文本非空行 map 成步骤标题（无正文）
+  const reasoningSteps = useMemo(
+    () => splitNonEmptyLines(reasoning).map((title) => ({ title })),
+    [reasoning],
+  );
 
   // 流式生成中自动滚底：思考或正文增长时消息流始终贴在最新处
   useEffect(() => {
     const body = bodyRef.current;
-    if (body === null || bodyStatus !== 'streaming') {
+    if (body === null || !isRunning) {
       return;
     }
-    // 尚无流式内容时不滚动：气泡刚出现时内容仍贴顶，无需滚动
-    if (shownText === '' && reasoning === '') {
+    // 尚无流式内容时不滚动：加载指示期间内容仍贴顶，无需滚动
+    if (reasoning === '' && segments.length === 0) {
       return;
     }
     body.scrollTop = body.scrollHeight;
-  }, [shownText, reasoning, bodyStatus]);
+  }, [segments.length, reasoning, isRunning]);
 
   // 复制恢复定时器清理
   useEffect(() => () => clearTimeout(copyResetTimer.current), []);
@@ -166,6 +164,14 @@ function ChatWindow({
     }
   };
 
+  // 重新生成：重跑最近一次场景，生成中不响应（与场景按钮禁用一致）
+  const handleRegenerate = (): void => {
+    if (isRunning || lastMethod === null) {
+      return;
+    }
+    onScene(lastMethod);
+  };
+
   // 一键打开授权小窗：期间禁用防重复开窗，失败时提示可重试
   const handleAuth = (): void => {
     setAuthPending(true);
@@ -181,7 +187,7 @@ function ChatWindow({
       });
   };
 
-  // 正文渲染：错误含授权入口、空流占位，其余按消息流渲染（用户侧消息/思考行/正文）
+  // 正文渲染：错误含授权入口、空流占位，其余按消息流渲染（消息对/思考面板/加载指示）
   const renderBody = (): ReactNode => {
     if (bodyStatus === 'error') {
       return (
@@ -202,39 +208,38 @@ function ChatWindow({
         </div>
       );
     }
-    if (bodyStatus === 'idle' && reasoning === '' && text === '') {
+    if (messages.length === 0) {
       return '点击下方「生成回复」，获取下一条回复建议';
     }
-    // 消息流：用户侧消息右对齐气泡，思考行与正文左对齐
     return (
       <div className="space-y-3">
-        {sceneLabel !== '' && (
-          <div className="flex justify-end">
-            <div className="max-w-[85%] rounded-lg bg-[#27272a] px-2.5 py-1.5 text-[#d4d4d8]">
-              {bodyStatus === 'streaming'
-                ? `正在为你生成「${sceneLabel}」…`
-                : `为你生成「${sceneLabel}」`}
-            </div>
-          </div>
-        )}
-        {/* // 等待首个 token：思考与正文都未到时，显示跳动的「正在输入」指示，避免静止无反馈 */}
-        {bodyStatus === 'streaming' && reasoning === '' && text === '' && (
-          <div className="flex justify-start">
-            <div className="hijob-typing-dots rounded-lg bg-[#27272a] px-2.5 py-2">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
+        {/* // 等待首个 token：思考与正文都未到时，九宫格加载指示避免静止无反馈 */}
+        {isRunning && reasoning === '' && text === '' && (
+          <GenerationLoader label="正在生成" tick={tick} />
         )}
         {reasoning !== '' && (
-          <ReasoningRow
-            reasoning={reasoning}
-            running={bodyStatus === 'streaming' && text === ''}
+          <ReasoningPanel
+            steps={reasoningSteps}
+            visibleSteps={reasoningSteps.length}
+            streaming={isRunning && text === ''}
+            open={reasoningOpen}
+            onOpenChange={setReasoningOpen}
+            restingLabel="已思考"
+            elapsed={
+              isRunning && text === '' ? `${elapsedSeconds}s` : undefined
+            }
           />
         )}
-        {shownText !== '' && (
-          <div className="whitespace-pre-wrap break-all">{shownText}</div>
+        {/* // 消息对：用户侧场景句气泡 + AI 正文逐词显现，词到达即现 */}
+        {text !== '' && (
+          <MessagePair
+            userMessage={userText}
+            words={segments.map((segment) => segment.text)}
+            visibleWords={segments.length}
+            streaming={isRunning}
+            onCopy={() => void handleCopy()}
+            onRegenerate={handleRegenerate}
+          />
         )}
       </div>
     );
@@ -282,7 +287,7 @@ function ChatWindow({
               </Button>
             </CardAction>
           </CardHeader>
-          {/* // @ 正文区：消息流（用户侧概要/思考行/正文），错误与占位单独分支 */}
+          {/* // @ 正文区：消息流（消息对/思考面板/加载指示），错误与占位单独分支 */}
           <CardContent
             ref={bodyRef}
             className="flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8]"
@@ -339,5 +344,38 @@ function ChatWindow({
     </TooltipProvider>
   );
 }
+
+// 读取用户侧场景句：消息流首条消息的文本 part
+const readUserText = (messages: readonly ChatThreadMessage[]): string => {
+  for (const part of messages[0]?.parts ?? []) {
+    if (part.type === 'text') {
+      return part.text;
+    }
+  }
+  return '';
+};
+
+// 读取 assistant 思考与正文：消息流第二条消息按 part 类型取对应文本
+const readAssistantContent = (
+  messages: readonly ChatThreadMessage[],
+): { reasoning: string; text: string } => {
+  let reasoning = '';
+  let text = '';
+  for (const part of messages[1]?.parts ?? []) {
+    if (part.type === 'reasoning') {
+      reasoning = part.text;
+    } else if (part.type === 'text') {
+      text = part.text;
+    }
+  }
+  return { reasoning, text };
+};
+
+// 拆分思考文本为非空行：逐行 trim 后过滤空白行，作为思考步骤标题
+const splitNonEmptyLines = (text: string): string[] =>
+  text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '');
 
 export { CHAT_WINDOW_HEIGHT, CHAT_WINDOW_WIDTH, ChatWindow };
