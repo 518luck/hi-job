@@ -1,5 +1,7 @@
 'use client';
 
+// # 消息对组件：用户侧气泡 + AI 流式逐词显现的正文与悬停复制/重新生成操作
+
 import { CopyIcon, RefreshCwIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
@@ -8,15 +10,17 @@ import { cn } from '@/shared/lib/cn';
 import { take } from './range';
 import { ghostButton, paper } from './surfaces';
 
+// 消息对属性
 export interface MessagePairProps
   extends Omit<ComponentProps<'div'>, 'children'> {
-  userMessage: string;
-  words: readonly string[];
-  visibleWords: number;
-  streaming: boolean;
-  variant?: 'bubble' | 'flat';
+  userMessage: string; // 用户侧消息文本
+  words: readonly string[]; // AI 正文按词拆分后的全量词序列
+  visibleWords: number; // 当前可见词数，驱动逐词显现进度
+  streaming: boolean; // 是否仍在流式生成中（尾随光标与新鲜词高亮）
+  variant?: 'bubble' | 'flat'; // 用户消息形态：气泡或纯文本右对齐
 }
 
+// 消息对：上方用户消息、下方 AI 流式正文与悬停操作按钮
 export function MessagePair({
   userMessage,
   words,
@@ -36,16 +40,16 @@ export function MessagePair({
     >
       <p
         className={cn(
-          'max-w-[85%] self-end text-sm',
+          'max-w-[85%] self-end text-[13px]',
           variant === 'bubble'
-            ? cn(paper, 'rounded-2xl px-3.5 py-2')
+            ? cn(paper, 'rounded-lg px-2.5 py-1.5')
             : 'text-foreground/90 text-end',
         )}
       >
         {userMessage}
       </p>
       <div className="group/message flex flex-col items-start">
-        <p className="min-h-[4.25rem] text-sm leading-relaxed">
+        <p className="text-[13px] leading-relaxed">
           {shown.map((word, index) => {
             const fresh = streaming && shown.length - 1 - index < 2;
 
@@ -73,17 +77,18 @@ export function MessagePair({
             />
           )}
         </p>
+        {/* // @ 悬停操作：复制与重新生成，聚焦/悬停消息时浮现 */}
         <div className="flex items-center gap-1 pt-1 opacity-0 transition-opacity group-focus-within/message:opacity-100 group-hover/message:opacity-100 motion-reduce:transition-none">
           <button
             type="button"
-            aria-label="Copy response"
+            aria-label="复制回复"
             className={cn(ghostButton, 'size-7')}
           >
             <CopyIcon className="size-3.5" />
           </button>
           <button
             type="button"
-            aria-label="Regenerate response"
+            aria-label="重新生成"
             className={cn(ghostButton, 'size-7')}
           >
             <RefreshCwIcon className="size-3.5" />

@@ -1,16 +1,20 @@
 'use client';
 
+// # 流式正文：按词逐步显现的正文段落，支持等宽片段标记
+
 import { type ComponentProps, useMemo } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 
 import { take } from './range';
 
+// 正文片段
 export interface Segment {
-  text: string;
-  mono?: boolean;
+  text: string; // 片段文本，按空格拆词
+  mono?: boolean; // 是否等宽样式标记（如代码片段）
 }
 
+// 流式正文：segments 拆词后按 count 逐词显现，最新词高亮并带尾随光标
 export function StreamingText({
   segments,
   count,
@@ -40,7 +44,7 @@ export function StreamingText({
     <p
       data-slot="streaming-text"
       className={cn(
-        'min-h-[8.5rem] max-w-sm text-sm leading-relaxed text-pretty',
+        'max-w-sm text-[13px] leading-relaxed text-pretty',
         className,
       )}
       {...props}
@@ -50,7 +54,7 @@ export function StreamingText({
         return (
           <span
             // biome-ignore lint/suspicious/noArrayIndexKey: 流式词追加只增不重排，且词会重复无法单独作 key，索引即稳定身份
-            key={i}
+            key={`${word}-${i}`}
             className="fade-in animate-in fill-mode-both duration-500 motion-reduce:animate-none"
           >
             <span

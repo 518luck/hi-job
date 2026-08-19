@@ -1,5 +1,7 @@
 'use client';
 
+// # 思考面板：AI 推理步骤折叠列表，流式中标题扫光并逐步显现
+
 import { ChevronDownIcon } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
@@ -12,22 +14,25 @@ import {
 import { take } from './range';
 import { collapsePanel, mono, ShimmerLabel, SwapLabel } from './surfaces';
 
+// 推理步骤
 export interface ReasoningStep {
-  title: string;
-  body: string;
+  title: string; // 步骤标题
+  body: string; // 步骤正文
 }
 
+// 思考面板属性
 export interface ReasoningPanelProps {
-  steps: ReasoningStep[];
-  visibleSteps: number;
-  streaming: boolean;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  restingLabel: string;
-  elapsed?: string;
-  className?: string;
+  steps: ReasoningStep[]; // 全量推理步骤
+  visibleSteps: number; // 当前可见步骤数，驱动逐步显现
+  streaming: boolean; // 是否仍在流式思考中
+  open: boolean; // 折叠展开状态（受控）
+  onOpenChange: (open: boolean) => void; // 展开状态变更回调
+  restingLabel: string; // 思考结束后的折叠态标签文案
+  elapsed?: string; // 已耗时文案，流式中展示在标题旁
+  className?: string; // 追加到根元素的类名
 }
 
+// 思考面板：折叠触发器扫光切换「思考中/结束态」，展开后按步骤列表逐条显现
 export function ReasoningPanel({
   steps,
   visibleSteps,
@@ -47,14 +52,14 @@ export function ReasoningPanel({
       onOpenChange={onOpenChange}
       className={cn('w-full max-w-sm', className)}
     >
-      <CollapsibleTrigger className="group/trigger text-foreground/55 hover:text-foreground/90 flex items-center gap-1.5 py-1 text-[13.5px] transition-[color,scale] outline-none active:scale-[0.98]">
+      <CollapsibleTrigger className="group/trigger text-foreground/55 hover:text-foreground/90 flex items-center gap-1.5 py-1 text-[13px] transition-[color,scale] outline-none active:scale-[0.98]">
         <SwapLabel active={streaming ? 0 : 1} className="text-start">
           <>
             <ShimmerLabel
               active={streaming}
               className="relative inline-block leading-none"
             >
-              Thinking
+              思考中
             </ShimmerLabel>
             {elapsed !== undefined && (
               <span className={cn(mono, 'text-foreground/30 tabular-nums')}>
@@ -72,7 +77,8 @@ export function ReasoningPanel({
             const active = streaming && i === shown.length - 1;
             return (
               <li
-                key={step.title}
+                // biome-ignore lint/suspicious/noArrayIndexKey: 步骤标题可能重复，标题加索引才是稳定身份
+                key={`${step.title}-${i}`}
                 className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both flex gap-3 duration-300"
               >
                 <span
@@ -85,7 +91,7 @@ export function ReasoningPanel({
                   )}
                 />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <p className="text-foreground/90 text-[13.5px] font-medium">
+                  <p className="text-foreground/90 text-[13px] font-medium">
                     {step.title}
                   </p>
                   <p className="text-foreground/50 mt-0.5 text-[13px] leading-relaxed break-words">
