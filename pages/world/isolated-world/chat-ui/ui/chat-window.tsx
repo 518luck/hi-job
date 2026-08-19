@@ -25,9 +25,9 @@ import {
 
 import { useStreamTick, useWordSegments } from '../model/stream-driver';
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
-import { GenerationLoader } from './elements/loading-state';
 import { MessagePair } from './elements/message-pair';
 import { ReasoningPanel } from './elements/reasoning-panel';
+import { TypingIndicator } from './elements/typing-indicator';
 
 // 聊天窗尺寸：与父级定位计算保持一致
 const CHAT_WINDOW_WIDTH = 340;
@@ -121,7 +121,7 @@ function ChatWindow({
   const { reasoning, text } = readAssistantContent(messages);
   const segments = useWordSegments(text);
   // 流式节拍：驱动加载指示动画与思考计时
-  const { tick, elapsedSeconds } = useStreamTick({ active: isRunning });
+  const { elapsedSeconds } = useStreamTick({ active: isRunning });
 
   // 思考步骤：思考文本非空行 map 成步骤标题（无正文）
   const reasoningSteps = useMemo(
@@ -213,13 +213,9 @@ function ChatWindow({
     }
     return (
       <div className="space-y-3">
-        {/* // 等待首个 token：思考与正文都未到时，九宫格加载指示靠左小占位，避免静止无反馈 */}
+        {/* // 等待首个 token：思考与正文都未到时，裸三点输入指示靠左小占位，避免静止无反馈 */}
         {isRunning && reasoning === '' && text === '' && (
-          <GenerationLoader
-            label="正在生成"
-            tick={tick}
-            className="items-start gap-1.5"
-          />
+          <TypingIndicator variant="bare" className="py-2" />
         )}
         {reasoning !== '' && (
           <ReasoningPanel
