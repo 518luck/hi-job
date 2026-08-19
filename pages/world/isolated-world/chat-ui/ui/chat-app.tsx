@@ -22,6 +22,14 @@ const WINDOW_GAP = 12;
 // 视口边距：窗口水平定位的钳制边界
 const VIEWPORT_MARGIN = 8;
 
+// 场景方法到中文名的映射：消息流用户侧消息措辞使用
+const SCENE_LABELS: Record<AiStreamMethod, string> = {
+  greeting: '问候',
+  followUp: '提醒',
+  rejectionFeedback: '反馈',
+  generateReply: '回复',
+};
+
 // 判定当前是否聊天页：会话容器存在即认定（与旧版主世界注入条件一致）
 const isChatPageReady = (): boolean =>
   document.querySelector('.chat-conversation') !== null;
@@ -62,9 +70,11 @@ function ChatAssistant() {
   const [open, setOpen] = useState(false);
   const [windowStyle, setWindowStyle] = useState<CSSProperties>({});
   const [busyMethod, setBusyMethod] = useState<AiStreamMethod | null>(null);
+  // 当前场景中文名：消息流用户侧消息展示，终态保留、下次发起场景时覆盖
+  const [sceneLabel, setSceneLabel] = useState('');
   // 场景准备失败（无会话/无聊天记录）：与流式失败共用正文错误位
   const [sceneError, setSceneError] = useState('');
-  const { status, text, error, start, cancel } = useAiStream();
+  const { status, reasoning, text, error, start, cancel } = useAiStream();
 
   // 初次布局：按按钮实际高度校准默认停靠位
   useLayoutEffect(() => {
@@ -135,6 +145,7 @@ function ChatAssistant() {
           return;
         }
         setBusyMethod(method);
+        setSceneLabel(SCENE_LABELS[method]);
         const { jobId, jd, hr, messages } = context;
         if (method === 'greeting') {
           await start('greeting', { jobId, jd, hr });
@@ -164,6 +175,8 @@ function ChatAssistant() {
           style={windowStyle}
           bodyStatus={bodyStatus}
           text={text}
+          reasoning={reasoning}
+          sceneLabel={sceneLabel}
           errorMessage={sceneError !== '' ? sceneError : error}
           busyMethod={busyMethod}
           onScene={handleScene}

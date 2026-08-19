@@ -1,4 +1,4 @@
-// # AI 回复聊天窗（聊天 UI）：标题栏 + 正文 + 场景操作区，正文实时渲染流式生成
+// # AI 回复聊天窗（聊天 UI）：标题栏 + 正文消息流 + 场景操作区，消息流展示用户侧概要、AI 思考与正文
 
 import { Check, Copy, Loader2, X } from 'lucide-react';
 import type { CSSProperties, ReactNode, RefObject } from 'react';
@@ -24,6 +24,7 @@ import {
 } from '@/shared/ui/tooltip';
 
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
+import { ReasoningRow } from './reasoning-row';
 
 // 聊天窗尺寸：与父级定位计算保持一致
 const CHAT_WINDOW_WIDTH = 340;
@@ -93,6 +94,8 @@ interface ChatWindowProps {
   style: CSSProperties; // 定位样式，父级按悬浮按钮位置计算
   bodyStatus: StreamStatus; // 正文状态（含场景准备失败折算的 error）
   text: string; // 已生成文本，流式累加
+  reasoning: string; // 已累积的 AI 思考文本，流式累加
+  sceneLabel: string; // 当前场景中文名（问候/提醒/反馈/回复），消息流用户侧消息展示
   errorMessage: string; // 失败原因（error 态时有值）
   busyMethod: AiStreamMethod | null; // 生成中的场景，对应按钮转圈
   onScene: (method: AiStreamMethod) => void; // 发起场景生成
@@ -100,11 +103,13 @@ interface ChatWindowProps {
   tooltipContainerRef: RefObject<HTMLDivElement | null>; // 悬停气泡挂载容器（shadow 根元素）
 }
 
-// AI 回复聊天窗：正文区按状态渲染（占位/转圈/流式文本/错误），操作区发起各场景生成
+// AI 回复聊天窗：正文区按状态渲染（错误/占位/消息流），操作区发起各场景生成
 function ChatWindow({
   style,
   bodyStatus,
   text,
+  reasoning,
+  sceneLabel,
   errorMessage,
   busyMethod,
   onScene,
@@ -126,17 +131,18 @@ function ChatWindow({
     done: bodyStatus !== 'streaming' || reduceMotion,
   });
 
-  // 流式生成中自动滚底：新文本出现时正文始终贴在最新处
+  // 流式生成中自动滚底：思考或正文增长时消息流始终贴在最新处
   useEffect(() => {
     const body = bodyRef.current;
     if (body === null || bodyStatus !== 'streaming') {
       return;
     }
-    if (shownText === '') {
+    // 尚无流式内容时不滚动：气泡刚出现时内容仍贴顶，无需滚动
+    if (shownText === '' && reasoning === '') {
       return;
     }
     body.scrollTop = body.scrollHeight;
-  }, [shownText, bodyStatus]);
+  }, [shownText, reasoning, bodyStatus]);
 
   // 复制恢复定时器清理
   useEffect(() => () => clearTimeout(copyResetTimer.current), []);
@@ -175,18 +181,11 @@ function ChatWindow({
       });
   };
 
-  // 正文渲染：空流先转圈、错误含授权入口、有文本即渲染（流式用打字机文本）
+  // 正文渲染：错误含授权入口、空流占位，其余按消息流渲染（用户侧消息/思考行/正文）
   const renderBody = (): ReactNode => {
-    if (bodyStatus === 'streaming' && shownText === '') {
-      return (
-        <div className="flex h-full items-center justify-center">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
     if (bodyStatus === 'error') {
       return (
-        <div>
+        <div className="whitespace-pre-wrap break-all">
           {errorMessage}
           {errorMessage.includes(AUTH_ERROR_MARKER) && (
             <Button
@@ -203,10 +202,32 @@ function ChatWindow({
         </div>
       );
     }
-    if (shownText !== '') {
-      return shownText;
+    if (bodyStatus === 'idle' && reasoning === '' && text === '') {
+      return '点击下方「生成回复」，获取下一条回复建议';
     }
-    return '点击下方「生成回复」，获取下一条回复建议';
+    // 消息流：用户侧消息右对齐气泡，思考行与正文左对齐
+    return (
+      <div className="space-y-3">
+        {sceneLabel !== '' && (
+          <div className="flex justify-end">
+            <div className="max-w-[85%] rounded-lg bg-[#27272a] px-2.5 py-1.5 text-[#d4d4d8]">
+              {bodyStatus === 'streaming'
+                ? `正在为你生成「${sceneLabel}」…`
+                : `为你生成「${sceneLabel}」`}
+            </div>
+          </div>
+        )}
+        {reasoning !== '' && (
+          <ReasoningRow
+            reasoning={reasoning}
+            running={bodyStatus === 'streaming' && text === ''}
+          />
+        )}
+        {shownText !== '' && (
+          <div className="whitespace-pre-wrap break-all">{shownText}</div>
+        )}
+      </div>
+    );
   };
 
   // 复制按钮内容：复制中转圈、成功打对勾（图标尺寸由按钮 size 统一给）
@@ -251,10 +272,10 @@ function ChatWindow({
               </Button>
             </CardAction>
           </CardHeader>
-          {/* // @ 正文区：错误/空流转圈时内容居中 */}
+          {/* // @ 正文区：消息流（用户侧概要/思考行/正文），错误与占位单独分支 */}
           <CardContent
             ref={bodyRef}
-            className="flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8] break-all whitespace-pre-wrap"
+            className="flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8]"
           >
             {renderBody()}
           </CardContent>
