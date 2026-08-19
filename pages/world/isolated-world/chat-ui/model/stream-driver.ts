@@ -14,7 +14,7 @@ const WORD_SEGMENT_PATTERN =
 
 // useElapsedSeconds 参数
 interface UseElapsedSecondsOptions {
-  active: boolean; // 是否正在计时（失活即暂停并清零）
+  active: boolean; // 是否正在计时（失活停表保持读数，再激活清零重计）
 }
 
 // useElapsedSeconds 返回
@@ -32,7 +32,7 @@ const splitWordSegments = (text: string): Segment[] =>
 const useWordSegments = (text: string): Segment[] =>
   useMemo(() => splitWordSegments(text), [text]);
 
-// 思考计时 Hook：active 时每秒递增，失活或卸载时清理并清零
+// 思考计时 Hook：active 时每秒递增；失活停表保持读数，重新激活视为新一轮清零重计
 const useElapsedSeconds = ({
   active,
 }: UseElapsedSecondsOptions): UseElapsedSecondsResult => {
@@ -40,9 +40,9 @@ const useElapsedSeconds = ({
 
   useEffect(() => {
     if (!active) {
-      setElapsedSeconds(0);
       return;
     }
+    setElapsedSeconds(0);
     const timer = setInterval(() => {
       setElapsedSeconds((previous) => previous + 1);
     }, ELAPSED_INTERVAL_MS);
