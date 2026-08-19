@@ -103,6 +103,56 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
 }
 
+/* 思考行摘要单行截断：溢出省略号；流式中改为裁剪并由滚动跟随行尾最新文本 */
+.hijob-reasoning-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hijob-reasoning-summary[data-follow-end] {
+  text-overflow: clip;
+}
+
+/* 思考行扫光：思考流式中渐变光带自左向右循环掠过，提示进行中（参考 deepseek-harness） */
+.hijob-reasoning-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.hijob-reasoning-sweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -140px;
+  width: 140px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(250, 250, 250, 0.08) 55%,
+    transparent 100%
+  );
+  animation: hijob-reasoning-sweep 2.6s ease-out infinite;
+  pointer-events: none;
+}
+
+/* 扫光关键帧：光带自行左外侧入、划出行尾，90% 后停在行外形成循环间隙 */
+@keyframes hijob-reasoning-sweep {
+  0% {
+    left: -140px;
+  }
+  90%,
+  100% {
+    left: 100%;
+  }
+}
+
+/* 系统「减弱动态」：关闭扫光动画，光带静态收回行外不遮挡内容 */
+@media (prefers-reduced-motion: reduce) {
+  .hijob-reasoning-sweep::after {
+    animation: none;
+  }
+}
+
 /* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角/容器/断点工具类不再随宿主 <html> 字号漂移 */
 @theme {
   --spacing: 4px;
