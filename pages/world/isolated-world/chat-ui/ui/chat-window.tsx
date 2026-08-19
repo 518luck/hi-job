@@ -325,9 +325,13 @@ function ChatWindow({
                 <TooltipContent
                   align={align}
                   positionerClassName={TOOLTIP_Z_CLASS}
+                  className="max-w-[280px] text-left"
                 >
-                  <span className="font-semibold">{label} · </span>
-                  {tip}
+                  {/* 标签与说明并入同一流内文本：弹层是 inline-flex 布局，拆成两个子项时长文案会把标签挤成竖排 */}
+                  <span>
+                    <span className="font-semibold">{label} · </span>
+                    {tip}
+                  </span>
                 </TooltipContent>
               </Tooltip>
             ))}
