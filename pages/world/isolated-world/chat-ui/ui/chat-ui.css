@@ -5,6 +5,21 @@
 @source "../../../../../shared/ui";
 /* dialog.tsx 含 rem 任意值（calc(100%-2rem)）且聊天窗不使用：排除以保证产物无 rem */
 @source not "../../../../../shared/ui/dialog.tsx";
+/* 聊天窗只用 Button/Card/Tooltip：@source not 排除其余组件，砍掉死代码（产物 50KB→25KB） */
+@source not "../../../../../shared/ui/accordion.tsx";
+@source not "../../../../../shared/ui/alert-dialog.tsx";
+@source not "../../../../../shared/ui/badge.tsx";
+@source not "../../../../../shared/ui/data-table.tsx";
+@source not "../../../../../shared/ui/icons.tsx";
+@source not "../../../../../shared/ui/input.tsx";
+@source not "../../../../../shared/ui/label.tsx";
+@source not "../../../../../shared/ui/select.tsx";
+@source not "../../../../../shared/ui/switch.tsx";
+@source not "../../../../../shared/ui/table.tsx";
+@source not "../../../../../shared/ui/tabs.tsx";
+@source not "../../../../../shared/ui/textarea.tsx";
+@source not "../../../../../shared/ui/toggle-group.tsx";
+@source not "../../../../../shared/ui/toggle.tsx";
 
 /* 聊天窗固定深色：dark: 变体恒在聊天根作用域内生效，不随宿主系统明暗切换 */
 @custom-variant dark (&:is(.hijob-chat-root, .hijob-chat-root *));
@@ -87,33 +102,6 @@
   cursor: grabbing;
   transform: translateY(0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-}
-
-/* 生成中旋转图标：正文大转盘与按钮小转盘共用动画 */
-@keyframes hijob-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.hijob-loading-spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #3f3f46;
-  border-top-color: #fafafa;
-  border-radius: 50%;
-  animation: hijob-spin 0.8s linear infinite;
-}
-.hijob-button-spinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  opacity: 0.8;
-  animation: hijob-spin 0.8s linear infinite;
-  vertical-align: middle;
 }
 
 /* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角/容器/断点工具类不再随宿主 <html> 字号漂移 */
