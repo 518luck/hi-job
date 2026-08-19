@@ -54,6 +54,7 @@ const computeWindowStyle = (rect: DOMRect): CSSProperties => {
 
 // 聊天助手：持有悬浮按钮位置、窗口开关与流式状态，发起各场景生成
 function ChatAssistant() {
+  const chatRootRef = useRef<HTMLDivElement | null>(null);
   const fabRef = useRef<HTMLButtonElement | null>(null);
   const [fabPos, setFabPos] = useState<FabPosition>(() => ({
     x: FAB_DEFAULT_LEFT,
@@ -151,7 +152,7 @@ function ChatAssistant() {
   const bodyStatus = sceneError !== '' ? 'error' : status;
 
   return (
-    <div className="hijob-chat-root">
+    <div ref={chatRootRef} className="hijob-chat-root">
       <GlassFilter />
       <ChatFab
         fabRef={fabRef}
@@ -169,6 +170,7 @@ function ChatAssistant() {
           busyMethod={busyMethod}
           onScene={handleScene}
           onClose={() => setOpen(false)}
+          tooltipContainerRef={chatRootRef}
         />
       )}
     </div>

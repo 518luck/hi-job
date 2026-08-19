@@ -38,6 +38,7 @@ function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
 
 function TooltipContent({
   className,
+  positionerClassName = '',
   side = 'top',
   sideOffset = 4,
   align = 'center',
@@ -48,7 +49,13 @@ function TooltipContent({
   Pick<
     TooltipPrimitive.Positioner.Props,
     'align' | 'alignOffset' | 'side' | 'sideOffset'
-  >) {
+  > & {
+    /**
+     * 浮层定位容器附加类：用于覆盖浮层整体层级（如挂在 shadow 根时需抬高
+     * z-index 压过聊天窗自身的 z-2147483646）
+     */
+    positionerClassName?: string;
+  }) {
   // 取 Provider 配置的容器；null 经 ?? undefined 映射后走 Base UI 默认行为（挂到 body）
   const container = useContext(TooltipContainerContext);
   return (
@@ -58,7 +65,7 @@ function TooltipContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
-        className="isolate z-50"
+        className={cn('isolate z-50', positionerClassName)}
       >
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
