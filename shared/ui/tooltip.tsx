@@ -1,19 +1,21 @@
-import { createContext, useContext } from "react"
+import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
+import { createContext, useContext } from 'react';
 
-import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
+import { cn } from '@/shared/lib/cn';
 
-import { cn } from "@/shared/lib/cn"
-
-// 工具提示浮层的挂载容器上下文；null 表示默认挂到 document.body
-const TooltipContainerContext = createContext<HTMLElement | null>(null)
+// 工具提示浮层的挂载容器上下文；未配置（null）时经 ?? undefined 映射回落 document.body
+const TooltipContainerContext = createContext<HTMLElement | null>(null);
 
 function TooltipProvider({
   delay = 0,
   container = null,
   ...props
 }: TooltipPrimitive.Provider.Props & {
-  /** 浮层挂载容器，null 走 Base UI 默认行为（挂到 body） */
-  container?: HTMLElement | null
+  /**
+   * 浮层挂载容器；不传或 null 均回落 document.body（Base UI 默认行为），
+   * 传 HTMLElement 则把气泡挂载到该容器（如 shadow root 内）
+   */
+  container?: HTMLElement | null;
 }) {
   return (
     <TooltipContainerContext.Provider value={container}>
@@ -23,34 +25,34 @@ function TooltipProvider({
         {...props}
       />
     </TooltipContainerContext.Provider>
-  )
+  );
 }
 
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
 function TooltipContent({
   className,
-  side = "top",
+  side = 'top',
   sideOffset = 4,
-  align = "center",
+  align = 'center',
   alignOffset = 0,
   children,
   ...props
 }: TooltipPrimitive.Popup.Props &
   Pick<
     TooltipPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
+    'align' | 'alignOffset' | 'side' | 'sideOffset'
   >) {
-  // 取 Provider 配置的容器，把气泡留在 shadow root 内而非挂到 body
-  const container = useContext(TooltipContainerContext)
+  // 取 Provider 配置的容器；null 经 ?? undefined 映射后走 Base UI 默认行为（挂到 body）
+  const container = useContext(TooltipContainerContext);
   return (
-    <TooltipPrimitive.Portal container={container}>
+    <TooltipPrimitive.Portal container={container ?? undefined}>
       <TooltipPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
@@ -61,8 +63,8 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            "z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-none bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-none data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-            className
+            'z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-none bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-none data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+            className,
           )}
           {...props}
         >
@@ -71,7 +73,7 @@ function TooltipContent({
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>
-  )
+  );
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
