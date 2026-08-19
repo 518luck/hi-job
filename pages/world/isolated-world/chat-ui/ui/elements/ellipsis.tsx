@@ -15,8 +15,8 @@ export function Ellipsis({ className, ...props }: ComponentProps<'span'>) {
       className={cn('text-foreground/55 inline leading-none', className)}
       {...props}
     >
-      .<span className="hijob-ellipsis-pop">.</span>
-      <span className="hijob-ellipsis-pop [animation-delay:360ms]">.</span>
+      .<span className="hijob-ellipsis-2nd">.</span>
+      <span className="hijob-ellipsis-3rd">.</span>
     </span>
   );
 }

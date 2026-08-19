@@ -79,26 +79,38 @@
   background: #52525b;
 }
 
-/* > 循环省略号：后两点依次浮现、周期末整体复位，配 360ms 延迟错位形成「. .. ...」节奏；
-   点位占位恒定，宽度不随浮现变化；减弱动态时静止显示完整省略号 */
-@keyframes hijob-ellipsis-pop {
+/* > 循环省略号：第二、三点用独立同周期 keyframes 依次浮现（. → .. → ... → 复位），
+   不用 animation-delay 错位——delay 仅首个周期生效，之后相位漂移会乱序跳变；
+   点位占位恒定宽度不抖；减弱动态时静止显示完整省略号 */
+@keyframes hijob-ellipsis-2nd {
   0%,
-  30% {
+  33% {
     opacity: 0;
   }
-  35%,
-  95% {
+  38%,
+  100% {
     opacity: 1;
   }
-  100% {
+}
+@keyframes hijob-ellipsis-3rd {
+  0%,
+  66% {
     opacity: 0;
   }
+  71%,
+  100% {
+    opacity: 1;
+  }
 }
-.hijob-ellipsis-pop {
-  animation: hijob-ellipsis-pop 1.2s infinite;
+.hijob-ellipsis-2nd {
+  animation: hijob-ellipsis-2nd 1.5s infinite;
+}
+.hijob-ellipsis-3rd {
+  animation: hijob-ellipsis-3rd 1.5s infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hijob-ellipsis-pop {
+  .hijob-ellipsis-2nd,
+  .hijob-ellipsis-3rd {
     animation: none;
     opacity: 1;
   }
