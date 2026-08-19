@@ -5,3 +5,6 @@ export const FIRST_CHUNK_TIMEOUT_MS = 30_000;
 
 // chunk 间隔超时：流中途卡死的判定
 export const CHUNK_GAP_TIMEOUT_MS = 15_000;
+
+// 计时心跳间隔：流式期间驱动顶栏 total 实时跳动
+export const TIMING_TICK_MS = 200;

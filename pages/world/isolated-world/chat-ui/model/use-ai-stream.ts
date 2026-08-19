@@ -15,6 +15,7 @@ import {
 import {
   CHUNK_GAP_TIMEOUT_MS,
   FIRST_CHUNK_TIMEOUT_MS,
+  TIMING_TICK_MS,
 } from '../config/use-ai-stream';
 
 // 流式状态机：idle 空闲 / streaming 生成中 / done 完成 / error 失败
@@ -29,10 +30,11 @@ type AiStreamMethod = {
     : never;
 }[keyof ProtocolMap];
 
-// 一轮生成的耗时与用量统计：tokens 缺失（供应商未上报）时对应项不展示
+// 一轮生成的耗时与用量统计：流式中实时刷新 total，ttft 首 token 到达后锁定；
+// tokens 两项依赖结束事件的用量上报，流式中为 null（对应列不渲染）
 interface AiTimingStats {
-  ttftMs: number; // 首 token 延迟：发起 → 首个增量事件到达
-  totalMs: number; // 总耗时：发起 → 结束事件到达
+  ttftMs: number | null; // 首 token 延迟：发起 → 首个增量事件到达，未到首包为 null
+  totalMs: number; // 总耗时：流式中实时跳动，结束定格
   tokensPerSecond: number | null; // 输出速率：输出 tokens / 总耗时，用量缺失为 null
   tokens: number | null; // 输入+输出 token 总数，用量缺失为 null
 }
@@ -98,7 +100,20 @@ const useAiStream = (): UseAiStreamResult => {
     teardown();
     setStatus('error');
     setError('生成超时：模型长时间无响应，请重试');
+    setTiming(null);
   }, [teardown]);
+
+  // 标记首增量到达时刻：仅首次生效，随后锁定 ttft 展示
+  const markFirstEvent = useCallback((): void => {
+    const firstAt = firstEventAtRef.current ?? Date.now();
+    firstEventAtRef.current = firstAt;
+    const startedAt = startedAtRef.current;
+    setTiming((previous) =>
+      previous !== null && previous.ttftMs === null && startedAt !== null
+        ? { ...previous, ttftMs: firstAt - startedAt }
+        : previous,
+    );
+  }, []);
 
   // 重置空闲计时：首包与中途断流共用一套计时，仅窗口不同
   const armIdleTimer = useCallback(
@@ -131,7 +146,13 @@ const useAiStream = (): UseAiStreamResult => {
       setText('');
       setReasoning('');
       setError('');
-      setTiming(null);
+      // 统计随发起即建立：total 从 0 实时跳动，ttft 待首包锁定
+      setTiming({
+        ttftMs: null,
+        totalMs: 0,
+        tokensPerSecond: null,
+        tokens: null,
+      });
       setStatus('streaming');
       // 计时从发起 RPC 起算：ttft 含后台往返，与用户体感一致
       startedAtRef.current = Date.now();
@@ -144,6 +165,7 @@ const useAiStream = (): UseAiStreamResult => {
         requestIdRef.current = null;
         setStatus('error');
         setError(caught instanceof Error ? caught.message : '生成失败');
+        setTiming(null);
       }
     },
     [armIdleTimer, teardown],
@@ -161,13 +183,13 @@ const useAiStream = (): UseAiStreamResult => {
       }
       // 思考增量：累加到思考文本并刷新断流计时，避免长思考被误判断流
       if (event.kind === 'reasoning') {
-        firstEventAtRef.current ??= Date.now();
+        markFirstEvent();
         setReasoning((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
         return;
       }
       if (event.kind === 'chunk') {
-        firstEventAtRef.current ??= Date.now();
+        markFirstEvent();
         setText((previous) => previous + event.delta);
         armIdleTimer(CHUNK_GAP_TIMEOUT_MS);
         return;
@@ -177,12 +199,12 @@ const useAiStream = (): UseAiStreamResult => {
       if (event.kind === 'end') {
         setText(event.text);
         setStatus('done');
-        // 折算耗时统计：首增量缺失时 ttft 以结束时刻兜底（空生成场景）
+        // 定格耗时统计：ttft 未到首包以 null 呈现（空生成场景），用量两项随上报补齐
         const startedAt = startedAtRef.current ?? Date.now();
-        const firstEventAt = firstEventAtRef.current ?? Date.now();
+        const firstEventAt = firstEventAtRef.current;
         const totalMs = Date.now() - startedAt;
         setTiming({
-          ttftMs: firstEventAt - startedAt,
+          ttftMs: firstEventAt !== null ? firstEventAt - startedAt : null,
           totalMs,
           tokensPerSecond:
             event.usage !== undefined && totalMs > 0
@@ -197,12 +219,32 @@ const useAiStream = (): UseAiStreamResult => {
       }
       setStatus('error');
       setError(event.message);
+      setTiming(null);
     };
     browser.runtime.onMessage.addListener(listener);
     return () => {
       browser.runtime.onMessage.removeListener(listener);
     };
-  }, [armIdleTimer, clearIdleTimer]);
+  }, [armIdleTimer, clearIdleTimer, markFirstEvent]);
+
+  // 流式期间计时心跳：驱动顶栏 total 实时跳动，离开流式态经清理停跳
+  useEffect(() => {
+    if (status !== 'streaming') {
+      return;
+    }
+    const ticker = setInterval(() => {
+      const startedAt = startedAtRef.current;
+      if (startedAt === null) {
+        return;
+      }
+      setTiming((previous) =>
+        previous === null
+          ? previous
+          : { ...previous, totalMs: Date.now() - startedAt },
+      );
+    }, TIMING_TICK_MS);
+    return () => clearInterval(ticker);
+  }, [status]);
 
   // 组件卸载时终止在途请求，避免后台空跑
   useEffect(() => teardown, [teardown]);

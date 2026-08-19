@@ -221,13 +221,21 @@ function ChatWindow({
     );
   };
 
-  // 顶部时序统计：ttft/总耗时/输出速率/用量，生成结束后展示至下一轮（供应商未上报时省略对应项）
+  // 顶部时序统计：发起即出现并实时跳动（total），ttft 首 token 到达补入，
+  // tok/s 与 tokens 结束随用量上报补齐（供应商未上报时省略对应列）
   const renderTiming = (): ReactNode => {
     if (timing === null) {
       return null;
     }
     const stats = [
-      { label: 'ttft', value: `${(timing.ttftMs / 1000).toFixed(1)}s` },
+      ...(timing.ttftMs === null
+        ? []
+        : [
+            {
+              label: 'ttft',
+              value: `${(timing.ttftMs / 1000).toFixed(1)}s`,
+            },
+          ]),
       { label: 'total', value: `${(timing.totalMs / 1000).toFixed(1)}s` },
       ...(timing.tokensPerSecond === null
         ? []
@@ -242,10 +250,10 @@ function ChatWindow({
           ]),
     ];
     return (
-      <div className="flex items-center gap-2.5 font-mono text-[11px] text-foreground/50 tabular-nums">
+      <div className="flex items-center gap-2 font-mono text-[10px] text-foreground/50 tabular-nums">
         {stats.map(({ label, value }) => (
           <span key={label} className="flex flex-col items-center leading-none">
-            <span className="text-foreground/30 mb-0.5 text-[10px]">
+            <span className="text-foreground/30 mb-0.5 text-[9px]">
               {label}
             </span>
             {value}
