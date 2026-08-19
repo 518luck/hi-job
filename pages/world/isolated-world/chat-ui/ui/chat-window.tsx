@@ -233,11 +233,13 @@ function ChatWindow({
           height: CHAT_WINDOW_HEIGHT,
           ...style,
         }}
-        className="fixed z-2147483646 flex flex-col overflow-hidden border border-[#3f3f46] bg-[#18181b] text-[#fafafa] shadow-[0_8px_32px_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.08)]"
+        // 半透明玻璃面板：深色底降不透明度 + 背景模糊，宿主页面在毛玻璃后隐约透出
+        className="fixed z-2147483646 flex flex-col overflow-hidden border border-[#3f3f46]/80 bg-[#18181b]/75 text-[#fafafa] shadow-[0_8px_32px_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.08)] backdrop-blur-xl"
       >
-        <Card className="size-full gap-0 py-0 ring-0">
+        {/* Card 自带的实心底中和为透明，通透感由窗体根元素统一承担 */}
+        <Card className="size-full gap-0 bg-transparent py-0 ring-0">
           {/* // @ 标题栏 */}
-          <CardHeader className="items-center bg-[#27272a] px-3.5 py-2.5">
+          <CardHeader className="items-center bg-[#27272a]/70 px-3.5 py-2.5">
             <CardTitle className="text-[13px] font-semibold">AI 回复</CardTitle>
             <CardAction className="self-center">
               <Button
@@ -260,7 +262,7 @@ function ChatWindow({
             {renderBody()}
           </CardContent>
           {/* // @ 操作区：场景按钮 + 复制 */}
-          <CardFooter className="gap-2 border-border bg-[#27272a] px-3.5 py-2.5">
+          <CardFooter className="gap-2 border-border bg-[#27272a]/70 px-3.5 py-2.5">
             {SCENE_BUTTONS.map(({ label, method, tip, align }) => (
               <Tooltip key={method}>
                 <TooltipTrigger
