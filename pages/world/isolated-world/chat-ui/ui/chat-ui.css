@@ -1,7 +1,13 @@
 /* # 聊天 UI 样式：Tailwind 基座（Shadow Root 内）+ 伪元素与动画自定义层 */
-/* 类扫描限定本目录：只收聊天 UI 组件，避免扫进主世界/侧边栏代码 */
+/* 类扫描：聊天 UI 目录 + shared/ui 的 shadcn 组件类（Task 3 引用），不扫主世界/侧边栏页面代码 */
 @import "tailwindcss" source(none);
 @source "./";
+@source "../../../../../shared/ui";
+/* dialog.tsx 含 rem 任意值（calc(100%-2rem)）且聊天窗不使用：排除以保证产物无 rem */
+@source not "../../../../../shared/ui/dialog.tsx";
+
+/* 聊天窗固定深色：dark: 变体恒在聊天根作用域内生效，不随宿主系统明暗切换 */
+@custom-variant dark (&:is(.hijob-chat-root, .hijob-chat-root *));
 
 /* 宿主页 <html> 字号不受控，rem 工具类会整体漂移：UI 统一 px 定尺寸并固定字体栈 */
 /* > 深色主题 token 基座：宿主页不加载 app.css，shadcn 组件依赖的变量在此固定为聊天窗深色值 */
@@ -15,6 +21,8 @@
   --foreground: #fafafa;
   --card: #18181b;
   --card-foreground: #fafafa;
+  --popover: #27272a;
+  --popover-foreground: #fafafa;
   --primary: #fafafa;
   --primary-foreground: #18181b;
   --secondary: #27272a;
@@ -24,6 +32,7 @@
   --accent: #27272a;
   --accent-foreground: #fafafa;
   --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
   --border: #3f3f46;
   --input: #3f3f46;
   --ring: #a1a1aa;
@@ -107,7 +116,7 @@
   vertical-align: middle;
 }
 
-/* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角工具类不再随宿主 <html> 字号漂移 */
+/* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角/容器/断点工具类不再随宿主 <html> 字号漂移 */
 @theme {
   --spacing: 4px;
   --text-xs: 12px;
@@ -126,4 +135,37 @@
   --radius-2xl: 0px;
   --radius-3xl: 0px;
   --radius-4xl: 0px;
+  /* max-w-xs/sm 等容器宽度：px 化（xs≈240px 保持工具提示大致同宽） */
+  --container-xs: 240px;
+  --container-sm: 384px;
+  /* sm:/md: 等响应式断点：px 化，避免媒体查询随宿主字号漂移 */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* > 颜色工具类映射：shadcn 组件用 bg-primary/text-muted-foreground 等类，经 --color-* 解析到
+   .hijob-chat-root 里定义的深色 token（镜像 app/app.css 的 @theme inline，chart/sidebar 系列不需要） */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
