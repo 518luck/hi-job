@@ -48,7 +48,8 @@ export function MessagePair({
         className={cn(
           'max-w-[85%] self-end text-[13px]',
           variant === 'bubble'
-            ? cn(paper, 'rounded-2xl px-3.5 py-2')
+            ? // 圆角用 px 显式值：窗内 @theme 已把圆角刻度清零（直角风格），rounded-2xl 会静默失效
+              cn(paper, 'rounded-[16px] px-3.5 py-2')
             : 'text-foreground/90 text-end',
         )}
       >
