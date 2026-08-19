@@ -5,6 +5,8 @@
 @import "tw-animate-css";
 @import "tw-shimmer";
 @source "./";
+/* config 常量里嵌有类名字符串（如气泡层级 z-[2147483647]），必须纳入扫描否则产物缺类 */
+@source "../config";
 @source "../../../../../shared/ui";
 /* dialog.tsx 含 rem 任意值（calc(100%-2rem)）且聊天窗不使用：排除以保证产物无 rem */
 @source not "../../../../../shared/ui/dialog.tsx";
