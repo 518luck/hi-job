@@ -4,13 +4,20 @@
 // 剖面与折射率（IOR）算出位移场——玻璃边缘呈真实透镜折射、中心清澈。canvas 生成
 // data URL，经 SVG 滤镜的 feImage 注入；backdrop-filter 负责抓背景并模糊。
 
+import {
+  GLASS_BEZEL_RATIO,
+  GLASS_IOR,
+  GLASS_SCALE_RATIO,
+  GLASS_THICKNESS,
+  MIN_GLASS_SIZE_PX,
+  SPEC_OPACITY,
+  SPEC_SATURATION,
+} from '../config/glass';
+
 // 玻璃表面剖面函数：x ∈ [0,1] 表示从中心到边缘，返回相对高度（保留对象结构便于换剖面调参）
 const SURFACE_FNS = {
   convexSquircle: (x: number): number => (1 - (1 - x) ** 4) ** 0.25,
 } as const;
-
-// 玻璃滤镜最小生效尺寸：低于此值不生成贴图（createImageData 要求正整数，过小也无折射意义）
-const MIN_GLASS_SIZE_PX = 2;
 
 // 折射剖面入参
 interface RefractionProfileInput {
@@ -235,15 +242,6 @@ interface GlassMaps {
   specSat: number; // 折射结果饱和度
   specOpacity: number; // 高光不透明度
 }
-
-// 玻璃观感调参（小胶囊、浅色宿主页面）
-// bezelRatio 收窄折射带：折射集中在外缘、留出清澈中心，呈现「边缘折射」而非整片均匀扭曲
-const GLASS_BEZEL_RATIO = 0.45; // 折射带宽度占半径比例，越小折射越贴边
-const GLASS_IOR = 2.0; // 折射率，越大边缘弯曲越强
-const GLASS_THICKNESS = 8; // 玻璃厚度，越大边缘位移越强
-const GLASS_SCALE_RATIO = 0.9; // 位移缩放比例，让边缘弯曲在小胶囊上可见
-const SPEC_SATURATION = 1.6; // 折射饱和度
-const SPEC_OPACITY = 0.6; // 高光不透明度，让边缘反光更明显
 
 // 由元素尺寸生成位移图、高光图与滤镜数值：供 SVG 滤镜的 feImage 使用
 const buildGlassMaps = ({

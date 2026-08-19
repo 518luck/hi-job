@@ -23,6 +23,14 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
 
+import {
+  CHAT_WINDOW_HEIGHT,
+  CHAT_WINDOW_WIDTH,
+  COPY_RESET_MS,
+  HOVER_DELAY_MS,
+  SCENE_BUTTONS,
+  TOOLTIP_Z_CLASS,
+} from '../config/chat-window';
 import { useElapsedSeconds, useWordSegments } from '../model/stream-driver';
 import { pickThinkingPhrase } from '../model/thinking-phrases';
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
@@ -30,55 +38,8 @@ import { MessagePair } from './elements/message-pair';
 import { ReasoningPanel } from './elements/reasoning-panel';
 import { TypingIndicator } from './elements/typing-indicator';
 
-// 聊天窗尺寸：与父级定位计算保持一致
-const CHAT_WINDOW_WIDTH = 340;
-const CHAT_WINDOW_HEIGHT = 420;
-
-// 悬停气泡展示延迟：避免扫过按钮时频繁闪现
-const HOVER_DELAY_MS = 300;
-
-// 复制成功对勾的恢复时长
-const COPY_RESET_MS = 1200;
-
-// 悬停气泡层级：窗口自身为 z-2147483646，气泡挂 shadow 根需更高层才能压住窗口
-const TOOLTIP_Z_CLASS = 'z-[2147483647]';
-
 // 消息流条目类型：经 AssistantState 的 thread scope 推导（含 parts 的消息状态，非 legacy MessageState）
 type ChatThreadMessage = AssistantState['thread']['messages'][number];
-
-// 场景按钮元数据：文案、协议方法与使用时机说明（tip 用作悬停气泡内容；
-// align 控制气泡对齐：按按钮在窗内位置钳制 240px 气泡不溢出窗宽/视口）
-const SCENE_BUTTONS: {
-  label: string;
-  method: AiStreamMethod;
-  tip: string;
-  align: 'start' | 'center' | 'end';
-}[] = [
-  {
-    label: '问候',
-    method: 'greeting',
-    tip: '首次联系时结合职位与 HR 信息生成打招呼语',
-    align: 'start',
-  },
-  {
-    label: '提醒',
-    method: 'followUp',
-    tip: '对方已读未回时生成自然跟进；招聘者刚回复请用「回复」',
-    align: 'start',
-  },
-  {
-    label: '反馈',
-    method: 'rejectionFeedback',
-    tip: '沟通结束或被拒后，生成礼貌请教反馈的消息',
-    align: 'center',
-  },
-  {
-    label: '回复',
-    method: 'generateReply',
-    tip: '结合聊天记录与职位信息，生成下一条回复',
-    align: 'end',
-  },
-];
 
 // 聊天窗属性
 interface ChatWindowProps {
@@ -386,4 +347,4 @@ const splitNonEmptyLines = (text: string): string[] =>
     .map((line) => line.trim())
     .filter((line) => line !== '');
 
-export { CHAT_WINDOW_HEIGHT, CHAT_WINDOW_WIDTH, ChatWindow };
+export { ChatWindow };

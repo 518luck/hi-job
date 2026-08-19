@@ -12,11 +12,10 @@ import {
   aiStreamEventSchema,
 } from '@/shared/zod';
 
-// 首 chunk 超时：模型首 token 前的等待上限（思考型模型首包偏慢）
-const FIRST_CHUNK_TIMEOUT_MS = 30_000;
-
-// chunk 间隔超时：流中途卡死的判定
-const CHUNK_GAP_TIMEOUT_MS = 15_000;
+import {
+  CHUNK_GAP_TIMEOUT_MS,
+  FIRST_CHUNK_TIMEOUT_MS,
+} from '../config/use-ai-stream';
 
 // 流式状态机：idle 空闲 / streaming 生成中 / done 完成 / error 失败
 type StreamStatus = 'idle' | 'streaming' | 'done' | 'error';

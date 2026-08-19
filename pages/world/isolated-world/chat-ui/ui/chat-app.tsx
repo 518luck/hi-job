@@ -4,23 +4,16 @@ import { AssistantRuntimeProvider } from '@assistant-ui/react';
 import type { CSSProperties, ReactElement } from 'react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import {
+  FAB_DEFAULT_BOTTOM,
+  FAB_DEFAULT_LEFT,
+  VIEWPORT_MARGIN,
+  WINDOW_GAP,
+} from '../config/chat-app';
+import { CHAT_WINDOW_HEIGHT, CHAT_WINDOW_WIDTH } from '../config/chat-window';
 import { useChatRuntime } from '../model/chat-runtime';
 import { ChatFab, type FabPosition } from './chat-fab';
-import {
-  CHAT_WINDOW_HEIGHT,
-  CHAT_WINDOW_WIDTH,
-  ChatWindow,
-} from './chat-window';
-
-// 悬浮按钮默认停靠：视口左下角
-const FAB_DEFAULT_LEFT = 16;
-const FAB_DEFAULT_BOTTOM = 56;
-
-// 聊天窗与按钮的间距
-const WINDOW_GAP = 12;
-
-// 视口边距：窗口水平定位的钳制边界
-const VIEWPORT_MARGIN = 8;
+import { ChatWindow } from './chat-window';
 
 // 判定当前是否聊天页：会话容器存在即认定（与旧版主世界注入条件一致）
 const isChatPageReady = (): boolean =>

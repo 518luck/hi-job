@@ -6,10 +6,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Component, useMemo } from 'react';
 
+import { LIQUID_GLASS_FILTER_ID } from '../config/liquid-glass-filter';
 import { buildGlassMaps } from '../model/glass';
-
-// 滤镜 id：chat-ui.css 里 .hijob-fab::after 的 filter/backdrop-filter 引用此值
-const LIQUID_GLASS_FILTER_ID = 'hijob-glass-filter';
 
 // 液态玻璃滤镜属性
 interface LiquidGlassFilterProps {

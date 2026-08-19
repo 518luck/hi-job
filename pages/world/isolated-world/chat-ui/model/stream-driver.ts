@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { ELAPSED_INTERVAL_MS } from '../config/stream-driver';
 import type { Segment } from '../ui/elements/streaming-text';
-
-// 计时间隔：秒级精度递增
-const ELAPSED_INTERVAL_MS = 1000;
 
 // 词元切分：1-2 个汉字带前后并入的标点（弯引号/省略号/破折号与中文/全角标点），或不含空白与汉字的连续串（ASCII 词连同其相邻标点）；
 // 每词吞并其尾随空白（空格/换行/空行），渲染端按 pre-wrap 还原，词间不再注入分隔符

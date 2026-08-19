@@ -3,10 +3,8 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 
+import { DRAG_THRESHOLD_PX } from '../config/chat-fab';
 import { LiquidGlassFilter } from './liquid-glass-filter';
-
-// 拖拽位移阈值：低于此值视为点击抖动，不触发拖拽
-const DRAG_THRESHOLD_PX = 6;
 
 // 拖拽过程状态：pressed 按住中，dragging 已越过阈值视为拖拽
 interface DragState {
