@@ -54,31 +54,37 @@ const usePrefersReducedMotion = (): boolean => {
   return reduced;
 };
 
-// 场景按钮元数据：文案、协议方法与使用时机说明（tip 用作悬停气泡内容）
+// 场景按钮元数据：文案、协议方法与使用时机说明（tip 用作悬停气泡内容；
+// align 控制气泡对齐：按按钮在窗内位置钳制 240px 气泡不溢出窗宽/视口）
 const SCENE_BUTTONS: {
   label: string;
   method: AiStreamMethod;
   tip: string;
+  align: 'start' | 'center' | 'end';
 }[] = [
   {
     label: '问候',
     method: 'greeting',
     tip: '首次联系时结合职位与 HR 信息生成打招呼语',
+    align: 'start',
   },
   {
     label: '提醒',
     method: 'followUp',
     tip: '对方已读未回时生成自然跟进；招聘者刚回复请用「回复」',
+    align: 'start',
   },
   {
     label: '反馈',
     method: 'rejectionFeedback',
     tip: '沟通结束或被拒后，生成礼貌请教反馈的消息',
+    align: 'center',
   },
   {
     label: '回复',
     method: 'generateReply',
     tip: '结合聊天记录与职位信息，生成下一条回复',
+    align: 'end',
   },
 ];
 
@@ -189,7 +195,7 @@ function ChatWindow({
               size="sm"
               disabled={authPending}
               onClick={handleAuth}
-              className="mt-2.5"
+              className="mt-2.5 flex"
             >
               {authFailed ? '打开失败，点击重试' : '去授权'}
             </Button>
@@ -230,9 +236,9 @@ function ChatWindow({
       >
         <Card className="size-full gap-0 py-0 ring-0">
           {/* // @ 标题栏 */}
-          <CardHeader className="bg-[#27272a] px-3.5 py-2.5">
+          <CardHeader className="items-center bg-[#27272a] px-3.5 py-2.5">
             <CardTitle className="text-[13px] font-semibold">AI 回复</CardTitle>
-            <CardAction>
+            <CardAction className="self-center">
               <Button
                 type="button"
                 variant="ghost"
@@ -254,7 +260,7 @@ function ChatWindow({
           </CardContent>
           {/* // @ 操作区：场景按钮 + 复制 */}
           <CardFooter className="gap-2 border-border bg-[#27272a] px-3.5 py-2.5">
-            {SCENE_BUTTONS.map(({ label, method, tip }) => (
+            {SCENE_BUTTONS.map(({ label, method, tip, align }) => (
               <Tooltip key={method}>
                 <TooltipTrigger
                   render={
@@ -276,7 +282,10 @@ function ChatWindow({
                     </Button>
                   }
                 />
-                <TooltipContent positionerClassName={TOOLTIP_Z_CLASS}>
+                <TooltipContent
+                  align={align}
+                  positionerClassName={TOOLTIP_Z_CLASS}
+                >
                   <span className="font-semibold">{label} · </span>
                   {tip}
                 </TooltipContent>
