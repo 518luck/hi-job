@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "tw-shimmer";
 @import "shadcn/tailwind.css";
 /* lyra 风格签名字体：JetBrains Mono（本地打包，与扩展一致） */
 @import "@fontsource-variable/jetbrains-mono";
@@ -137,4 +138,100 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+}
+
+/* > 聊天演示窗（chat-demo）：扫描光效依赖 tw-shimmer；窗内固定深色 token
+   （与扩展聊天窗同值），使 elements 组件在亮色落地页上呈现产品真实观感；
+   字号体系与宿主页解耦，字体回到系统无衬线 */
+.chat-demo {
+  --background: #18181b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #27272a;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #3f3f46;
+  --input: #3f3f46;
+  --ring: #a1a1aa;
+  --radius: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+}
+
+/* > 循环省略号：与扩展同款——第二、三点独立同周期 keyframes 依次浮现（. → .. → ... → 复位） */
+@keyframes hijob-ellipsis-2nd {
+  0%,
+  33% {
+    opacity: 0;
+  }
+  38%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes hijob-ellipsis-3rd {
+  0%,
+  66% {
+    opacity: 0;
+  }
+  71%,
+  100% {
+    opacity: 1;
+  }
+}
+.hijob-ellipsis-2nd {
+  animation: hijob-ellipsis-2nd 1.5s infinite;
+}
+.hijob-ellipsis-3rd {
+  animation: hijob-ellipsis-3rd 1.5s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hijob-ellipsis-2nd,
+  .hijob-ellipsis-3rd {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* > 演示窗正文区滚动条：深色细条（与扩展同款） */
+.hijob-chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.hijob-chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.hijob-chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hijob-chat-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* > 界面一览区光晕背景：两团低饱和柔光（蓝紫），衬托产品界面层次，克制不抢戏 */
+.showcase-glow {
+  background:
+    radial-gradient(
+      560px 380px at 26% 24%,
+      color-mix(in oklch, #6366f1 9%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      520px 400px at 82% 68%,
+      color-mix(in oklch, #8b5cf6 8%, transparent),
+      transparent 72%
+    );
 }
