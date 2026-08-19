@@ -55,11 +55,10 @@
   --radius: 0;
 }
 
-/* 液态玻璃悬浮按钮：::after 承载「backdrop 模糊 + SVG 噪声位移」折射层（z-index:-1），
-   ::before 叠玻璃染色与内侧高光，文字浮于最上；宿主页面恒为浅色，文字与描边用深色保证对比 */
+/* 液态玻璃悬浮按钮：::after 用物理折射滤镜扭曲背后页面（backdrop-filter 抓取并模糊），
+   ::before 叠玻璃染色与内侧高光，文字浮于最上；宿主页面恒为浅色，文字用深色保证对比 */
 .hijob-fab {
   padding: 9px 18px;
-  border: 1px solid rgba(24, 24, 27, 0.08);
   border-radius: 999px;
   background: transparent;
   color: #18181b;
@@ -69,9 +68,7 @@
   user-select: none;
   touch-action: none;
   isolation: isolate;
-  box-shadow:
-    0 6px 24px rgba(0, 0, 0, 0.2),
-    0 0 0 0 rgba(0, 0, 0, 0);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   transition:
     box-shadow 0.15s,
     transform 0.15s;
@@ -80,28 +77,30 @@
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.7);
+  z-index: 1;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 14px -4px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
 }
 .hijob-fab::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: 999px;
-  backdrop-filter: blur(2px);
-  filter: url(#hijob-glass-distortion);
+  border-radius: inherit;
+  backdrop-filter: blur(0.5px);
+  filter: url(#hijob-glass-filter);
+  isolation: isolate;
 }
 .hijob-fab:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 .hijob-fab:active {
   cursor: grabbing;
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
 }
 
 /* > px 钉定：Tailwind v4 @theme 机制，把 rem 基座改为 px，间距/字号/圆角/容器/断点工具类不再随宿主 <html> 字号漂移 */

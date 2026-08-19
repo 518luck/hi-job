@@ -11,7 +11,6 @@ import {
   CHAT_WINDOW_WIDTH,
   ChatWindow,
 } from './chat-window';
-import { GlassFilter } from './glass-filter';
 
 // 悬浮按钮默认停靠：视口左下角
 const FAB_DEFAULT_LEFT = 16;
@@ -153,7 +152,6 @@ function ChatAssistant() {
 
   return (
     <div ref={chatRootRef} className="hijob-chat-root">
-      <GlassFilter />
       <ChatFab
         fabRef={fabRef}
         pos={fabPos}

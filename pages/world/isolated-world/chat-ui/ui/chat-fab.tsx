@@ -1,7 +1,9 @@
 // # AI 回复悬浮按钮（聊天 UI）：液态玻璃胶囊，按住拖拽改变位置，点击切换聊天窗显隐
 
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import { useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+
+import { LiquidGlassFilter } from './liquid-glass-filter';
 
 // 拖拽位移阈值：低于此值视为点击抖动，不触发拖拽
 const DRAG_THRESHOLD_PX = 6;
@@ -40,6 +42,21 @@ function ChatFab({ fabRef, pos, onPosChange, onToggle }: ChatFabProps) {
     pressed: false,
     dragging: false,
   });
+  // 按钮实际渲染尺寸：位移/高光贴图按此尺寸生成，尺寸变化时重建。
+  // useLayoutEffect 在绘制前同步测得，避免首帧无滤镜的闪烁
+  const [pillSize, setPillSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const el = fabRef.current;
+    if (el === null) {
+      return;
+    }
+    const update = (): void =>
+      setPillSize({ width: el.offsetWidth, height: el.offsetHeight });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fabRef]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -100,18 +117,22 @@ function ChatFab({ fabRef, pos, onPosChange, onToggle }: ChatFabProps) {
   };
 
   return (
-    <button
-      ref={fabRef}
-      type="button"
-      className="hijob-fab fixed z-2147483646"
-      style={{ left: pos.x, top: pos.y }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-    >
-      <span className="relative z-1">AI 回复</span>
-    </button>
+    <>
+      <button
+        ref={fabRef}
+        type="button"
+        className="hijob-fab fixed z-2147483646"
+        style={{ left: pos.x, top: pos.y }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      >
+        <span className="relative z-1">AI 回复</span>
+      </button>
+      {/* // > 液态玻璃滤镜：按按钮实际尺寸生成位移/高光图，供 ::after 引用 */}
+      <LiquidGlassFilter width={pillSize.width} height={pillSize.height} />
+    </>
   );
 }
 
