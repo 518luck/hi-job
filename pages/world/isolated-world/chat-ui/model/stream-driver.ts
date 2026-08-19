@@ -7,9 +7,9 @@ import type { Segment } from '../ui/elements/streaming-text';
 // 节拍默认间隔：约每 150ms 显现一个词
 const DEFAULT_TICK_INTERVAL_MS = 150;
 
-// 词元切分：1-2 个汉字后跟随并入的中文标点，或不含空白与 CJK 字符的连续串
+// 词元切分：1-2 个汉字带前后并入的标点（弯引号/省略号/破折号与中文/全角标点），或不含空白与汉字的连续串（ASCII 词连同其相邻标点）
 const WORD_SEGMENT_PATTERN =
-  /[\u4e00-\u9fff]{1,2}[\u3001-\u303f\uff00-\uffef]*|[^\s\u4e00-\u9fff\u3001-\u303f\uff00-\uffef]+/gu;
+  /[\u2013-\u2026\u3001-\u303f\uff00-\uffef]?[\u4e00-\u9fff]{1,2}[\u2013-\u2026\u3001-\u303f\uff00-\uffef]*|[^\s\u4e00-\u9fff]+/gu;
 
 // useStreamTick 参数
 interface UseStreamTickOptions {
