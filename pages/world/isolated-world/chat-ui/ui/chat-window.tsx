@@ -296,6 +296,7 @@ function ChatWindow({
               variant="outline"
               size="sm"
               className="flex-1"
+              aria-label="复制"
               disabled={copyState === 'copying'}
               onClick={() => void handleCopy()}
             >
