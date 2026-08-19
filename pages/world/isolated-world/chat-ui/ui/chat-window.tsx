@@ -24,6 +24,7 @@ import {
 } from '@/shared/ui/tooltip';
 
 import { useElapsedSeconds, useWordSegments } from '../model/stream-driver';
+import { pickThinkingPhrase } from '../model/thinking-phrases';
 import type { AiStreamMethod, StreamStatus } from '../model/use-ai-stream';
 import { MessagePair } from './elements/message-pair';
 import { ReasoningPanel } from './elements/reasoning-panel';
@@ -120,8 +121,9 @@ function ChatWindow({
   const userText = readUserText(messages);
   const { reasoning, text } = readAssistantContent(messages);
   const segments = useWordSegments(text);
-  // 思考计时：流式期间驱动思考面板的耗时展示
+  // 思考计时：流式期间驱动思考面板的耗时展示；短语随当前时间定时随机切换
   const { elapsedSeconds } = useElapsedSeconds({ active: isRunning });
+  const streamingLabel = pickThinkingPhrase(Date.now());
 
   // 思考步骤：思考文本非空行 map 成步骤标题（无正文）
   const reasoningSteps = useMemo(
@@ -235,6 +237,7 @@ function ChatWindow({
               open={reasoningOpen}
               onOpenChange={setReasoningOpen}
               restingLabel="已思考"
+              streamingLabel={streamingLabel}
               elapsed={
                 isRunning && text === '' ? `${elapsedSeconds}s` : undefined
               }
