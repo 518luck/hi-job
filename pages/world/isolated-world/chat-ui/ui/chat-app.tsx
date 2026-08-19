@@ -144,6 +144,13 @@ function ChatAssistant() {
           setSceneError('暂无聊天记录（页面可能还在加载）');
           return;
         }
+        // 提醒（跟进）要求末条是求职者自己发的：末条是对方时引导改用「回复」，避免走到后台报「参数不合法」
+        if (method === 'followUp' && context.messages.at(-1)?.role !== 'self') {
+          setSceneError(
+            '「提醒」用于你发出最后一条消息后对方未回复的场景；对方刚回复，请改用「回复」',
+          );
+          return;
+        }
         setBusyMethod(method);
         setSceneLabel(SCENE_LABELS[method]);
         const { jobId, jd, hr, messages } = context;
