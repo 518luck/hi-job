@@ -36,7 +36,7 @@ export const SCENE_BUTTONS: readonly SceneButton[] = [
   {
     label: '提醒',
     method: 'followUp',
-    tip: '对方已读未回时生成自然跟进；',
+    tip: '对方已读未回时生成自然跟进',
     align: 'start',
   },
   {

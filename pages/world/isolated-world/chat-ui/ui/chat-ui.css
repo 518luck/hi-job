@@ -81,6 +81,15 @@
   background: #52525b;
 }
 
+/* > 窗内按钮统一手型光标：base-lyra 按钮默认不带 cursor:pointer，悬停统一给手型反馈；
+   禁用态给禁止符；悬浮按钮排除（它有自己的 grab/grabbing 拖拽光标） */
+.hijob-chat-root button:not(.hijob-fab) {
+  cursor: pointer;
+}
+.hijob-chat-root button:not(.hijob-fab):disabled {
+  cursor: not-allowed;
+}
+
 /* > 循环省略号：第二、三点用独立同周期 keyframes 依次浮现（. → .. → ... → 复位），
    不用 animation-delay 错位——delay 仅首个周期生效，之后相位漂移会乱序跳变；
    点位占位恒定宽度不抖；减弱动态时静止显示完整省略号 */
