@@ -3,7 +3,7 @@
 // # 消息对组件：用户侧气泡 + AI 流式逐词显现的正文与悬停复制/重新生成操作
 
 import { CopyIcon, RefreshCwIcon } from 'lucide-react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 
@@ -20,9 +20,10 @@ export interface MessagePairProps
   variant?: 'bubble' | 'flat'; // 用户消息形态：气泡或纯文本右对齐
   onCopy?: () => void; // 悬停复制回调：复制 AI 正文全文
   onRegenerate?: () => void; // 悬停重新生成回调：重跑当前场景
+  children?: ReactNode; // 插在用户气泡与 AI 正文之间的内容（如思考面板），保持「请求 → 思考 → 正文」顺序
 }
 
-// 消息对：上方用户消息、下方 AI 流式正文与悬停操作按钮
+// 消息对：上方用户消息、中间可选插槽、下方 AI 流式正文与悬停操作按钮
 export function MessagePair({
   userMessage,
   words,
@@ -31,6 +32,7 @@ export function MessagePair({
   variant = 'bubble',
   onCopy,
   onRegenerate,
+  children,
   className,
   ...props
 }: MessagePairProps) {
@@ -52,6 +54,7 @@ export function MessagePair({
       >
         {userMessage}
       </p>
+      {children}
       <div className="group/message flex flex-col items-start">
         {/* // 词序列：词文本自带原尾随空白，pre-wrap 还原空格与换行，break-all 防长串溢出 */}
         <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-all">
@@ -82,25 +85,27 @@ export function MessagePair({
             />
           )}
         </p>
-        {/* // @ 悬停操作：复制与重新生成，聚焦/悬停消息时浮现 */}
-        <div className="flex items-center gap-1 pt-1 opacity-0 transition-opacity group-focus-within/message:opacity-100 group-hover/message:opacity-100 motion-reduce:transition-none">
-          <button
-            type="button"
-            aria-label="复制回复"
-            onClick={onCopy}
-            className={cn(ghostButton, 'size-7')}
-          >
-            <CopyIcon className="size-3.5" />
-          </button>
-          <button
-            type="button"
-            aria-label="重新生成"
-            onClick={onRegenerate}
-            className={cn(ghostButton, 'size-7')}
-          >
-            <RefreshCwIcon className="size-3.5" />
-          </button>
-        </div>
+        {/* // @ 悬停操作：复制与重新生成，聚焦/悬停消息时浮现；正文未到时隐藏（思考阶段无内容可操作） */}
+        {shown.length > 0 && (
+          <div className="flex items-center gap-1 pt-1 opacity-0 transition-opacity group-focus-within/message:opacity-100 group-hover/message:opacity-100 motion-reduce:transition-none">
+            <button
+              type="button"
+              aria-label="复制回复"
+              onClick={onCopy}
+              className={cn(ghostButton, 'size-7')}
+            >
+              <CopyIcon className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              aria-label="重新生成"
+              onClick={onRegenerate}
+              className={cn(ghostButton, 'size-7')}
+            >
+              <RefreshCwIcon className="size-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -211,37 +211,37 @@ function ChatWindow({
     if (messages.length === 0) {
       return '点击下方「生成回复」，获取下一条回复建议';
     }
+    // 消息对整体：场景发起即挂载（用户气泡立刻在场），思考与等待指示插在气泡与正文之间，
+    // 保持「请求 → 思考 → 正文」的阅读顺序，正文到达时不再有元素中途插入
     return (
-      <div className="space-y-3">
-        {/* // 等待首个 token：思考与正文都未到时，裸三点输入指示靠左小占位，避免静止无反馈 */}
-        {isRunning && reasoning === '' && text === '' && (
-          <TypingIndicator variant="bare" className="py-2" />
-        )}
-        {reasoning !== '' && (
-          <ReasoningPanel
-            steps={reasoningSteps}
-            visibleSteps={reasoningSteps.length}
-            streaming={isRunning && text === ''}
-            open={reasoningOpen}
-            onOpenChange={setReasoningOpen}
-            restingLabel="已思考"
-            elapsed={
-              isRunning && text === '' ? `${elapsedSeconds}s` : undefined
-            }
-          />
-        )}
-        {/* // 消息对：用户侧场景句气泡 + AI 正文逐词显现，词到达即现 */}
-        {text !== '' && (
-          <MessagePair
-            userMessage={userText}
-            words={segments.map((segment) => segment.text)}
-            visibleWords={segments.length}
-            streaming={isRunning}
-            onCopy={() => void handleCopy()}
-            onRegenerate={handleRegenerate}
-          />
-        )}
-      </div>
+      <MessagePair
+        userMessage={userText}
+        words={segments.map((segment) => segment.text)}
+        visibleWords={segments.length}
+        streaming={isRunning}
+        onCopy={() => void handleCopy()}
+        onRegenerate={handleRegenerate}
+      >
+        <div className="w-full space-y-3">
+          {/* // 等待首个 token：思考与正文都未到时，裸三点输入指示靠左小占位，避免静止无反馈 */}
+          {isRunning && reasoning === '' && text === '' && (
+            <TypingIndicator variant="bare" className="py-2" />
+          )}
+          {reasoning !== '' && (
+            <ReasoningPanel
+              steps={reasoningSteps}
+              visibleSteps={reasoningSteps.length}
+              streaming={isRunning && text === ''}
+              open={reasoningOpen}
+              onOpenChange={setReasoningOpen}
+              restingLabel="已思考"
+              elapsed={
+                isRunning && text === '' ? `${elapsedSeconds}s` : undefined
+              }
+            />
+          )}
+        </div>
+      </MessagePair>
     );
   };
 
