@@ -12,9 +12,9 @@ import {
   CollapsibleTrigger,
 } from '@/shared/ui/collapsible';
 
+import { Ellipsis } from './ellipsis';
 import { take } from './range';
 import { collapsePanel, mono, ShimmerLabel, SwapLabel } from './surfaces';
-import { TypingIndicator } from './typing-indicator';
 
 // 推理步骤
 export interface ReasoningStep {
@@ -76,8 +76,8 @@ export function ReasoningPanel({
             >
               {streamingLabel}
             </ShimmerLabel>
-            {/* 短语后的跳动三点：短语文本已表意，指示器对读屏隐藏 */}
-            <TypingIndicator variant="bare" aria-hidden className="gap-0.5" />
+            {/* 短语后的循环省略号：短语文本已表意，动画对读屏隐藏 */}
+            <Ellipsis />
             {elapsed !== undefined && (
               <span className={cn(mono, 'text-foreground/30 tabular-nums')}>
                 {elapsed}

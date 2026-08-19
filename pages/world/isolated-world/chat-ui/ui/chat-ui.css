@@ -60,6 +60,7 @@
 
 /* > 正文区滚动条：深色细条贴合窗体，默认与边框同色（走 token）、悬停加深，轨道透明不占视觉；
    Firefox 构建走 scrollbar-width/color 标准属性，Chrome 走 webkit 前缀伪元素 */
+
 .hijob-chat-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -76,6 +77,31 @@
 }
 .hijob-chat-scroll::-webkit-scrollbar-thumb:hover {
   background: #52525b;
+}
+
+/* > 循环省略号：后两点依次浮现、周期末整体复位，配 360ms 延迟错位形成「. .. ...」节奏；
+   点位占位恒定，宽度不随浮现变化；减弱动态时静止显示完整省略号 */
+@keyframes hijob-ellipsis-pop {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  35%,
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.hijob-ellipsis-pop {
+  animation: hijob-ellipsis-pop 1.2s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hijob-ellipsis-pop {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* 液态玻璃悬浮按钮：::after 用物理折射滤镜扭曲背后页面（backdrop-filter 抓取并模糊），
