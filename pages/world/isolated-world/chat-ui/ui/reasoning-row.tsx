@@ -1,6 +1,6 @@
 // # 思考行：AI 思考文本折叠展示，默认收起为弱化单行摘要，流式中叠加扫光动画
 
-import { BrainCircuit, ChevronDown, ChevronRight } from 'lucide-react';
+import { Brain, ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/shared/lib/cn';
@@ -59,7 +59,7 @@ function ReasoningRow({ reasoning, running }: ReasoningRowProps) {
         )}
       >
         <ChevronIcon className="size-3.5 shrink-0 text-[#71717a]" />
-        <BrainCircuit className="size-3.5 shrink-0 text-[#a1a1aa]" />
+        <Brain className="size-3.5 shrink-0 text-[#a1a1aa]" />
         <span className="shrink-0 text-[#a1a1aa]">思考</span>
         <span
           aria-hidden
@@ -76,7 +76,7 @@ function ReasoningRow({ reasoning, running }: ReasoningRowProps) {
       </button>
       {/* // @ 展开正文：弱化灰色、左缩进对齐标题、保留换行 */}
       {expanded && (
-        <div className="py-1 pl-9 text-[#71717a] leading-[1.7] whitespace-pre-wrap break-words">
+        <div className="py-1 pl-9 text-[#71717a] leading-[1.7] whitespace-pre-wrap wrap-break-word">
           {reasoning}
         </div>
       )}
