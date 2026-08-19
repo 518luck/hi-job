@@ -60,8 +60,8 @@ export function MessagePair({
 
             return (
               <span
-                // biome-ignore lint/suspicious/noArrayIndexKey: 流式词追加只增不重排，且词会重复无法单独作 key，索引即稳定身份
-                key={`${word}-${index}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: 流式词追加只增不重排且会重复；词文本含尾随空白随 chunk 增长，索引才是稳定身份（文本 key 会重挂重放淡入）
+                key={index}
                 className="fade-in animate-in fill-mode-both duration-500 motion-reduce:animate-none"
               >
                 <span

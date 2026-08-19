@@ -77,8 +77,8 @@ export function ReasoningPanel({
             const active = streaming && i === shown.length - 1;
             return (
               <li
-                // biome-ignore lint/suspicious/noArrayIndexKey: 步骤标题可能重复，标题加索引才是稳定身份
-                key={`${step.title}-${i}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: 步骤列表只前缀追加不重排，且末步标题随流式增长，索引才是稳定身份（文本 key 会重挂重放入场动画）
+                key={i}
                 className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both flex gap-3 duration-300"
               >
                 <span
