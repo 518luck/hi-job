@@ -290,7 +290,7 @@ function ChatWindow({
           {/* // @ 正文区：消息流（消息对/思考面板/加载指示），错误与占位单独分支 */}
           <CardContent
             ref={bodyRef}
-            className="flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8]"
+            className="hijob-chat-scroll flex-1 overflow-y-auto border-t border-border px-3.5 py-3 text-[13px] leading-[1.8]"
           >
             {renderBody()}
           </CardContent>

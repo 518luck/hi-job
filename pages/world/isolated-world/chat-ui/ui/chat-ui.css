@@ -58,6 +58,26 @@
   --radius: 0;
 }
 
+/* > 正文区滚动条：深色细条贴合窗体，默认与边框同色、悬停加深，轨道透明不占视觉；
+   Firefox 构建走 scrollbar-width/color 标准属性，Chrome 走 webkit 前缀伪元素 */
+.hijob-chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+.hijob-chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.hijob-chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hijob-chat-scroll::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+.hijob-chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
 /* 液态玻璃悬浮按钮：::after 用物理折射滤镜扭曲背后页面（backdrop-filter 抓取并模糊），
    ::before 叠玻璃染色与内侧高光，文字浮于最上；宿主页面恒为浅色，文字用深色保证对比 */
 .hijob-fab {
