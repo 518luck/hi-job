@@ -38,11 +38,7 @@ interface DeltaBufferOptions {
 }
 
 // 增量缓冲器：同类增量在攒批窗口内合并，到期一次推送；提供残余冲刷与丢弃
-const createDeltaBuffer = ({
-  requestId,
-  tabId,
-  kind,
-}: DeltaBufferOptions) => {
+const createDeltaBuffer = ({ requestId, tabId, kind }: DeltaBufferOptions) => {
   let buffer = '';
   let flushTimer: ReturnType<typeof setTimeout> | undefined;
 

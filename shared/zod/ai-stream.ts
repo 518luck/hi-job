@@ -1,7 +1,7 @@
 // # ai-stream 消息：AI 流式生成的事件 DTO（后台推送信封 hiJobStream 的内层结构）
 import { z } from 'zod';
 
-// 流式请求句柄：启动消息立即返回，后续 chunk/end/error 事件按 requestId 关联
+// 流式请求句柄：启动消息立即返回，后续 reasoning/chunk/end/error 事件按 requestId 关联
 const aiStreamHandleSchema = z.object({
   requestId: z.string().min(1), // 流式请求唯一 id
 });

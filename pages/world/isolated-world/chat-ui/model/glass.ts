@@ -6,8 +6,7 @@
 
 // 玻璃表面剖面函数：x ∈ [0,1] 表示从中心到边缘，返回相对高度（保留对象结构便于换剖面调参）
 const SURFACE_FNS = {
-  convexSquircle: (x: number): number =>
-    Math.pow(1 - Math.pow(1 - x, 4), 0.25),
+  convexSquircle: (x: number): number => (1 - (1 - x) ** 4) ** 0.25,
 } as const;
 
 // 玻璃滤镜最小生效尺寸：低于此值不生成贴图（createImageData 要求正整数，过小也无折射意义）
@@ -247,7 +246,11 @@ const SPEC_SATURATION = 1.6; // 折射饱和度
 const SPEC_OPACITY = 0.6; // 高光不透明度，让边缘反光更明显
 
 // 由元素尺寸生成位移图、高光图与滤镜数值：供 SVG 滤镜的 feImage 使用
-const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => {
+const buildGlassMaps = ({
+  width,
+  height,
+  radius,
+}: GlassMapInput): GlassMaps => {
   // 尺寸未测得（首帧为 0）时返回空贴图，由组件据此跳过渲染，避免 createImageData 崩溃
   if (width < MIN_GLASS_SIZE_PX || height < MIN_GLASS_SIZE_PX) {
     return {
