@@ -176,7 +176,7 @@ function ChatWindow({
     if (messages.length === 0) {
       // 空态居中弱化：玻璃面板上的安静邀请，而不是贴顶的裸文本
       return (
-        <div className="flex h-full items-center justify-center px-4 text-center text-[#a1a1aa]">
+        <div className="text-muted-foreground flex h-full items-center justify-center px-4 text-center">
           点击下方「生成回复」，获取下一条回复建议
         </div>
       );
@@ -244,8 +244,9 @@ function ChatWindow({
       >
         {/* Card 自带的实心底中和为透明，玻璃材料由窗体根统一承担 */}
         <Card className="size-full gap-0 bg-transparent py-0 ring-0">
-          {/* // @ 标题栏：玻璃上的微亮层（不再是灰块），结构与正文用发丝线分层 */}
-          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5">
+          {/* // @ 标题栏：玻璃上的微亮层（不再是灰块），结构与正文用发丝线分层；
+              [.border-b]:pb-2.5 压回 Card 内置 border-b 变体的 --card-spacing 下边距，保持上下对称 */}
+          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5 [.border-b]:pb-2.5">
             <CardTitle className="text-[13px] font-semibold">AI 回复</CardTitle>
             <CardAction className="self-center">
               <Button

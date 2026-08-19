@@ -31,7 +31,7 @@ export interface ReasoningPanelProps {
   onOpenChange: (open: boolean) => void; // 展开状态变更回调
   restingLabel: string; // 思考结束后的折叠态标签文案
   elapsed?: string; // 已耗时文案，流式中展示在标题旁
-  streamingLabel?: string; // 流式中的标题文案，默认「思考中」，可由调用方按思考时长递进切换
+  streamingLabel?: string; // 流式中的标题文案，默认「思考中」，可由调用方随时间随机切换
   className?: string; // 追加到根元素的类名
 }
 

@@ -179,11 +179,11 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     convertMessage,
   });
 
-  // 发起场景：记录方法后经 runtime 通道追加用户消息（内容仅作触发，实际展示走 scenePhrase），由 onNew 消费执行
+  // 发起场景：记录方法后经 runtime 通道追加触发消息（内容仅作 onNew 触发，实际展示走 scenePhrase）
   const startScene = useCallback(
     (method: AiStreamMethod): void => {
       pendingMethodRef.current = method;
-      runtime.thread.append(pickScenePhrase(method));
+      runtime.thread.append(method);
     },
     [runtime],
   );

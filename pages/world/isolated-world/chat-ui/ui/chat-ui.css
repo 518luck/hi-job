@@ -90,9 +90,9 @@
   cursor: not-allowed;
 }
 
-/* > 循环省略号：第二、三点用独立同周期 keyframes 依次浮现（. → .. → ... → 复位），
-   不用 animation-delay 错位——delay 仅首个周期生效，之后相位漂移会乱序跳变；
-   点位占位恒定宽度不抖；减弱动态时静止显示完整省略号 */
+/* > 循环省略号：第二、三点用独立同周期 keyframes 依次浮现（. → .. → ... → 复位）；
+   不用 animation-delay 错位——正 delay 的元素在延迟窗口内没有回填（缺 backwards fill-mode），
+   会以自然不透明度先闪现再进入动画；点位占位恒定宽度不抖；减弱动态时静止显示完整省略号 */
 @keyframes hijob-ellipsis-2nd {
   0%,
   33% {
