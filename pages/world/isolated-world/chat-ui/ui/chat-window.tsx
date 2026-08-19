@@ -136,11 +136,11 @@ function ChatWindow({
       return;
     }
     // 尚无流式内容时不滚动：加载指示期间内容仍贴顶，无需滚动
-    if (reasoning === '' && segments.length === 0) {
+    if (reasoning === '' && text === '') {
       return;
     }
     body.scrollTop = body.scrollHeight;
-  }, [segments.length, reasoning, isRunning]);
+  }, [text, reasoning, isRunning]);
 
   // 复制恢复定时器清理
   useEffect(() => () => clearTimeout(copyResetTimer.current), []);

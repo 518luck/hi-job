@@ -53,7 +53,8 @@ export function MessagePair({
         {userMessage}
       </p>
       <div className="group/message flex flex-col items-start">
-        <p className="text-[13px] leading-relaxed">
+        {/* // 词序列：词文本自带原尾随空白，pre-wrap 还原空格与换行，break-all 防长串溢出 */}
+        <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-all">
           {shown.map((word, index) => {
             const fresh = streaming && shown.length - 1 - index < 2;
 
@@ -70,7 +71,7 @@ export function MessagePair({
                   )}
                 >
                   {word}
-                </span>{' '}
+                </span>
               </span>
             );
           })}

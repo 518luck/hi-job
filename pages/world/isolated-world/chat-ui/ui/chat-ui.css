@@ -1,5 +1,5 @@
 /* # 聊天 UI 样式：Tailwind 基座（Shadow Root 内）+ 伪元素与动画自定义层 */
-/* 类扫描：聊天 UI 目录 + shared/ui 的 shadcn 组件类（Task 3 引用），不扫主世界/侧边栏页面代码 */
+/* 类扫描：聊天 UI 目录 + shared/ui 的 shadcn 组件类，不扫主世界/侧边栏页面代码 */
 @import "tailwindcss" source(none);
 /* > elements 动画与扫光依赖：tw-animate-css 提供 animate-in/fade-in 等类，tw-shimmer 提供 shimmer 类 */
 @import "tw-animate-css";
@@ -8,7 +8,7 @@
 @source "../../../../../shared/ui";
 /* dialog.tsx 含 rem 任意值（calc(100%-2rem)）且聊天窗不使用：排除以保证产物无 rem */
 @source not "../../../../../shared/ui/dialog.tsx";
-/* 聊天窗只用 Button/Card/Tooltip：@source not 排除其余组件，砍掉死代码（产物 50KB→25KB） */
+/* 聊天窗只用 Button/Card/Tooltip/Collapsible：@source not 排除其余组件，砍掉未引用的死代码 */
 @source not "../../../../../shared/ui/accordion.tsx";
 @source not "../../../../../shared/ui/alert-dialog.tsx";
 @source not "../../../../../shared/ui/badge.tsx";
