@@ -240,7 +240,7 @@ function Lamp({ level }: LampProps) {
   return (
     <span
       aria-hidden
-      className={cn('size-1.5 rounded-[2px] transition-colors', tone)}
+      className={cn('size-1.5 rounded-xs transition-colors', tone)}
     />
   );
 }
