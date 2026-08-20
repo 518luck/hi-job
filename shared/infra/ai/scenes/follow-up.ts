@@ -1,5 +1,9 @@
 // # AI 跟进消息生成：招聘沟通暂时中断时，结合 JD、HR、简历与聊天记录自然续聊
-import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
+import {
+  aiPreferenceStore,
+  resumeStore,
+  resumeSupplementStore,
+} from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
   HrInfo,
@@ -43,6 +47,7 @@ const generateFollowUp = async ({
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
+  const supplement = await resumeSupplementStore.readResumeSupplement();
   return chatWithVendor({
     source: 'followUp',
     vendor,
@@ -51,7 +56,7 @@ const generateFollowUp = async ({
     thinkingMode,
     requestPermission,
     stream,
-    // 结构化提示词：完整职位字段 + HR/简历 + 当前页面最近聊天记录，跟进最近对话
+    // 结构化提示词：完整职位字段 + HR/简历/简历外补充 + 当前页面最近聊天记录，跟进最近对话
     prompt: {
       task: preference.followUpTask ?? DEFAULT_FOLLOW_UP_TASK,
       requirement:
@@ -59,6 +64,8 @@ const generateFollowUp = async ({
       jd,
       hr,
       resumeText: resume?.content,
+      // 简历外补充：未录入或空串时不传字段，非空才注入
+      ...(supplement?.content ? { supplementText: supplement.content } : {}),
       sections: [transcriptSectionOf(messages)],
     },
   });

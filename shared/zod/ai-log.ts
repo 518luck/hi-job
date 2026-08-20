@@ -12,6 +12,7 @@ const scenePromptSchema = z.object({
   jd: replyJdSchema.optional(), // 目标职位信息，简历梳理等无职位场景缺省
   hr: hrInfoSchema.optional(), // HR 信息，无则缺省
   resumeText: z.string().optional(), // 求职者简历文本，未上传缺省
+  supplementText: z.string().optional(), // 简历外补充素材
   sections: z.array(z.string()).optional(), // 场景差异段（聊天记录/打招呼语）
 });
 

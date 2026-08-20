@@ -1,5 +1,9 @@
 // # AI 请教反馈生成：招聘流程结束后，结合完整职位、HR、简历与聊天记录生成反馈请求
-import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
+import {
+  aiPreferenceStore,
+  resumeStore,
+  resumeSupplementStore,
+} from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
   HrInfo,
@@ -43,6 +47,7 @@ const generateRejectionFeedback = async ({
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
+  const supplement = await resumeSupplementStore.readResumeSupplement();
   return chatWithVendor({
     source: 'rejectionFeedback',
     vendor,
@@ -52,7 +57,7 @@ const generateRejectionFeedback = async ({
     thinkingMode,
     requestPermission,
     stream,
-    // 结构化提示词：完整职位字段 + HR/简历 + 最近聊天记录
+    // 结构化提示词：完整职位字段 + HR/简历/简历外补充 + 最近聊天记录
     prompt: {
       task: preference.rejectionFeedbackTask ?? DEFAULT_REJECTION_FEEDBACK_TASK,
       requirement:
@@ -61,6 +66,8 @@ const generateRejectionFeedback = async ({
       jd,
       hr,
       resumeText: resume?.content,
+      // 简历外补充：未录入或空串时不传字段，非空才注入
+      ...(supplement?.content ? { supplementText: supplement.content } : {}),
       sections: [transcriptSectionOf(messages)],
     },
   });

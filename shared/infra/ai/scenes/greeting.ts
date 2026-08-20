@@ -1,5 +1,9 @@
 // # AI 打招呼生成：结合 JD、HR 信息与简历拼提示词，调用所选厂商模型
-import { aiPreferenceStore, resumeStore } from '@/shared/infra/storage';
+import {
+  aiPreferenceStore,
+  resumeStore,
+  resumeSupplementStore,
+} from '@/shared/infra/storage';
 import type {
   AiVendorRecord,
   HrInfo,
@@ -38,6 +42,7 @@ const generateGreeting = async ({
 }): Promise<string> => {
   const preference = await aiPreferenceStore.readAiPreference();
   const resume = await resumeStore.readResume();
+  const supplement = await resumeSupplementStore.readResumeSupplement();
   return chatWithVendor({
     source: 'greeting',
     vendor,
@@ -46,7 +51,7 @@ const generateGreeting = async ({
     thinkingMode,
     requestPermission,
     stream,
-    // 结构化提示词：完整职位字段 + HR/简历，文本与日志字段由 chatWithVendor 内部推导
+    // 结构化提示词：完整职位字段 + HR/简历/简历外补充，文本与日志字段由 chatWithVendor 内部推导
     prompt: {
       task: preference.greetingTask ?? DEFAULT_GREETING_TASK,
       requirement:
@@ -54,6 +59,8 @@ const generateGreeting = async ({
       jd,
       hr,
       resumeText: resume?.content,
+      // 简历外补充：未录入或空串时不传字段，非空才注入
+      ...(supplement?.content ? { supplementText: supplement.content } : {}),
     },
   });
 };

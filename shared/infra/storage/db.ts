@@ -16,6 +16,7 @@ import type {
   Hr,
   RecordedJd,
   ResumeRecord,
+  ResumeSupplementRecord,
 } from '@/shared/zod';
 
 // 全局数据库实例：各领域的表统一在此注册类型
@@ -30,6 +31,7 @@ const db = new Dexie('hi-job') as Dexie & {
   aiLog: EntityTable<AiLog, 'id'>; // AI 调用日志表
   aiPreference: EntityTable<AiPreference, 'key'>; // AI 调用全局偏好表
   resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
+  resumeSupplement: EntityTable<ResumeSupplementRecord, 'key'>; // 简历外补充素材表（单行）
   consent: EntityTable<ConsentRecord, 'key'>; // 用户确认记录表（单行）
 };
 
@@ -46,6 +48,22 @@ db.version(1).stores({
   aiPreference: 'key',
   resume: 'key',
   consent: 'key',
+});
+
+// v2：新增 resumeSupplement 表（简历外补充素材），stores 传全量表清单，v1 声明原样保留
+db.version(2).stores({
+  jd: 'jobId, companyId, lastSeenAt',
+  company: 'companyId, lastSeenAt',
+  aiVendor: 'vendorId, name, updatedAt',
+  hr: 'encryptBossId, lastMsgAt, lastChatAt, status',
+  chatMessage: '[encryptBossId+msgId], encryptBossId, msgAt',
+  debugSetting: 'key',
+  blockedCompany: 'key',
+  aiLog: '++id, createdAt',
+  aiPreference: 'key',
+  resume: 'key',
+  consent: 'key',
+  resumeSupplement: 'key',
 });
 
 export { db };

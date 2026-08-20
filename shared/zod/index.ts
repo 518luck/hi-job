@@ -109,3 +109,12 @@ export { replyInputSchema, replyJdSchema, replyMessageSchema } from './reply';
 // resume 表：用户简历（单行，UI 上传入口预留）
 export type { ResumeInput, ResumeRecord } from './resume';
 export { resumeInputSchema, resumeSchema } from './resume';
+// resumeSupplement 表：简历外补充素材（单行，工作台录入）
+export type {
+  ResumeSupplementInput,
+  ResumeSupplementRecord,
+} from './resume-supplement';
+export {
+  resumeSupplementInputSchema,
+  resumeSupplementSchema,
+} from './resume-supplement';
