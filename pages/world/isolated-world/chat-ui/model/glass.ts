@@ -1,298 +1,120 @@
-// # 液态玻璃贴图生成（聊天 UI）：基于物理折射的位移图与高光图
+// # 液态玻璃贴图生成（聊天 UI）：SDF 边缘透镜重映射位移图
 //
-// 参考开源 liquid-glass（iOS 26 风格）：不再用 feTurbulence 程序化噪声，而是按玻璃
-// 剖面与折射率（IOR）算出位移场——玻璃边缘呈真实透镜折射、中心清澈。canvas 生成
-// data URL，经 SVG 滤镜的 feImage 注入；backdrop-filter 负责抓背景并模糊。
+// 算法来自 Shu Ding 的开源 liquid-glass（https://github.com/shuding/liquid-glass，2025），
+// 由其 UV 域实现改为像素域适配胶囊按钮：内层胶囊 SDF 定出清澈中心，向外经 smoothStep
+// 过渡到边缘强折射（采样点向中心收缩 = 边缘放大透镜），位移按最大值归一化编码进
+// R/G 通道，经 feImage + feDisplacementMap 注入 backdrop-filter。
 
 import {
-  GLASS_BEZEL_RATIO,
-  GLASS_IOR,
-  GLASS_SCALE_RATIO,
-  GLASS_THICKNESS,
+  GLASS_BAND_RATIO,
+  GLASS_INSET_RATIO,
   MIN_GLASS_SIZE_PX,
-  SPEC_OPACITY,
-  SPEC_SATURATION,
 } from '../config/glass';
 
-// 玻璃表面剖面函数：x ∈ [0,1] 表示从中心到边缘，返回相对高度（保留对象结构便于换剖面调参）
-const SURFACE_FNS = {
-  convexSquircle: (x: number): number => (1 - (1 - x) ** 4) ** 0.25,
-} as const;
-
-// 折射剖面入参
-interface RefractionProfileInput {
-  glassThickness: number; // 玻璃厚度，越大边缘折射越强
-  bezelWidth: number; // 折射发生作用的边缘带宽度
-  ior: number; // 折射率，越大位移越强
-  samples?: number; // 采样数
-}
-
-// 按折射率与剖面计算横向位移剖面（每采样点的位移量）
-const calculateRefractionProfile = ({
-  glassThickness,
-  bezelWidth,
-  ior,
-  samples = 128,
-}: RefractionProfileInput): Float64Array => {
-  const eta = 1 / ior;
-  // 二维折射向量：给定法线方向返回折射后的方向
-  const refract = ({
-    nx,
-    ny,
-  }: {
-    nx: number; // 法线 x 分量
-    ny: number; // 法线 y 分量
-  }): [number, number] | null => {
-    const dot = ny;
-    const k = 1 - eta * eta * (1 - dot * dot);
-    if (k < 0) {
-      return null;
-    }
-    const sq = Math.sqrt(k);
-    return [-(eta * dot + sq) * nx, eta - (eta * dot + sq) * ny];
-  };
-  const heightFn = SURFACE_FNS.convexSquircle;
-  const profile = new Float64Array(samples);
-  for (let i = 0; i < samples; i += 1) {
-    const x = i / samples;
-    const y = heightFn(x);
-    const dx = x < 1 ? 0.0001 : -0.0001;
-    const deriv = (heightFn(x + dx) - y) / dx;
-    const mag = Math.sqrt(deriv * deriv + 1);
-    const ref = refract({ nx: -deriv / mag, ny: -1 / mag });
-    if (ref === null) {
-      profile[i] = 0;
-      continue;
-    }
-    profile[i] = ref[0] * ((y * bezelWidth + glassThickness) / ref[1]);
-  }
-  return profile;
+// 平滑阶梯（与 liquid-glass 同式）：a>b 时自外向内过渡
+const smoothStep = (a: number, b: number, t: number): number => {
+  const clamped = Math.max(0, Math.min(1, (t - a) / (b - a)));
+  return clamped * clamped * (3 - 2 * clamped);
 };
 
-// 位移贴图入参
-interface DisplacementMapInput {
-  width: number; // 元素宽（px）
-  height: number; // 元素高（px）
-  radius: number; // 圆角半径
-  bezelWidth: number; // 折射边缘带宽度
-  profile: Float64Array; // 折射剖面
-  maxDisp: number; // 剖面最大位移量（用于归一化）
-}
+// 向量长度
+const lengthOf = (x: number, y: number): number => Math.sqrt(x * x + y * y);
 
-// 生成位移贴图 data URL：R/G 通道编码 X/Y 位移，中心为中性 (128,128)
-const generateDisplacementMap = ({
-  width: w,
-  height: h,
-  radius,
-  bezelWidth,
-  profile,
-  maxDisp,
-}: DisplacementMapInput): string => {
-  // 尺寸无效（未测得）时不生成：createImageData 要求正整数宽高
-  if (w < MIN_GLASS_SIZE_PX || h < MIN_GLASS_SIZE_PX) {
-    return '';
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (ctx === null) {
-    return '';
-  }
-  const img = ctx.createImageData(w, h);
-  const d = img.data;
-  // 先全部填中性位移（无偏移）
-  for (let i = 0; i < d.length; i += 4) {
-    d[i] = 128;
-    d[i + 1] = 128;
-    d[i + 2] = 0;
-    d[i + 3] = 255;
-  }
-
-  const r = radius;
-  const rSq = r * r;
-  const r1Sq = (r + 1) ** 2;
-  const rBSq = Math.max(r - bezelWidth, 0) ** 2;
-  const wB = w - r * 2;
-  const hB = h - r * 2;
-  const sampleCount = profile.length;
-
-  for (let y1 = 0; y1 < h; y1 += 1) {
-    for (let x1 = 0; x1 < w; x1 += 1) {
-      const x = x1 < r ? x1 - r : x1 >= w - r ? x1 - r - wB : 0;
-      const y = y1 < r ? y1 - r : y1 >= h - r ? y1 - r - hB : 0;
-      const dSq = x * x + y * y;
-      if (dSq > r1Sq || dSq < rBSq) {
-        continue;
-      }
-      const dist = Math.sqrt(dSq);
-      const fromSide = r - dist;
-      const op =
-        dSq < rSq
-          ? 1
-          : 1 - (dist - Math.sqrt(rSq)) / (Math.sqrt(r1Sq) - Math.sqrt(rSq));
-      if (op <= 0 || dist === 0) {
-        continue;
-      }
-      const cos = x / dist;
-      const sin = y / dist;
-      const bi = Math.min(
-        ((fromSide / bezelWidth) * sampleCount) | 0,
-        sampleCount - 1,
-      );
-      const disp = profile[bi] || 0;
-      const dX = (-cos * disp) / maxDisp;
-      const dY = (-sin * disp) / maxDisp;
-      const idx = (y1 * w + x1) * 4;
-      d[idx] = (128 + dX * 127 * op + 0.5) | 0;
-      d[idx + 1] = (128 + dY * 127 * op + 0.5) | 0;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();
+// 圆角矩形有符号距离（负值在形内）：width/height 为半宽半高
+const roundedRectSDF = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+): number => {
+  const qx = Math.abs(x) - width + radius;
+  const qy = Math.abs(y) - height + radius;
+  return (
+    Math.min(Math.max(qx, qy), 0) +
+    lengthOf(Math.max(qx, 0), Math.max(qy, 0)) -
+    radius
+  );
 };
 
-// 高光贴图入参
-interface SpecularMapInput {
-  width: number; // 元素宽（px）
-  height: number; // 元素高（px）
-  radius: number; // 圆角半径
-  bezelWidth: number; // 高光边缘带宽度
-  angle?: number; // 高光入射方向
-}
-
-// 生成高光贴图 data URL：边缘白色反光，alpha 随边缘距离衰减
-const generateSpecularMap = ({
-  width: w,
-  height: h,
-  radius,
-  bezelWidth,
-  angle = Math.PI / 3,
-}: SpecularMapInput): string => {
-  // 尺寸无效（未测得）时不生成：createImageData 要求正整数宽高
-  if (w < MIN_GLASS_SIZE_PX || h < MIN_GLASS_SIZE_PX) {
-    return '';
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (ctx === null) {
-    return '';
-  }
-  const img = ctx.createImageData(w, h);
-  const d = img.data;
-  d.fill(0);
-
-  const r = radius;
-  const rSq = r * r;
-  const r1Sq = (r + 1) ** 2;
-  const rBSq = Math.max(r - bezelWidth, 0) ** 2;
-  const wB = w - r * 2;
-  const hB = h - r * 2;
-  const sv: [number, number] = [Math.cos(angle), Math.sin(angle)];
-
-  for (let y1 = 0; y1 < h; y1 += 1) {
-    for (let x1 = 0; x1 < w; x1 += 1) {
-      const x = x1 < r ? x1 - r : x1 >= w - r ? x1 - r - wB : 0;
-      const y = y1 < r ? y1 - r : y1 >= h - r ? y1 - r - hB : 0;
-      const dSq = x * x + y * y;
-      if (dSq > r1Sq || dSq < rBSq) {
-        continue;
-      }
-      const dist = Math.sqrt(dSq);
-      const fromSide = r - dist;
-      const op =
-        dSq < rSq
-          ? 1
-          : 1 - (dist - Math.sqrt(rSq)) / (Math.sqrt(r1Sq) - Math.sqrt(rSq));
-      if (op <= 0 || dist === 0) {
-        continue;
-      }
-      const cos = x / dist;
-      const sin = -y / dist;
-      const dot = Math.abs(cos * sv[0] + sin * sv[1]);
-      const edge = Math.sqrt(Math.max(0, 1 - (1 - fromSide) ** 2));
-      const coeff = dot * edge;
-      const col = (255 * coeff) | 0;
-      const alpha = (col * coeff * op) | 0;
-      const idx = (y1 * w + x1) * 4;
-      d[idx] = col;
-      d[idx + 1] = col;
-      d[idx + 2] = col;
-      d[idx + 3] = alpha;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();
-};
-
-// 组装一次玻璃滤镜所需的全部贴图与参数
+// 组装一次玻璃滤镜所需的贴图与参数
 interface GlassMapInput {
   width: number; // 元素宽（px）
   height: number; // 元素高（px）
-  radius: number; // 圆角半径
+  radius: number; // 圆角半径（px）
 }
 
-// 滤镜输出参数：位移/高光 data URL 与滤镜数值
+// 滤镜输出参数：位移贴图 data URL 与位移强度
 interface GlassMaps {
-  displacementUrl: string; // 位移贴图 data URL
-  specularUrl: string; // 高光贴图 data URL
-  scale: number; // feDisplacementMap 位移强度
-  specSat: number; // 折射结果饱和度
-  specOpacity: number; // 高光不透明度
+  displacementUrl: string; // 位移贴图 data URL（R/G 通道编码归一化采样偏移）
+  scale: number; // feDisplacementMap 位移强度（px）
 }
 
-// 由元素尺寸生成位移图、高光图与滤镜数值：供 SVG 滤镜的 feImage 使用
-const buildGlassMaps = ({
-  width,
-  height,
-  radius,
-}: GlassMapInput): GlassMaps => {
-  // 尺寸未测得（首帧为 0）时返回空贴图，由组件据此跳过渲染，避免 createImageData 崩溃
+// 由元素尺寸生成边缘透镜位移贴图：供 SVG 滤镜的 feImage 使用
+const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => {
+  // 尺寸未测得（首帧为 0）时不生成，由组件据此跳过渲染，避免 createImageData 崩溃
   if (width < MIN_GLASS_SIZE_PX || height < MIN_GLASS_SIZE_PX) {
-    return {
-      displacementUrl: '',
-      specularUrl: '',
-      scale: 0,
-      specSat: SPEC_SATURATION,
-      specOpacity: SPEC_OPACITY,
-    };
+    return { displacementUrl: '', scale: 0 };
   }
-  const bezel = Math.max(
-    Math.min(
-      radius * GLASS_BEZEL_RATIO,
-      radius - 1,
-      Math.min(width, height) / 2 - 1,
-    ),
-    1,
-  );
-  const profile = calculateRefractionProfile({
-    glassThickness: GLASS_THICKNESS,
-    bezelWidth: bezel,
-    ior: GLASS_IOR,
-  });
-  const maxDisp =
-    Math.max(...Array.from(profile).map((value) => Math.abs(value))) || 1;
-  return {
-    displacementUrl: generateDisplacementMap({
-      width,
-      height,
-      radius,
-      bezelWidth: bezel,
-      profile,
-      maxDisp,
-    }),
-    specularUrl: generateSpecularMap({
-      width,
-      height,
-      radius,
-      bezelWidth: bezel * 2.5,
-    }),
-    scale: maxDisp * GLASS_SCALE_RATIO,
-    specSat: SPEC_SATURATION,
-    specOpacity: SPEC_OPACITY,
-  };
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) {
+    return { displacementUrl: '', scale: 0 };
+  }
+
+  // 内层胶囊（清澈区边界）与透镜过渡带宽
+  const short = Math.min(width, height);
+  const inset = Math.max(short * GLASS_INSET_RATIO, 1);
+  const band = Math.max(short * GLASS_BAND_RATIO, 1);
+  const halfWidth = width / 2 - inset;
+  const halfHeight = height / 2 - inset;
+  const innerRadius = Math.max(radius - inset, 1);
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  // 第一遍：逐像素算目标采样点与偏移，记录最大偏移用于归一化
+  const offsets = new Float32Array(width * height * 2);
+  let maxOffset = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const relX = x - centerX;
+      const relY = y - centerY;
+      const sdf = roundedRectSDF(relX, relY, halfWidth, halfHeight, innerRadius);
+      // 内层形内为 1（原样采样、中心清澈），向外过渡到 0（采样点收到中心、边缘最强折射）
+      const falloff = smoothStep(band, 0, sdf);
+      const scaled = falloff * falloff * (3 - 2 * falloff);
+      const sampleX = centerX + relX * scaled;
+      const sampleY = centerY + relY * scaled;
+      const dx = sampleX - x;
+      const dy = sampleY - y;
+      const index = (y * width + x) * 2;
+      offsets[index] = dx;
+      offsets[index + 1] = dy;
+      maxOffset = Math.max(maxOffset, Math.abs(dx), Math.abs(dy));
+    }
+  }
+
+  // 归一化与 liquid-glass 相同：最大偏移减半，滤镜 scale 直接用该值（通道编码 dx/max + 0.5）
+  maxOffset *= 0.5;
+  if (maxOffset <= 0) {
+    return { displacementUrl: '', scale: 0 };
+  }
+
+  // 第二遍：偏移写入 R/G 通道，中性 0.5 为无位移；Uint8ClampedArray 自动钳制越界
+  const img = ctx.createImageData(width, height);
+  const data = img.data;
+  for (let i = 0, j = 0; i < data.length; i += 4, j += 2) {
+    const dx = offsets[j] ?? 0;
+    const dy = offsets[j + 1] ?? 0;
+    data[i] = (dx / maxOffset + 0.5) * 255;
+    data[i + 1] = (dy / maxOffset + 0.5) * 255;
+    data[i + 2] = 0;
+    data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return { displacementUrl: canvas.toDataURL(), scale: maxOffset };
 };
 
 export { buildGlassMaps };

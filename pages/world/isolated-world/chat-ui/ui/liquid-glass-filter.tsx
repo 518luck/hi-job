@@ -1,7 +1,8 @@
-// # 液态玻璃滤镜（聊天 UI）：canvas 生成物理折射位移图与高光图，注入 SVG 滤镜供悬浮按钮伪元素引用
+// # 液态玻璃滤镜（聊天 UI）：canvas 生成边缘透镜位移图，注入 SVG 滤镜供悬浮按钮 backdrop-filter 引用
 //
-// 位移图让玻璃边缘呈真实透镜折射、中心清澈，高光图叠加边缘反光——替代 feTurbulence 噪声。
-// 滤镜本身零渲染（宽高为 0），仅靠 url(#id) 被 .hijob-fab::after 引用。
+// 算法源自 Shu Ding 的开源 liquid-glass（https://github.com/shuding/liquid-glass）：
+// 位移图让玻璃边缘呈放大透镜、中心清澈。滤镜本身零渲染（宽高为 0），
+// 仅靠 url(#id) 被 .hijob-fab::after 的 backdrop-filter 引用。
 
 import type { ReactElement, ReactNode } from 'react';
 import { Component, useMemo } from 'react';
@@ -11,16 +12,16 @@ import { buildGlassMaps } from '../model/glass';
 
 // 液态玻璃滤镜属性
 interface LiquidGlassFilterProps {
-  width: number; // 悬浮按钮渲染宽（px），位移/高光贴图与之同尺寸
+  width: number; // 悬浮按钮渲染宽（px），位移贴图与之同尺寸
   height: number; // 悬浮按钮渲染高（px）
 }
 
-// 按按钮实际尺寸生成位移与高光贴图，渲染为 SVG 滤镜
+// 按按钮实际尺寸生成位移贴图，渲染为 SVG 滤镜
 function GlassFilterSvg({
   width,
   height,
 }: LiquidGlassFilterProps): ReactElement | null {
-  // 胶囊圆角取短边一半：位移/高光贴图按此计算折射剖面
+  // 胶囊圆角取短边一半：位移贴图按此计算透镜剖面
   const radius = Math.min(width, height) / 2;
   const maps = useMemo(
     () => buildGlassMaps({ width, height, radius }),
@@ -61,39 +62,7 @@ function GlassFilterSvg({
             scale={maps.scale}
             xChannelSelector="R"
             yChannelSelector="G"
-            result="displaced"
           />
-          {/* 饱和度 + 高光层：边缘反光经遮罩与透明度后叠加 */}
-          <feColorMatrix
-            in="displaced"
-            type="saturate"
-            values={String(maps.specSat)}
-            result="displaced_sat"
-          />
-          <feImage
-            href={maps.specularUrl}
-            x="0"
-            y="0"
-            width={width}
-            height={height}
-            result="spec_layer"
-          />
-          <feComposite
-            in="displaced_sat"
-            in2="spec_layer"
-            operator="in"
-            result="spec_masked"
-          />
-          <feComponentTransfer in="spec_layer" result="spec_faded">
-            <feFuncA type="linear" slope={maps.specOpacity} />
-          </feComponentTransfer>
-          <feBlend
-            in="spec_masked"
-            in2="displaced"
-            mode="normal"
-            result="with_sat"
-          />
-          <feBlend in="spec_faded" in2="with_sat" mode="normal" />
         </filter>
       </defs>
     </svg>
