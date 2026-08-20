@@ -294,7 +294,7 @@ function ChatWindow({
         <Card className="size-full gap-0 bg-transparent py-0 ring-0">
           {/* // @ 标题栏：军师招牌 + 本轮耗时用量统计 + 关闭；玻璃上的微亮层，发丝线与正文分层；
               [.border-b]:pb-2 压回 Card 内置 border-b 变体的 --card-spacing 下边距，保持上下紧凑对称 */}
-          <CardHeader className="items-center border-b border-white/[0.06] bg-white/[0.04] px-3.5 py-2 [.border-b]:pb-2">
+          <CardHeader className="items-center border-b border-white/6 bg-white/4 px-3.5 py-2 [.border-b]:pb-2">
             <CardTitle className="text-[13px] font-semibold">
               求职军师
             </CardTitle>
@@ -320,7 +320,7 @@ function ChatWindow({
             {renderBody()}
           </CardContent>
           {/* // @ 操作区：玻璃上的微亮层 + 发丝线，场景按钮 + 复制 */}
-          <CardFooter className="gap-2 border-t border-white/[0.06] bg-white/[0.04] px-3.5 py-2.5">
+          <CardFooter className="gap-2 border-t border-white/6 bg-white/4 px-3.5 py-2.5">
             {SCENE_BUTTONS.map(({ label, method, tip, align }) => (
               <Tooltip key={method}>
                 <TooltipTrigger
@@ -346,7 +346,7 @@ function ChatWindow({
                 <TooltipContent
                   align={align}
                   positionerClassName={TOOLTIP_Z_CLASS}
-                  className="max-w-[280px] text-left"
+                  className="max-w-70 text-left"
                 >
                   {/* 标签与说明并入同一流内文本：弹层是 inline-flex 布局，拆成两个子项时长文案会把标签挤成竖排 */}
                   <span>
