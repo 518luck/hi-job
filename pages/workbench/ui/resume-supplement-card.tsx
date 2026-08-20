@@ -24,7 +24,7 @@ function ResumeSupplementCard() {
   const [saved, setSaved] = useState(false);
   const hasContent = value.trim() !== '';
 
-  // 初次装载：用库中已有内容初始化编辑值；此后不再跟随 store 回写，避免覆盖编辑中的草稿
+  // 初次装载：用库中已有内容初始化编辑值；此后不再跟随 store 回写，避免覆盖编辑中的草稿（用户开始输入也会完成初始化）
   useEffect(() => {
     if (!hydrated && supplement !== undefined) {
       setValue(supplement.content);
@@ -71,7 +71,8 @@ function ResumeSupplementCard() {
         <div className="divide-y divide-border rounded-md border border-border">
           <div className="flex flex-col gap-1.5 px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
-              不会出现在简历里，仅供 AI 聊天时自然提及
+              不会出现在简历里；会随消息素材发送给你配置的 AI
+              厂商，仅供聊天时自然提及
             </p>
             {/* 固定高度并关闭 field-sizing：高度不随内容变化，保证折叠动画测量稳定 */}
             <Textarea
@@ -80,6 +81,8 @@ function ResumeSupplementCard() {
               placeholder="记录简历之外的小项目、技能涉猎等浅层经历…"
               className="field-sizing-fixed h-40 resize-none overflow-y-auto"
               onChange={(event) => {
+                // 开始输入即完成初始化：封死库无记录时首次保存的 liveQuery 回流覆盖草稿的竞态窗口
+                setHydrated(true);
                 setValue(event.target.value);
               }}
               onBlur={() => {

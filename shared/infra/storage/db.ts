@@ -35,7 +35,7 @@ const db = new Dexie('hi-job') as Dexie & {
   consent: EntityTable<ConsentRecord, 'key'>; // 用户确认记录表（单行）
 };
 
-// 开发环境不做版本迁移：只声明当前表集合，历史版本数据直接清库重建
+// v1 初版表集合：历史版本声明原样保留，自 v2 起新增表以追加 version 方式演进，升级不清库
 db.version(1).stores({
   jd: 'jobId, companyId, lastSeenAt',
   company: 'companyId, lastSeenAt',

@@ -58,7 +58,7 @@ const SCENE_CONFIGS: Record<
   greeting: {
     label: '问候',
     description:
-      '首次联系招聘者：结合职位、招聘者信息与求职者简历，生成打招呼消息。',
+      '首次联系招聘者：结合职位、招聘者信息、求职者简历与简历外补充，生成打招呼消息。',
     systemKey: 'greetingSystem',
     taskKey: 'greetingTask',
     requirementKey: 'greetingRequirement',
@@ -69,7 +69,7 @@ const SCENE_CONFIGS: Record<
   reply: {
     label: '回复',
     description:
-      '延续当前沟通：结合职位、招聘者信息、求职者简历与当前聊天记录，生成回复。',
+      '延续当前沟通：结合职位、招聘者信息、求职者简历、简历外补充与当前聊天记录，生成回复。',
     systemKey: 'replySystem',
     taskKey: 'replyTask',
     requirementKey: 'replyRequirement',
@@ -80,7 +80,7 @@ const SCENE_CONFIGS: Record<
   followUp: {
     label: '提醒',
     description:
-      '沟通暂时中断时：结合职位、求职者简历与当前聊天记录，生成自然的跟进消息。',
+      '沟通暂时中断时：结合职位、招聘者信息、求职者简历、简历外补充与当前聊天记录，生成自然的跟进消息。',
     systemKey: 'followUpSystem',
     taskKey: 'followUpTask',
     requirementKey: 'followUpRequirement',
@@ -91,7 +91,7 @@ const SCENE_CONFIGS: Record<
   rejectionFeedback: {
     label: '反馈',
     description:
-      '招聘流程结束后：只结合职位名称、公司名称与当前最近聊天记录，生成低负担的反馈请教消息，不发送简历。',
+      '招聘流程结束后：结合职位、招聘者信息、求职者简历、简历外补充与最近聊天记录，生成低负担的反馈请教消息。',
     systemKey: 'rejectionFeedbackSystem',
     taskKey: 'rejectionFeedbackTask',
     requirementKey: 'rejectionFeedbackRequirement',
