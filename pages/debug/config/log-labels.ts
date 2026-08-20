@@ -10,12 +10,13 @@ const THINKING_MODE_LABELS: Record<AiLog['thinkingMode'], string> = {
   high: '高',
 };
 
+// 来源中文标签：与聊天窗场景按钮、日志筛选 Tab 共用同一套短文案与顺序
 const SOURCE_LABELS: Record<AiLog['source'], string> = {
-  greeting: '打招呼',
+  greeting: '问候',
   reply: '回复',
-  followUp: '跟进',
-  rejectionFeedback: '请教反馈',
-  resumeOrganize: '梳理简历',
+  followUp: '提醒',
+  rejectionFeedback: '反馈',
+  resumeOrganize: '简历',
 };
 
 // 日志分层筛选：全部或按来源

@@ -2,7 +2,7 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModelUsage } from 'ai';
-import { generateText, streamText } from 'ai';
+import { APICallError, generateText, streamText } from 'ai';
 
 import type {
   AiLogSource,
@@ -125,6 +125,22 @@ const resolveThinkingArgs = (
   return { reasoning: mode };
 };
 
+// 判断厂商侧失败（429 限流 / 5xx 过载或服务错误）：与思考参数无关，提示应指向重试而非切档
+const isVendorSideError = (error: unknown): boolean =>
+  APICallError.isInstance(error) &&
+  error.statusCode !== undefined &&
+  (error.statusCode === 429 || error.statusCode >= 500);
+
+// 整理 SDK 错误为可读 Error：APICallError 的 message 不含状态码，补上 HTTP 前缀便于定位限流/过载
+const describeVendorError = (error: unknown): Error => {
+  if (APICallError.isInstance(error)) {
+    const prefix =
+      error.statusCode !== undefined ? `HTTP ${error.statusCode}` : '网络错误';
+    return new Error(`${prefix}：${error.message}`);
+  }
+  return error instanceof Error ? error : new Error(String(error));
+};
+
 // > 用厂商配置与指定模型跑一次文本生成：收结构化提示词，内部拼平并清洗日志字段；先申请跨域权限
 const chatWithVendor = async ({
   vendor,
@@ -186,15 +202,27 @@ const chatWithVendor = async ({
         abortSignal: stream.abortSignal,
         ...resolvedArgs,
       });
+      // 流内错误 part 不会抛异常：供应商原始报错在这里捕获，否则会被 SDK 的泛化失败文案掩盖
+      let streamError: Error | undefined;
       for await (const part of streamResult.fullStream) {
-        if (part.type === 'reasoning-delta' && part.text !== '') {
+        if (part.type === 'error') {
+          streamError =
+            part.error instanceof Error
+              ? part.error
+              : new Error(String(part.error));
+        } else if (part.type === 'reasoning-delta' && part.text !== '') {
           stream.onReasoning?.(part.text);
         } else if (part.type === 'text-delta' && part.text !== '') {
           stream.onChunk(part.text);
         }
       }
-      result = (await streamResult.text).trim();
-      usage = await streamResult.usage;
+      try {
+        result = (await streamResult.text).trim();
+        usage = await streamResult.usage;
+      } catch (error) {
+        // 零输出时 SDK 只抛「No output generated」泛化文案：改抛流内捕获的原始错误
+        throw streamError ?? error;
+      }
       // 用量上报：两项计数齐全才回调，供应商缺报时调用方收不到（对应展示省略）
       if (
         usage?.inputTokens !== undefined &&
@@ -221,16 +249,15 @@ const chatWithVendor = async ({
       await recordAiLog({ ...logEntry, ok: false, error: '已取消' });
       throw new Error('已取消');
     }
-    const rawMessage = error instanceof Error ? error.message : '生成失败';
-    // 思考档位下失败多为模型不支持思考参数：追加可读提示，便于切回默认档
-    const finalError =
-      thinkingMode !== 'default'
+    const described = describeVendorError(error);
+    // 厂商限流/过载提示重试；其余思考档位下的失败可能是模型不支持思考参数，提示切回默认档
+    const finalError = isVendorSideError(error)
+      ? new Error(`${described.message}（厂商限流或过载，请稍后重试）`)
+      : thinkingMode !== 'default'
         ? new Error(
-            `${rawMessage}（该模型可能不支持思考参数，可尝试切回「默认」档）`,
+            `${described.message}（该模型可能不支持思考参数，可尝试切回「默认」档）`,
           )
-        : error instanceof Error
-          ? error
-          : new Error(rawMessage);
+        : described;
     await recordAiLog({
       ...logEntry,
       ok: false,

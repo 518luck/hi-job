@@ -109,13 +109,13 @@ function AiLogView({ onBack }: AiLogViewProps) {
             全部
           </TabsTrigger>
           <TabsTrigger value="greeting" className="flex-1">
-            打招呼
+            问候
           </TabsTrigger>
           <TabsTrigger value="reply" className="flex-1">
             回复
           </TabsTrigger>
           <TabsTrigger value="followUp" className="flex-1">
-            跟进
+            提醒
           </TabsTrigger>
           <TabsTrigger value="rejectionFeedback" className="flex-1">
             反馈

@@ -70,7 +70,7 @@ const useXxxContext = (): XxxContextType => {
   const context = useContext(XxxContext);
 
   if (context === null) {
-    throw new Error('useXxxContext 必须在 XxxProvider 内部使用。');
+    throw new Error("useXxxContext 必须在 XxxProvider 内部使用。");
   }
 
   return context;
@@ -123,10 +123,10 @@ app / entrypoints
 
 ```ts
 // 正确
-import { FavoritesPage } from '@/pages/favorites';
+import { FavoritesPage } from "@/pages/favorites";
 
 // 禁止：跨 slice 深层导入
-import { FavoritesPage } from '@/pages/favorites/ui/page';
+import { FavoritesPage } from "@/pages/favorites/ui/page";
 ```
 
 - index.ts 只导出外部真正需要使用的组件、函数和类型（如 favorites 导出 `startJdRecorder`，供内容脚本使用）。

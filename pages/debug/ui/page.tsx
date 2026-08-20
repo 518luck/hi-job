@@ -192,7 +192,7 @@ function DebugPage() {
           <LogEntryRow
             icon={Icons.aiLog}
             title="AI 日志"
-            description="打招呼、回复等 AI 调用记录"
+            description="问候、回复等 AI 调用记录"
             onOpen={() => setView('aiLog')}
           />
           <LogEntryRow

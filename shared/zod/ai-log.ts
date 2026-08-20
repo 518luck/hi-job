@@ -25,7 +25,7 @@ const aiLogSchema = z.object({
     'followUp',
     'rejectionFeedback',
     'resumeOrganize',
-  ]), // 调用来源：打招呼/聊天页回复/跟进消息/请教反馈/简历梳理
+  ]), // 调用来源：问候/回复/提醒/反馈/简历（枚举顺序与各界面标签顺序共用）
   vendorName: z.string(), // 厂商名称
   apiFormat: z.enum(['openai', 'anthropic']), // API 协议格式
   modelId: z.string(), // 模型 id

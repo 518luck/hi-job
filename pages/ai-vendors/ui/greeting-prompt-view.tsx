@@ -1,4 +1,4 @@
-// # 提示词配置视图：各场景（打招呼/跟进/回复/请教反馈）的系统提示、任务描述与生成要求
+// # 提示词配置视图：各场景（问候/回复/提醒/反馈）的系统提示、任务描述与生成要求
 
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
@@ -26,8 +26,8 @@ import { Icons } from '@/shared/ui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
 
-// 提示词场景：打招呼/跟进/回复/请教反馈
-type PromptScene = 'greeting' | 'followUp' | 'reply' | 'rejectionFeedback';
+// 提示词场景：问候/回复/提醒/反馈，键序即 Tab 渲染顺序（对齐日志来源枚举）
+type PromptScene = 'greeting' | 'reply' | 'followUp' | 'rejectionFeedback';
 
 // 场景配置：偏好字段键、默认文案与场景描述
 const SCENE_CONFIGS: Record<
@@ -56,7 +56,7 @@ const SCENE_CONFIGS: Record<
   }
 > = {
   greeting: {
-    label: '打招呼',
+    label: '问候',
     description:
       '首次联系招聘者：结合职位、招聘者信息与求职者简历，生成打招呼消息。',
     systemKey: 'greetingSystem',
@@ -65,17 +65,6 @@ const SCENE_CONFIGS: Record<
     defaultSystem: DEFAULT_GREETING_SYSTEM,
     defaultTask: DEFAULT_GREETING_TASK,
     defaultRequirement: DEFAULT_GREETING_REQUIREMENT,
-  },
-  followUp: {
-    label: '跟进',
-    description:
-      '沟通暂时中断时：结合职位、求职者简历与当前聊天记录，生成自然的跟进消息。',
-    systemKey: 'followUpSystem',
-    taskKey: 'followUpTask',
-    requirementKey: 'followUpRequirement',
-    defaultSystem: DEFAULT_FOLLOW_UP_SYSTEM,
-    defaultTask: DEFAULT_FOLLOW_UP_TASK,
-    defaultRequirement: DEFAULT_FOLLOW_UP_REQUIREMENT,
   },
   reply: {
     label: '回复',
@@ -88,8 +77,19 @@ const SCENE_CONFIGS: Record<
     defaultTask: DEFAULT_REPLY_TASK,
     defaultRequirement: DEFAULT_REPLY_REQUIREMENT,
   },
+  followUp: {
+    label: '提醒',
+    description:
+      '沟通暂时中断时：结合职位、求职者简历与当前聊天记录，生成自然的跟进消息。',
+    systemKey: 'followUpSystem',
+    taskKey: 'followUpTask',
+    requirementKey: 'followUpRequirement',
+    defaultSystem: DEFAULT_FOLLOW_UP_SYSTEM,
+    defaultTask: DEFAULT_FOLLOW_UP_TASK,
+    defaultRequirement: DEFAULT_FOLLOW_UP_REQUIREMENT,
+  },
   rejectionFeedback: {
-    label: '请教反馈',
+    label: '反馈',
     description:
       '招聘流程结束后：只结合职位名称、公司名称与当前最近聊天记录，生成低负担的反馈请教消息，不发送简历。',
     systemKey: 'rejectionFeedbackSystem',

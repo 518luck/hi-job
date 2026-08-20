@@ -25,7 +25,7 @@ export interface SceneButton {
   align: 'start' | 'center' | 'end'; // 气泡对齐：按按钮在窗内位置钳制不溢出窗宽/视口
 }
 
-// 场景按钮元数据表：文案、协议方法与使用时机说明
+// 场景按钮元数据表：文案、协议方法与使用时机说明；顺序对齐日志来源枚举（问候→回复→提醒→反馈）
 export const SCENE_BUTTONS: readonly SceneButton[] = [
   {
     label: '问候',
@@ -34,21 +34,21 @@ export const SCENE_BUTTONS: readonly SceneButton[] = [
     align: 'start',
   },
   {
+    label: '回复',
+    method: 'generateReply',
+    tip: '结合聊天记录与职位信息，生成下一条回复',
+    align: 'start',
+  },
+  {
     label: '提醒',
     method: 'followUp',
     tip: '对方已读未回时生成自然跟进',
-    align: 'start',
+    align: 'center',
   },
   {
     label: '反馈',
     method: 'rejectionFeedback',
     tip: '沟通结束或被拒后，生成礼貌请教反馈的消息',
-    align: 'center',
-  },
-  {
-    label: '回复',
-    method: 'generateReply',
-    tip: '结合聊天记录与职位信息，生成下一条回复',
     align: 'end',
   },
 ];
