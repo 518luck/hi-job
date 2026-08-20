@@ -7,11 +7,15 @@ export { aiLogInputSchema, aiLogSchema, scenePromptSchema } from './ai-log';
 export type {
   AiPreference,
   AiPreferenceInput,
+  DeliveryScene,
+  SceneDelivery,
+  SceneDeliveryMap,
   ThinkingMode,
 } from './ai-preference';
 export {
   aiPreferenceInputSchema,
   aiPreferenceSchema,
+  SCENE_DELIVERY_SCENES,
   THINKING_MODES,
 } from './ai-preference';
 // ai-stream 消息：AI 流式生成事件 DTO（后台推送信封内层）

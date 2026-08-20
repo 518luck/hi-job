@@ -4,7 +4,12 @@ import {
   aiPreferenceStore,
   DEFAULT_AI_PREFERENCE,
 } from '@/shared/infra/storage';
-import type { ThinkingMode } from '@/shared/zod';
+import type {
+  DeliveryScene,
+  SceneDelivery,
+  SceneDeliveryMap,
+  ThinkingMode,
+} from '@/shared/zod';
 
 // 工作台全局 AI 偏好：厂商/模型选择与思考模式，选择即持久化，聊天页回复与打招呼共用
 const useAiPreference = (): {
@@ -13,11 +18,16 @@ const useAiPreference = (): {
   thinkingMode: ThinkingMode;
   autoGreetOnGoChat: boolean;
   autoSendGreeting: boolean;
+  sceneDelivery: SceneDeliveryMap;
   selectVendor: (vendorId: string | null) => void;
   selectModel: (modelId: string | null) => void;
   setThinkingMode: (mode: ThinkingMode) => Promise<void>;
   setAutoGreetOnGoChat: (enabled: boolean) => void;
   setAutoSendGreeting: (enabled: boolean) => void;
+  updateSceneDelivery: (
+    scene: DeliveryScene,
+    patch: Partial<SceneDelivery>,
+  ) => void;
 } => {
   const preference = useLiveQuery(
     () => aiPreferenceStore.readAiPreference(),
@@ -66,17 +76,33 @@ const useAiPreference = (): {
     });
   };
 
+  // 更新某场景的投递开关：合并写入该场景的填入/发送配置
+  const updateSceneDelivery = (
+    scene: DeliveryScene,
+    patch: Partial<SceneDelivery>,
+  ): void => {
+    void aiPreferenceStore.saveAiPreference({
+      ...preference,
+      sceneDelivery: {
+        ...preference.sceneDelivery,
+        [scene]: { ...preference.sceneDelivery[scene], ...patch },
+      },
+    });
+  };
+
   return {
     vendorId: preference.vendorId,
     modelId: preference.modelId,
     thinkingMode: preference.thinkingMode,
     autoGreetOnGoChat: preference.autoGreetOnGoChat,
     autoSendGreeting: preference.autoSendGreeting,
+    sceneDelivery: preference.sceneDelivery,
     selectVendor,
     selectModel,
     setThinkingMode,
     setAutoGreetOnGoChat,
     setAutoSendGreeting,
+    updateSceneDelivery,
   };
 };
 

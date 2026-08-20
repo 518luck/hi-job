@@ -13,6 +13,7 @@ import {
 import { CHAT_WINDOW_HEIGHT, CHAT_WINDOW_WIDTH } from '../config/chat-window';
 import { useAutoGreet } from '../model/auto-greet';
 import { useChatRuntime } from '../model/chat-runtime';
+import { useSceneDelivery } from '../model/scene-delivery';
 import { ChatFab, type FabPosition } from './chat-fab';
 import { ChatWindow } from './chat-window';
 
@@ -67,7 +68,10 @@ function ChatAssistant() {
     text,
   } = useChatRuntime();
 
-  // 自动问候：去沟通标记 + 工作台开关驱动，自动展开聊天窗发起「问候」，终态后投递到页面输入框
+  // 场景投递：回复/提醒/反馈生成完成后按工作台开关自动填入输入框（可选发送）
+  useSceneDelivery({ bodyStatus, text, lastMethod });
+
+  // 自动问候：去沟通标记 + 工作台开关驱动，自动展开聊天窗发起「问候」；投递统一走场景投递
   useAutoGreet({
     onTrigger: () => {
       const fab = fabRef.current;
@@ -77,9 +81,6 @@ function ChatAssistant() {
       setOpen(true);
       startScene('greeting');
     },
-    bodyStatus,
-    text,
-    lastMethod,
   });
 
   // 初次布局：按按钮实际高度校准默认停靠位

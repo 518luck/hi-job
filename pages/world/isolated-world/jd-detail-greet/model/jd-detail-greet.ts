@@ -43,7 +43,10 @@ const runAutoGreet = async (): Promise<void> => {
   });
   if (startButton === null) {
     debugLog('auto-greet', '未找到「立即沟通」按钮，放弃自动流程');
-    showToast({ text: '自动沟通未完成：未找到「立即沟通」按钮' });
+    showToast({
+      text: '自动沟通未完成：未找到「立即沟通」按钮',
+      tone: 'error',
+    });
     return;
   }
   // 点击前写入自动问候标记：点击后的两种去向（弹窗确认/直接跳转）都会落到聊天页消费
@@ -59,7 +62,10 @@ const runAutoGreet = async (): Promise<void> => {
   // 点击后页面直接跳转会话时脚本上下文销毁，走不到这里；等不到弹窗说明流程异常
   if (dialog === null) {
     debugLog('auto-greet', '点击后未出现弹窗也未跳转，请人工确认');
-    showToast({ text: '自动沟通未完成：未检测到弹窗或跳转，请手动确认' });
+    showToast({
+      text: '自动沟通未完成：未检测到弹窗或跳转，请手动确认',
+      tone: 'error',
+    });
     clearAutoGreetMarker();
     return;
   }
@@ -74,7 +80,10 @@ const runAutoGreet = async (): Promise<void> => {
     confirmButton.textContent?.trim() !== '继续沟通'
   ) {
     debugLog('auto-greet', '出现非打招呼弹窗，不自动处理', title ?? '');
-    showToast({ text: '自动沟通已暂停：出现其他弹窗，请手动处理' });
+    showToast({
+      text: '自动沟通已暂停：出现其他弹窗，请手动处理',
+      tone: 'error',
+    });
     clearAutoGreetMarker();
     return;
   }

@@ -1,4 +1,4 @@
-// # 问候投递（隔离世界）：把生成的问候文本填入 Boss 聊天输入框，可选自动点击发送
+// # 聊天投递（隔离世界）：把生成的消息文本填入 Boss 聊天输入框，可选自动点击发送
 
 import {
   randomDelay,
@@ -14,7 +14,7 @@ const SEND_BUTTON_SELECTOR = '.btn-send';
 const DELIVERY_WAIT_TIMEOUT_MS = 3000;
 
 // 投递结果：填入未发送 / 已发送 / 失败（带原因）
-type GreetingDeliveryResult =
+type ChatDeliveryResult =
   | { outcome: 'filled' }
   | { outcome: 'sent' }
   | { outcome: 'failed'; reason: string };
@@ -60,16 +60,16 @@ const writeChatInput = ({
   return input.textContent === text;
 };
 
-// 投递问候：填入输入框 → 等发送按钮启用 → autoSend 时拟人延迟后点击发送，全程 toast 反馈
-const deliverGreeting = async ({
+// 投递生成文本：填入输入框 → 等发送按钮启用 → autoSend 时拟人延迟后点击发送，全程 toast 反馈
+const deliverChatText = async ({
   text,
   autoSend,
 }: {
   text: string;
   autoSend: boolean;
-}): Promise<GreetingDeliveryResult> => {
+}): Promise<ChatDeliveryResult> => {
   if (text.trim() === '') {
-    showToast({ text: '问候内容为空，未填入输入框' });
+    showToast({ text: '生成内容为空，未填入输入框', tone: 'error' });
     return { outcome: 'failed', reason: 'empty-text' };
   }
   const input = await waitForVisible({
@@ -77,7 +77,7 @@ const deliverGreeting = async ({
     timeoutMs: DELIVERY_WAIT_TIMEOUT_MS,
   });
   if (input === null) {
-    showToast({ text: '未找到聊天输入框，请手动粘贴问候' });
+    showToast({ text: '未找到聊天输入框，请手动粘贴', tone: 'error' });
     return { outcome: 'failed', reason: 'input-not-found' };
   }
   const written = writeChatInput({ input, text });
@@ -86,21 +86,21 @@ const deliverGreeting = async ({
     timeoutMs: DELIVERY_WAIT_TIMEOUT_MS,
   });
   if (!written || sendButton === null) {
-    showToast({ text: '问候填入输入框失败，请手动粘贴' });
+    showToast({ text: '生成内容填入输入框失败，请手动粘贴', tone: 'error' });
     return {
       outcome: 'failed',
       reason: written ? 'send-disabled' : 'write-failed',
     };
   }
   if (!autoSend) {
-    showToast({ text: '问候已填入输入框，确认后手动发送' });
+    showToast({ text: '已填入输入框，确认后手动发送', tone: 'ok' });
     return { outcome: 'filled' };
   }
   await randomDelay();
   sendButton.click();
-  showToast({ text: '问候已自动发送' });
+  showToast({ text: '生成内容已自动发送', tone: 'ok' });
   return { outcome: 'sent' };
 };
 
-export type { GreetingDeliveryResult };
-export { deliverGreeting, locateChatInput };
+export type { ChatDeliveryResult };
+export { deliverChatText, locateChatInput };
