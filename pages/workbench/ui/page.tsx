@@ -16,6 +16,7 @@ import { useHasBlockedCompanies } from '../model/use-has-blocked-companies';
 import { useVendors } from '../model/use-vendors';
 import { AutomationSection } from './automation-section';
 import { CurrentSessionCard } from './current-session-card';
+import { ResumeSupplementCard } from './resume-supplement-card';
 import { ResumeUpload } from './resume-upload';
 
 // 思考模式档位选项：文案说明各档对生成参数的影响
@@ -155,6 +156,7 @@ function WorkbenchPage({
       {renderVendorPicker()}
       <AutomationSection />
       <ResumeUpload />
+      <ResumeSupplementCard />
       {/* 屏蔽公司引导入口：仅在名单为空时展示，已配置则不再指引 */}
       {!hasBlockedCompanies && (
         <button
