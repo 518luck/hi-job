@@ -19,11 +19,14 @@ const PREVIEW_CLASSES =
 
 // 简历上传区：标题行可折叠收起预览，操作按钮常驻标题行；发起操作或出错时自动展开
 function ResumeUpload() {
-  const { resume, upload, organize, restore, clear } = useResume();
+  const { resume, loaded, upload, organize, restore, clear } = useResume();
   const [uploading, setUploading] = useState(false);
   const [organizing, setOrganizing] = useState(false);
   const [error, setError] = useState('');
-  const [open, setOpen] = useState(true);
+  // null 表示未手动操作：初始展开态跟随「是否已有简历」——未上传时展开引导，已上传默认收起；
+  // 查询就绪前一律收起，避免先按「无简历」渲染成展开再突然收起的闪烁
+  const [openOverride, setOpenOverride] = useState<boolean | null>(null);
+  const open = openOverride ?? (loaded && resume === undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const resumeContent = resume?.content;
 
@@ -39,16 +42,16 @@ function ResumeUpload() {
 
   // 出错即展开：折叠态下失败提示不可见会造成静默失败
   const handleErrorShow = (message: string): void => {
-    setOpen(true);
+    setOpenOverride(true);
     setError(message);
   };
 
-  // 选择文件后解析入库：先展开面板保证过程可见，失败时给出可读提示
+  // 选择文件后解析入库：先展开面板保证过程可见，成功后保持展开供查看结果（收起由下次加载的默认态接管），失败给出提示
   const handleFile = async (file: File | undefined): Promise<void> => {
     if (file === undefined) {
       return;
     }
-    setOpen(true);
+    setOpenOverride(true);
     setUploading(true);
     setError('');
     try {
@@ -62,9 +65,9 @@ function ResumeUpload() {
     }
   };
 
-  // AI 梳理：后台生成整理版并落库（原件自动备份），失败透出可读提示
+  // AI 梳理：后台生成整理版并落库（原件自动备份），失败透出可读提示；保持展开供查看新版本
   const handleOrganize = async (): Promise<void> => {
-    setOpen(true);
+    setOpenOverride(true);
     setOrganizing(true);
     setError('');
     try {
@@ -79,7 +82,7 @@ function ResumeUpload() {
   return (
     <Collapsible
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={setOpenOverride}
       className="flex flex-col gap-2 rounded-md border border-border p-2"
     >
       <div className="flex items-start justify-between gap-2">

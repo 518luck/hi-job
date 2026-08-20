@@ -9,12 +9,19 @@ import { parseResumeFile } from './parse-resume';
 // 工作台简历数据：读取、上传解析入库、AI 梳理与清空
 const useResume = (): {
   resume?: ResumeRecord;
+  loaded: boolean;
   upload: (file: File) => Promise<void>;
   organize: () => Promise<void>;
   restore: () => Promise<void>;
   clear: () => Promise<void>;
 } => {
-  const resume = useLiveQuery(() => resumeStore.readResume(), []);
+  // 查询结果三态：undefined 加载中 / null 无简历 / 记录 已上传——区分加载与未上传，供 UI 避免初始误判闪状态
+  const query = useLiveQuery(
+    () => resumeStore.readResume().then((record) => record ?? null),
+    [],
+  );
+  const loaded = query !== undefined;
+  const resume = query ?? undefined;
 
   // 上传简历：解析为 Markdown 后覆盖写入
   const upload = async (file: File): Promise<void> => {
@@ -40,6 +47,7 @@ const useResume = (): {
 
   return {
     resume,
+    loaded,
     upload,
     organize,
     restore,

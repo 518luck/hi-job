@@ -59,7 +59,7 @@ function ResumeSupplementCard() {
           <span
             aria-hidden
             className={cn(
-              'size-1.5 rounded-[2px] transition-colors',
+              'size-1.5 rounded-xs transition-colors',
               hasContent ? 'bg-primary' : 'bg-muted-foreground/20',
             )}
           />
@@ -68,41 +68,52 @@ function ResumeSupplementCard() {
       </CollapsibleTrigger>
       {/* 动画外壳用无边框面板包裹带边框卡片：收起时卡片被完全裁掉，不留边框残影 */}
       <CollapsibleContent className="overflow-hidden data-open:animate-hijob-collapse-down data-closed:animate-hijob-collapse-up motion-reduce:animate-none">
-        <div className="divide-y divide-border rounded-md border border-border">
+        <div className="rounded-md border border-border">
           <div className="flex flex-col gap-1.5 px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
               不会出现在简历里；会随消息素材发送给你配置的 AI
               厂商，仅供聊天时自然提及
             </p>
-            {/* 固定高度并关闭 field-sizing：高度不随内容变化，保证折叠动画测量稳定 */}
-            <Textarea
-              value={value}
-              maxLength={CONTENT_LIMIT}
-              placeholder="记录简历之外的小项目、技能涉猎等浅层经历…"
-              className="field-sizing-fixed h-40 resize-none overflow-y-auto"
-              onChange={(event) => {
-                // 开始输入即完成初始化：封死库无记录时首次保存的 liveQuery 回流覆盖草稿的竞态窗口
-                setHydrated(true);
-                setValue(event.target.value);
-              }}
-              onBlur={() => {
-                void handleBlur();
-              }}
-            />
-          </div>
-          <div className="flex items-center justify-between px-3 py-1.5">
-            <span className="text-xs text-muted-foreground">
-              {value.length}/{CONTENT_LIMIT}
-            </span>
-            {/* 保存反馈：常驻占位 + 透明度过渡，保存成功亮起约 1.5s 后淡出 */}
-            <span
-              className={cn(
-                'text-xs text-muted-foreground transition-opacity duration-300 motion-reduce:transition-none',
-                saved ? 'opacity-100' : 'opacity-0',
-              )}
-            >
-              已保存
-            </span>
+            {/* 输入框浮层容器：计数与保存提示以前景色叠在框内底边预留带，不占独立行 */}
+            <div className="relative">
+              {/* 固定高度并关闭 field-sizing：高度不随内容变化，保证折叠动画测量稳定；底部留白给浮层避让文字 */}
+              <Textarea
+                value={value}
+                maxLength={CONTENT_LIMIT}
+                placeholder="记录简历之外的小项目、技能涉猎等浅层经历…"
+                className="field-sizing-fixed h-40 resize-none overflow-y-auto pb-6"
+                onChange={(event) => {
+                  // 开始输入即完成初始化：封死库无记录时首次保存的 liveQuery 回流覆盖草稿的竞态窗口
+                  setHydrated(true);
+                  setValue(event.target.value);
+                }}
+                onBlur={() => {
+                  void handleBlur();
+                }}
+              />
+              {/* 字数计数：右下角前景浮层，触顶转警示色 */}
+              <span
+                aria-hidden
+                className={cn(
+                  'pointer-events-none absolute right-3 bottom-2 text-[10px] tabular-nums',
+                  value.length >= CONTENT_LIMIT
+                    ? 'text-destructive/80'
+                    : 'text-muted-foreground/60',
+                )}
+              >
+                {value.length}/{CONTENT_LIMIT}
+              </span>
+              {/* 保存反馈：左下角前景浮层，保存成功亮起约 1.5s 后淡出 */}
+              <span
+                aria-hidden
+                className={cn(
+                  'pointer-events-none absolute left-3 bottom-2 text-[10px] text-muted-foreground/60 transition-opacity duration-300 motion-reduce:transition-none',
+                  saved ? 'opacity-100' : 'opacity-0',
+                )}
+              >
+                已保存
+              </span>
+            </div>
           </div>
         </div>
       </CollapsibleContent>
