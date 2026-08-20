@@ -313,6 +313,7 @@ export default defineBackground(() => {
     await broadcastNotify('blocked-companies-changed');
   });
   onMessage('getDebugSettings', () => debugSettingStore.readDebugSettings());
+  onMessage('getAiPreference', () => aiPreferenceStore.readAiPreference());
   // 打开授权小窗：聊天页未授权报错的一键入口，开窗无手势限制，权限申请在小窗内点击完成
   onMessage('openAiVendorAuth', async () => {
     const origin = await resolveActiveVendorOrigin();

@@ -11,6 +11,7 @@ import {
   WINDOW_GAP,
 } from '../config/chat-app';
 import { CHAT_WINDOW_HEIGHT, CHAT_WINDOW_WIDTH } from '../config/chat-window';
+import { useAutoGreet } from '../model/auto-greet';
 import { useChatRuntime } from '../model/chat-runtime';
 import { ChatFab, type FabPosition } from './chat-fab';
 import { ChatWindow } from './chat-window';
@@ -63,7 +64,23 @@ function ChatAssistant() {
     timing,
     errorMessage,
     lastMethod,
+    text,
   } = useChatRuntime();
+
+  // 自动问候：去沟通标记 + 工作台开关驱动，自动展开聊天窗发起「问候」，终态后投递到页面输入框
+  useAutoGreet({
+    onTrigger: () => {
+      const fab = fabRef.current;
+      if (fab !== null) {
+        setWindowStyle(computeWindowStyle(fab.getBoundingClientRect()));
+      }
+      setOpen(true);
+      startScene('greeting');
+    },
+    bodyStatus,
+    text,
+    lastMethod,
+  });
 
   // 初次布局：按按钮实际高度校准默认停靠位
   useLayoutEffect(() => {

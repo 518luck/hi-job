@@ -33,6 +33,7 @@ interface UseChatRuntimeResult {
   timing: AiTimingStats | null; // 耗时用量统计：发起即建立实时跳动、done 定格，供顶栏展示
   errorMessage: string; // 视图展示的失败原因：场景准备失败优先，其次流式失败
   lastMethod: AiStreamMethod | null; // 最近一次实际发起的场景方法，终态保留，供重新生成重跑
+  text: string; // 生成终态全文：自动问候完成后投递到页面输入框用
 }
 
 // 流式状态到 assistant 消息状态映射参数
@@ -204,6 +205,7 @@ const useChatRuntime = (): UseChatRuntimeResult => {
     timing,
     errorMessage: sceneError !== '' ? sceneError : error,
     lastMethod,
+    text,
   };
 };
 

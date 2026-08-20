@@ -2,6 +2,7 @@
 import { defineExtensionMessaging } from '@webext-core/messaging';
 
 import type {
+  AiPreferenceInput,
   AiStreamHandle,
   ChatMessageInput,
   DebugSettings,
@@ -29,6 +30,7 @@ interface ProtocolMap {
   getPageJobContext(): PageJobContext; // 侧边栏	后台	读取当前 BOSS 页面的职位上下文（页面类型与当前职位数据）
   jobContextChanged(): void; // 隔离世界脚本	后台	通知职位选中已变化（后台广播到侧边栏刷新）
   getDebugSettings(): DebugSettings; // 主世界脚本（经桥）	后台	读取调试开关设置
+  getAiPreference(): AiPreferenceInput; // 聊天 UI（隔离世界）	后台	读取 AI 偏好（自动问候/自动发送开关）
   openAiVendorAuth(): void; // 主世界脚本（经桥）	后台	打开当前选中厂商的授权小窗
   saveDebugSettings(data: DebugSettings): void; // 侧边栏	后台	保存调试开关设置并广播到页面
   greeting(data: GreetingInput): AiStreamHandle; // 聊天 UI（隔离世界）	后台	启动流式生成打招呼语句，增量经 hiJobStream 推送

@@ -3,53 +3,25 @@
 // 侧边栏「去沟通」打开带 #hijob-greet 标记的详情页；本模块检测到标记后先清除再执行，
 // 手动浏览与刷新都不会触发。点击即发起真实沟通（发出直聘设置的招呼语），
 // 未设招呼语或已沟通过时页面会直接跳转会话，等不到弹窗属正常流程。
+// 点击「立即沟通」前写入自动问候标记，聊天页消费后自动发起 AI 问候（开关在工作台）。
 
+import {
+  clearAutoGreetMarker,
+  markAutoGreetPending,
+} from '@/shared/lib/auto-greet-marker';
 import { JOB_GREET_HASH } from '@/shared/lib/boss-url';
 import { debugLog } from '@/shared/lib/debug-log';
+import {
+  randomDelay,
+  showToast,
+  waitForVisible,
+} from '@/shared/lib/page-interaction';
 
 // 等待按钮/弹窗的超时：页面加载慢或结构变化时放弃自动流程
 const WAIT_TIMEOUT_MS = 8000;
 
-// 点击前随机延迟区间：模拟人扫一眼页面再动手，降低风控特征
-const CLICK_DELAY_MIN_MS = 500;
-const CLICK_DELAY_MAX_MS = 1200;
-
 // 打招呼弹窗标题：仅该弹窗的「继续沟通」会被自动点击
 const GREET_DIALOG_TITLE = '已向BOSS发送消息';
-
-// toast 提示类名与自动消失时长：失败时页面角落短暂提示
-const TOAST_CLASS = 'hijob-greet-toast';
-const TOAST_DISMISS_MS = 4000;
-
-// 随机等待一小段：两次点击前的拟人延迟
-const randomDelay = (): Promise<void> =>
-  new Promise((resolve) => {
-    const ms =
-      CLICK_DELAY_MIN_MS +
-      Math.random() * (CLICK_DELAY_MAX_MS - CLICK_DELAY_MIN_MS);
-    setTimeout(resolve, ms);
-  });
-
-// 轮询等待定位函数命中可见元素，超时返回 null
-const waitForVisible = async ({
-  locate,
-  timeoutMs,
-}: {
-  locate: () => HTMLElement | null;
-  timeoutMs: number;
-}): Promise<HTMLElement | null> => {
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    const element = locate();
-    if (element !== null) {
-      return element;
-    }
-    if (Date.now() >= deadline) {
-      return null;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  }
-};
 
 // 定位可见的「立即沟通」按钮
 const locateStartButton = (): HTMLElement | null => {
@@ -63,27 +35,6 @@ const locateVisibleDialog = (): HTMLElement | null => {
   return dialog !== null && dialog.offsetWidth > 0 ? dialog : null;
 };
 
-// 注入 toast 样式：深色小条，贴页面右下角
-const ensureToastStyle = (): void => {
-  if (document.querySelector(`style[data-hijob-greet-style]`) !== null) {
-    return;
-  }
-  const style = document.createElement('style');
-  style.dataset.hijobGreetStyle = '1';
-  style.textContent = `.${TOAST_CLASS}{position:fixed;right:16px;bottom:16px;z-index:2147483647;padding:10px 14px;border-radius:4px;background:rgba(24,24,27,.92);color:#fafafa;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.25);}`;
-  document.head.append(style);
-};
-
-// 失败提示：页面右下角短暂显示后自动消失
-const showToast = ({ text }: { text: string }): void => {
-  ensureToastStyle();
-  const toast = document.createElement('div');
-  toast.className = TOAST_CLASS;
-  toast.textContent = text;
-  document.body.append(toast);
-  setTimeout(() => toast.remove(), TOAST_DISMISS_MS);
-};
-
 // 自动打招呼主流程：等按钮点击 → 等打招呼弹窗点击「继续沟通」
 const runAutoGreet = async (): Promise<void> => {
   const startButton = await waitForVisible({
@@ -95,6 +46,8 @@ const runAutoGreet = async (): Promise<void> => {
     showToast({ text: '自动沟通未完成：未找到「立即沟通」按钮' });
     return;
   }
+  // 点击前写入自动问候标记：点击后的两种去向（弹窗确认/直接跳转）都会落到聊天页消费
+  markAutoGreetPending();
   await randomDelay();
   startButton.click();
   debugLog('auto-greet', '已点击「立即沟通」');
@@ -107,6 +60,7 @@ const runAutoGreet = async (): Promise<void> => {
   if (dialog === null) {
     debugLog('auto-greet', '点击后未出现弹窗也未跳转，请人工确认');
     showToast({ text: '自动沟通未完成：未检测到弹窗或跳转，请手动确认' });
+    clearAutoGreetMarker();
     return;
   }
   // > 双重校验：标题与按钮文案都匹配打招呼弹窗才自动点，上限/验证码等弹窗一律不碰
@@ -121,6 +75,7 @@ const runAutoGreet = async (): Promise<void> => {
   ) {
     debugLog('auto-greet', '出现非打招呼弹窗，不自动处理', title ?? '');
     showToast({ text: '自动沟通已暂停：出现其他弹窗，请手动处理' });
+    clearAutoGreetMarker();
     return;
   }
   await randomDelay();

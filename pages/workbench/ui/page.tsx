@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
+import { Switch } from '@/shared/ui/switch';
 import type { NavKey } from '@/widgets/nav-bar';
 
 import { useAiPreference } from '../model/use-ai-preference';
@@ -43,9 +44,13 @@ function WorkbenchPage({
     vendorId,
     modelId,
     thinkingMode,
+    autoGreetOnGoChat,
+    autoSendGreeting,
     selectVendor,
     selectModel,
     setThinkingMode,
+    setAutoGreetOnGoChat,
+    setAutoSendGreeting,
   } = useAiPreference();
 
   // 生效的厂商与模型：未选择或选择失效时回退到第一个
@@ -152,6 +157,23 @@ function WorkbenchPage({
       <h2 className="text-base font-medium">工作台</h2>
       <CurrentSessionCard />
       {renderVendorPicker()}
+      {/* // @ 去沟通自动化：控制「去沟通」落到聊天页后的自动问候生成与自动发送 */}
+      <div className="divide-y divide-border border border-border">
+        <SwitchRow
+          title="去沟通后自动生成问候"
+          description="从侧边栏「去沟通」进入聊天页后，自动生成 AI 问候并填入输入框"
+          checked={autoGreetOnGoChat}
+          disabled={false}
+          onCheckedChange={setAutoGreetOnGoChat}
+        />
+        <SwitchRow
+          title="生成后自动发送"
+          description="问候生成完成后自动点击发送；关闭则填入输入框由你确认后手动发"
+          checked={autoSendGreeting && autoGreetOnGoChat}
+          disabled={!autoGreetOnGoChat}
+          onCheckedChange={setAutoSendGreeting}
+        />
+      </div>
       <ResumeUpload />
       {/* 屏蔽公司引导入口：仅在名单为空时展示，已配置则不再指引 */}
       {!hasBlockedCompanies && (
@@ -169,6 +191,39 @@ function WorkbenchPage({
           <Icons.chevronRight className="size-4 shrink-0 text-muted-foreground" />
         </button>
       )}
+    </div>
+  );
+}
+
+// 自动化开关行的 props
+interface SwitchRowProps {
+  title: string; // 开关名称
+  description: string; // 开关作用说明
+  checked: boolean; // 当前开关状态
+  disabled: boolean; // 是否禁用（依赖的上游开关未开时）
+  onCheckedChange: (enabled: boolean) => void; // 切换回调
+}
+
+// 自动化开关行：名称与说明在左、滑动开关在右，行间由外层 hairline 分隔
+function SwitchRow({
+  title,
+  description,
+  checked,
+  disabled,
+  onCheckedChange,
+}: SwitchRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+      <span className="flex flex-col gap-0.5">
+        <span className="text-sm">{title}</span>
+        <span className="text-xs text-muted-foreground">{description}</span>
+      </span>
+      <Switch
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onCheckedChange}
+        aria-label={title}
+      />
     </div>
   );
 }

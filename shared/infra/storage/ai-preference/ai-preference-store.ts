@@ -11,6 +11,8 @@ const DEFAULT_AI_PREFERENCE: AiPreferenceInput = {
   vendorId: null, // 工作台所选厂商 id，null 未选择
   modelId: null, // 工作台所选模型 id，null 未选择
   thinkingMode: 'default', // 思考模式档位
+  autoGreetOnGoChat: false, // 去沟通流程落到聊天页后自动发起 AI 问候生成
+  autoSendGreeting: false, // 问候生成完成后自动填入 Boss 输入框并发送
   greetingSystem: null, // 打招呼系统提示，null 用默认
   greetingTask: null, // 打招呼任务描述，null 用默认
   greetingRequirement: null, // 打招呼生成要求，null 用默认
@@ -43,6 +45,8 @@ const readAiPreference = async (): Promise<AiPreferenceInput> => {
     vendorId: record.vendorId,
     modelId: record.modelId,
     thinkingMode: record.thinkingMode,
+    autoGreetOnGoChat: record.autoGreetOnGoChat ?? false,
+    autoSendGreeting: record.autoSendGreeting ?? false,
     greetingSystem: record.greetingSystem ?? null,
     greetingTask: record.greetingTask ?? null,
     greetingRequirement: record.greetingRequirement ?? null,

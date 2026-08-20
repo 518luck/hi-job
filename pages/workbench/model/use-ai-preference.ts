@@ -11,9 +11,13 @@ const useAiPreference = (): {
   vendorId: string | null;
   modelId: string | null;
   thinkingMode: ThinkingMode;
+  autoGreetOnGoChat: boolean;
+  autoSendGreeting: boolean;
   selectVendor: (vendorId: string | null) => void;
   selectModel: (modelId: string | null) => void;
   setThinkingMode: (mode: ThinkingMode) => Promise<void>;
+  setAutoGreetOnGoChat: (enabled: boolean) => void;
+  setAutoSendGreeting: (enabled: boolean) => void;
 } => {
   const preference = useLiveQuery(
     () => aiPreferenceStore.readAiPreference(),
@@ -46,13 +50,33 @@ const useAiPreference = (): {
     });
   };
 
+  // 切换去沟通自动问候：更新状态并持久化
+  const setAutoGreetOnGoChat = (enabled: boolean): void => {
+    void aiPreferenceStore.saveAiPreference({
+      ...preference,
+      autoGreetOnGoChat: enabled,
+    });
+  };
+
+  // 切换问候自动发送：更新状态并持久化
+  const setAutoSendGreeting = (enabled: boolean): void => {
+    void aiPreferenceStore.saveAiPreference({
+      ...preference,
+      autoSendGreeting: enabled,
+    });
+  };
+
   return {
     vendorId: preference.vendorId,
     modelId: preference.modelId,
     thinkingMode: preference.thinkingMode,
+    autoGreetOnGoChat: preference.autoGreetOnGoChat,
+    autoSendGreeting: preference.autoSendGreeting,
     selectVendor,
     selectModel,
     setThinkingMode,
+    setAutoGreetOnGoChat,
+    setAutoSendGreeting,
   };
 };
 
