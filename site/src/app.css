@@ -102,7 +102,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply overflow-x-clip bg-background text-foreground;
   }
 
   /* 全局滚动条美化：细圆角滑块 + 透明轨道，颜色随明暗主题切换；
@@ -219,6 +219,162 @@
 .hijob-chat-scroll::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 3px;
+}
+
+/* # Hero 入场与背景动效：光斑网格圆形涟漪揭示、环形光晕、两侧滚动文字列 */
+
+/* @ 入场关键帧 */
+@keyframes hijob-ripple-reveal {
+  0% {
+    clip-path: circle(0 at 50% 42%);
+    opacity: 0;
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(150vmax at 50% 42%);
+    opacity: 1;
+  }
+}
+@keyframes hijob-ripple-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.05);
+  }
+  26% {
+    opacity: 0.48;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.9);
+  }
+}
+@keyframes hijob-content-rise {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(48px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@keyframes hijob-header-drop {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(-18px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+/* @ 滚动文字列：内容复制一份后上移自身一半，形成无缝循环 */
+@keyframes hijob-scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* > 环境光斑：两团主色柔光（左上 + 右下），衬托 Hero 层次 */
+.hero-ambient {
+  background-image:
+    radial-gradient(
+      circle at 18% 24%,
+      color-mix(in oklch, var(--primary) 20%, transparent) 0,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 86% 74%,
+      color-mix(in oklch, var(--primary) 13%, transparent) 0,
+      transparent 32%
+    );
+}
+
+/* > 涟漪光环：入场时自焦点扩散的一圈柔光 */
+.hero-ripple-ring {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  z-index: -5;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.05);
+  background: radial-gradient(
+    circle,
+    transparent 0 38%,
+    color-mix(in oklch, var(--primary) 26%, transparent) 43%,
+    color-mix(in oklch, var(--primary) 13%, transparent) 54%,
+    transparent 68%
+  );
+}
+
+/* @ 滚动文字列与头部入场：仅在允许动效时启用初始隐藏态与动画 */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-entry .hero-reveal-layer {
+    opacity: 0;
+    clip-path: circle(0 at 50% 42%);
+  }
+  .hero-entry .hero-content-rise {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  .site-header-drop {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+
+  .hero-entry.hero-started .hero-reveal-layer {
+    animation: hijob-ripple-reveal 0.88s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .hero-entry.hero-started .hero-ripple-ring {
+    animation: hijob-ripple-ring 0.92s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .hero-entry.hero-started .hero-content-rise {
+    animation: hijob-content-rise 0.68s cubic-bezier(0.16, 1, 0.3, 1) 0.62s
+      both;
+  }
+  .site-header-drop.site-header-started {
+    animation: hijob-header-drop 0.56s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both;
+  }
+
+  .hero-scroll-col {
+    will-change: transform;
+    animation: hijob-scroll-up 20s linear infinite;
+  }
+  .hero-scroll-col-reverse {
+    animation-direction: reverse;
+  }
+  .hero-scroll-container:hover .hero-scroll-col {
+    animation-play-state: paused;
+  }
+}
+
+/* 滚动列上下淡出遮罩 */
+.hero-fade-y {
+  mask-image: linear-gradient(
+    transparent 0%,
+    black 25%,
+    black 75%,
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-col {
+    animation: none;
+  }
 }
 
 /* > 界面一览区光晕背景：两团低饱和柔光（蓝紫），衬托产品界面层次，克制不抢戏 */

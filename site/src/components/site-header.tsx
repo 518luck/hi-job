@@ -1,9 +1,24 @@
+import { useEffect, useState } from 'react';
 import { REPO_URL, SITE_TITLE } from '../lib/site';
+import { cn } from '../lib/utils';
 
-// 顶部导航：产品名 + GitHub 入口
+// 顶部导航：产品名 + GitHub 入口，入场时自上方下落
 export function SiteHeader() {
+  const [started, setStarted] = useState(false);
+
+  // 挂载后下一帧触发入场动画
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setStarted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   return (
-    <header className="flex items-center justify-between py-4">
+    <header
+      className={cn(
+        'site-header-drop flex items-center justify-between py-4',
+        started && 'site-header-started',
+      )}
+    >
       <span className="text-sm font-semibold tracking-tight">{SITE_TITLE}</span>
       <a
         href={REPO_URL}
