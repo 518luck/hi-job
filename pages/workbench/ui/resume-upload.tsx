@@ -1,9 +1,14 @@
-// 简历上传区：md/docx 上传解析、Markdown 渲染预览、AI 梳理、重新上传与清空
-import { useRef, useState } from 'react';
+// 简历上传区：折叠面板承载 md/docx 上传解析、Markdown 预览、AI 梳理、重新上传与清空
+import { useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import { Button } from '@/shared/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/shared/ui/collapsible';
 import { Icons } from '@/shared/ui/icons';
 
 import { useResume } from '../model/use-resume';
@@ -12,25 +17,46 @@ import { useResume } from '../model/use-resume';
 const PREVIEW_CLASSES =
   '[&_h1]:mb-1 [&_h1]:text-sm [&_h1]:font-semibold [&_h2]:mb-1 [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_p]:my-1 [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_table]:my-1 [&_table]:w-full [&_th]:border [&_th]:px-1 [&_td]:border [&_td]:px-1';
 
-// 简历上传区：未上传显示上传按钮，已上传显示渲染预览与操作
+// 简历上传区：标题行可折叠收起预览，操作按钮常驻标题行；发起操作或出错时自动展开
 function ResumeUpload() {
   const { resume, upload, organize, restore, clear } = useResume();
   const [uploading, setUploading] = useState(false);
   const [organizing, setOrganizing] = useState(false);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resumeContent = resume?.content;
 
-  // 选择文件后解析入库；解析失败时给出可读提示
+  // Markdown 预览按内容记忆化：上传/梳理/折叠等状态变化不重复解析整份简历
+  const preview = useMemo(() => {
+    if (resumeContent === undefined) {
+      return null;
+    }
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{resumeContent}</ReactMarkdown>
+    );
+  }, [resumeContent]);
+
+  // 出错即展开：折叠态下失败提示不可见会造成静默失败
+  const handleErrorShow = (message: string): void => {
+    setOpen(true);
+    setError(message);
+  };
+
+  // 选择文件后解析入库：先展开面板保证过程可见，失败时给出可读提示
   const handleFile = async (file: File | undefined): Promise<void> => {
     if (file === undefined) {
       return;
     }
+    setOpen(true);
     setUploading(true);
     setError('');
     try {
       await upload(file);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '文件解析失败');
+      handleErrorShow(
+        reason instanceof Error ? reason.message : '文件解析失败',
+      );
     } finally {
       setUploading(false);
     }
@@ -38,21 +64,30 @@ function ResumeUpload() {
 
   // AI 梳理：后台生成整理版并落库（原件自动备份），失败透出可读提示
   const handleOrganize = async (): Promise<void> => {
+    setOpen(true);
     setOrganizing(true);
     setError('');
     try {
       await organize();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'AI 梳理失败');
+      handleErrorShow(reason instanceof Error ? reason.message : 'AI 梳理失败');
     } finally {
       setOrganizing(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border p-2">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="flex flex-col gap-2 rounded-md border border-border p-2"
+    >
       <div className="flex items-start justify-between gap-2">
-        <p className="shrink-0 text-xs font-medium whitespace-nowrap">简历</p>
+        <CollapsibleTrigger className="group/trigger flex shrink-0 cursor-pointer items-center gap-0.5 rounded-sm px-1 py-0.5 -ml-1 text-xs font-medium whitespace-nowrap outline-none transition-colors hover:bg-muted/50 focus-visible:ring-1 focus-visible:ring-ring/50">
+          {/* 箭头随开合旋转：Trigger 挂的是 data-panel-open 属性，时长与缓动对齐面板高度动画 */}
+          <Icons.chevronDown className="size-3.5 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-panel-open/trigger:rotate-180 motion-reduce:transition-none" />
+          简历
+        </CollapsibleTrigger>
         <div className="flex flex-wrap justify-end gap-1">
           <Button
             variant="outline"
@@ -101,6 +136,7 @@ function ResumeUpload() {
           )}
         </div>
       </div>
+      {/* 隐藏文件输入挂在根级：折叠收起内容后「重新上传」仍可触发选择 */}
       <input
         ref={inputRef}
         type="file"
@@ -111,35 +147,43 @@ function ResumeUpload() {
           event.target.value = '';
         }}
       />
-      {/* 格式提示仅在上传前展示：已有简历时让位给预览 */}
-      {resume === undefined && (
-        <p className="text-xs text-muted-foreground">
-          支持 .md / .docx 格式：md 直接读取，docx 自动转
-          Markdown（仅保留文字与表格，图片与复杂排版不保留）
-        </p>
-      )}
-      {uploading && <p className="text-xs text-muted-foreground">解析中…</p>}
-      {organizing && (
-        <p className="text-xs text-muted-foreground">AI 梳理中…</p>
-      )}
-      {error !== '' && <p className="text-xs text-destructive">{error}</p>}
-      {resume !== undefined && (
-        <>
-          <p className="text-xs text-muted-foreground">
-            {resume.fileName}
-            {resume.originalContent !== undefined &&
-              '（已 AI 梳理，原版已备份）'}
-          </p>
-          <div
-            className={`max-h-80 overflow-y-auto rounded-md bg-muted/50 p-2 text-xs ${PREVIEW_CLASSES}`}
-          >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {resume.content}
-            </ReactMarkdown>
-          </div>
-        </>
-      )}
-    </div>
+      {/* 外层面板只承载高度关键帧动画（块级布局，子内容不随压扁收缩，测量才准）；flex 排版移入内层包裹 */}
+      <CollapsibleContent
+        keepMounted
+        className="overflow-hidden data-open:animate-hijob-collapse-down data-closed:animate-hijob-collapse-up motion-reduce:animate-none"
+      >
+        <div className="flex flex-col gap-2">
+          {/* 格式提示仅在上传前展示：已有简历时让位给预览 */}
+          {resume === undefined && (
+            <p className="text-xs text-muted-foreground">
+              支持 .md / .docx 格式：md 直接读取，docx 自动转
+              Markdown（仅保留文字与表格，图片与复杂排版不保留）
+            </p>
+          )}
+          {uploading && (
+            <p className="text-xs text-muted-foreground">解析中…</p>
+          )}
+          {organizing && (
+            <p className="text-xs text-muted-foreground">AI 梳理中…</p>
+          )}
+          {error !== '' && <p className="text-xs text-destructive">{error}</p>}
+          {resume !== undefined && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {resume.fileName}
+                {resume.originalContent !== undefined &&
+                  '（已 AI 梳理，原版已备份）'}
+              </p>
+              <div
+                className={`max-h-80 overflow-y-auto rounded-md bg-muted/50 p-2 text-xs ${PREVIEW_CLASSES}`}
+              >
+                {preview}
+              </div>
+            </>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
