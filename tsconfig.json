@@ -6,5 +6,6 @@
     "paths": {
       "@/*": ["./*"]
     }
-  }
+  },
+  "exclude": ["**/node_modules", ".output", "site"]
 }
