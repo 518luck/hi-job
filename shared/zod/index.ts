@@ -121,9 +121,9 @@ export {
 // updateCheck 表：版本检查缓存 + 协议 DTO + 外源响应契约
 export type { UpdateCheck, UpdateCheckStatus } from './update-check';
 export {
-  UPDATE_CHECK_KEY,
   githubReleaseResponseSchema,
   jsdelivrPackageResponseSchema,
+  UPDATE_CHECK_KEY,
   updateCheckSchema,
   updateCheckStatusSchema,
 } from './update-check';
