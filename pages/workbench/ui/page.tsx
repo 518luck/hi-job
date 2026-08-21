@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/shared/ui/select';
 import type { NavKey } from '@/widgets/nav-bar';
+import { UpdateBadge } from '@/widgets/update-notice';
 
 import { useAiPreference } from '../model/use-ai-preference';
 import { useHasBlockedCompanies } from '../model/use-has-blocked-companies';
@@ -151,7 +152,11 @@ function WorkbenchPage({
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-4">
-      <h2 className="text-base font-medium">工作台</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-base font-medium">工作台</h2>
+        {/* 有新版本时标题右侧出现绿点提示，无新版本不占位 */}
+        <UpdateBadge />
+      </div>
       <CurrentSessionCard />
       {renderVendorPicker()}
       <AutomationSection />

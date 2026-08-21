@@ -1,9 +1,11 @@
 import { useTheme } from 'next-themes';
 import { useEffect, useRef } from 'react';
 
+import { FALLBACK_RELEASE_URL } from '@/shared/lib/update-source';
 import { Icons } from '@/shared/ui/icons';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { DISCLAIMER_PARAGRAPHS } from '@/widgets/disclaimer-dialog';
+import { useUpdateStatus } from '@/widgets/update-notice';
 
 import { BlockedCompanyInput } from './blocked-company-input';
 import { StorageUsageSection } from './storage-usage';
@@ -93,9 +95,35 @@ function SettingsPage({ focusSection, onSectionFocused }: SettingsPageProps) {
         {/* 版本号：读取已安装扩展的 manifest，与 package.json 构建时自动同步 */}
         <p className="pt-1 text-xs text-muted-foreground/60">
           v{browser.runtime.getManifest().version}
+          <VersionUpdateStatus />
         </p>
       </section>
     </div>
+  );
+}
+
+// 设置页底部的更新状态：紧随版本号展示「当前为最新」或可点的新版本跳转，未知时不显示
+function VersionUpdateStatus() {
+  const { status } = useUpdateStatus();
+  // 加载中或检查失败（latestVersion 为 null）：不显示任何状态
+  if (status === undefined || status.latestVersion === null) {
+    return null;
+  }
+  if (!status.hasUpdate) {
+    return <span className="ml-1">· 当前为最新</span>;
+  }
+  return (
+    <button
+      type="button"
+      className="ml-1 cursor-pointer underline underline-offset-2 outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+      onClick={() => {
+        void browser.tabs.create({
+          url: status.releaseUrl ?? FALLBACK_RELEASE_URL,
+        });
+      }}
+    >
+      有新版本 v{status.latestVersion}，点击查看
+    </button>
   );
 }
 
