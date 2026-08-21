@@ -38,17 +38,17 @@ const DONE_TO_REPLY_MS = 600; // 输出完成到指针动身的间隔
 const CURSOR_REAPPEAR_MS = 350; // 指针原地淡入后动身的等待（让位移过渡可见）
 const SENT_HOLD_MS = 3600; // 送达后停留再循环
 
-// 演示剧本：复刻真实产品截图的开场白场景（周女士 · 泰琪丰 · 嵌入式岗位）
+// 演示剧本：嵌入式岗位的走心开场白（周女士 · 泰琪丰）
 const DEMO_SCRIPT: DemoScript = {
-  phrase: '开场白走心一点',
+  phrase: '开场白要真诚，别模板化',
   reasoning: [
-    '对方招嵌入式，我是 Web 背景',
-    '先接住兴趣，再讲可迁移能力',
-    '不装懂，留一个轻量问题收尾',
-    '控制在一百字内，语气真诚',
+    'JD 要嵌入式经验，我的主战场在 Web',
+    '先接住行业兴趣，再迁移工程能力',
+    '不硬凑匹配度，把问题轻轻递回去',
+    '百字以内收住，真诚比华丽重要',
   ],
   reply:
-    '周女士您好，我是一名全栈开发者，一直对新能源领域的嵌入式应用很感兴趣。虽然我的经验集中在 Web 开发，但对技术充满热情，也具备快速学习新领域的能力。不知是否有机会与您进一步沟通，了解这个岗位的具体要求？',
+    '周女士您好。我是一名全栈开发者，长期深耕 Web 性能与工程化；注意到贵司在新能源嵌入式方向的布局，正是我想深入的行业。跨领域迁移我有完整方法论，也有快速落地的过往成绩。方便的话，想请教这个岗位当前最希望解决什么问题？',
 };
 const SCRIPTS: readonly DemoScript[] = [DEMO_SCRIPT];
 
@@ -410,10 +410,10 @@ function WorkbenchSidebar({
         )}
         {/* 厂商 / 模型 / 思考模式选择器 */}
         <div className="grid grid-cols-2 gap-2">
-          <SelectMock value="小米 MiMo" />
-          <SelectMock value="mimo-v2.5-pro-ul" />
+          <SelectMock value="Deepseek" />
+          <SelectMock value="deepseek-v4-flash" />
           <div className="col-span-2">
-            <SelectMock value="思考：中（传 reasoning: medium）" />
+            <SelectMock value="思考：高（传 reasoning: high）" />
           </div>
         </div>
         {/* 聊天自动化：四灯指示行 */}
@@ -563,26 +563,30 @@ function ResumeExpanded() {
         <p className="mb-1 text-sm font-semibold">核心技能</p>
         <ul className="my-1 list-disc pl-4">
           <li className="my-0.5">
-            <span className="font-semibold">前端开发：</span>
-            React、Next.js、TypeScript、Vite、TanStack Query、Zustand
+            <span className="font-semibold">前端架构：</span>
+            React 19、Next.js、TypeScript；主导百万 DAU
+            产品前端架构，微前端落地 30+ 人团队
           </li>
           <li className="my-0.5">
-            <span className="font-semibold">后端与接口：</span>
-            Next.js、Prisma；既有 Go 服务业务开发经验
+            <span className="font-semibold">后端与高并发：</span>
+            Node.js、Go、Prisma；设计 10 万 QPS
+            网关与限流降级，核心链路可用性 99.99%
           </li>
           <li className="my-0.5">
-            <span className="font-semibold">数据与异步：</span>
-            PostgreSQL、Redis、BullMQ、S3
+            <span className="font-semibold">数据与 AI 工程：</span>
+            PostgreSQL、Redis、Kafka；落地 RAG 与 Agent
+            工作流，AI 客服人效提升 40%
           </li>
           <li className="my-0.5">
-            <span className="font-semibold">工程部署：</span>
-            Git、Docker、Nginx、Argo
+            <span className="font-semibold">工程与影响力：</span>
+            Docker、K8s、Argo CD；5k+ Star
+            开源项目维护者，技术博客 10w+ 阅读
           </li>
         </ul>
         <p className="mb-1 mt-2 text-sm font-semibold">工作经历亮点</p>
         <p className="my-1">
-          主导低代码渲染引擎研发，首屏耗时 2.1s 降至 0.8s；推动 AI
-          辅助客服流程落地。
+          主导低代码渲染引擎重构，首屏 2.1s 降至 0.8s（-62%），获年度技术突破奖；推动
+          AI Agent 在三条业务线落地，人效提升 40%。
         </p>
       </div>
     </div>
