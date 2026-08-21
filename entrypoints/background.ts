@@ -21,7 +21,13 @@ import {
   debugSettingStore,
   hrStore,
   jdStore,
+  updateCheckStore,
 } from '@/shared/infra/storage';
+import {
+  GITHUB_RELEASE_API_URL,
+  JSDELIVR_PACKAGE_URL,
+} from '@/shared/lib/update-source';
+import { compareVersions } from '@/shared/lib/version-compare';
 import type {
   AiVendorRecord,
   FollowUpInput,
@@ -30,6 +36,8 @@ import type {
   RejectionFeedbackInput,
   ReplyInput,
   ThinkingMode,
+  UpdateCheck,
+  UpdateCheckStatus,
 } from '@/shared/zod';
 import {
   blockedCompanyNamesSchema,
@@ -38,13 +46,106 @@ import {
   debugSettingsSchema,
   excludedHrIdsResponseSchema,
   followUpInputSchema,
+  githubReleaseResponseSchema,
   greetingInputSchema,
   hrInputSchema,
+  jsdelivrPackageResponseSchema,
   pageJobContextSchema,
   rejectionFeedbackInputSchema,
   replyInputSchema,
   selectedJdSchema,
+  UPDATE_CHECK_KEY,
 } from '@/shared/zod';
+
+// 版本检查缓存有效期（1 小时）与单次请求超时（10 秒）
+const UPDATE_CHECK_TTL_MS = 60 * 60 * 1000;
+const UPDATE_FETCH_TIMEOUT_MS = 10_000;
+
+// 进行中的检查：并发触发共享同一次网络检查
+let inFlightCheck: Promise<UpdateCheckStatus> | undefined;
+
+// 请求 JSON 并按 schema 校验：任一环节失败抛错，由调用方走兜底
+const fetchJsonOf = async <T>(
+  url: string,
+  schema: z.ZodType<T>,
+): Promise<T> => {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(UPDATE_FETCH_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return schema.parse(await response.json());
+};
+
+// 由检查结果计算协议状态：附加当前版本与是否有更新
+const statusOf = ({
+  latestVersion,
+  releaseUrl,
+  source,
+  currentVersion,
+}: Omit<UpdateCheck, 'key' | 'lastCheckedAt'> & {
+  currentVersion: string;
+}): UpdateCheckStatus => ({
+  latestVersion,
+  releaseUrl,
+  source,
+  currentVersion,
+  hasUpdate:
+    latestVersion !== null &&
+    compareVersions(latestVersion, currentVersion) > 0,
+});
+
+// > 检查扩展更新：缓存不足 1 小时直接返回；过期才请求网络，GitHub 主源失败走 jsDelivr 镜像，全失败记未知且同样缓存 1 小时
+const handleCheckUpdate = async (): Promise<UpdateCheckStatus> => {
+  const currentVersion = browser.runtime.getManifest().version;
+  const cached = await updateCheckStore.readUpdateCheck();
+  if (
+    cached !== undefined &&
+    Date.now() - cached.lastCheckedAt < UPDATE_CHECK_TTL_MS
+  ) {
+    return statusOf({ ...cached, currentVersion });
+  }
+  if (inFlightCheck === undefined) {
+    inFlightCheck = (async () => {
+      let latestVersion: string | null = null;
+      let releaseUrl: string | null = null;
+      let source: UpdateCheck['source'] = 'unknown';
+      try {
+        const release = await fetchJsonOf(
+          GITHUB_RELEASE_API_URL,
+          githubReleaseResponseSchema,
+        );
+        latestVersion = release.tag_name.replace(/^v/, '');
+        releaseUrl = release.html_url;
+        source = 'github';
+      } catch {
+        try {
+          const pkg = await fetchJsonOf(
+            JSDELIVR_PACKAGE_URL,
+            jsdelivrPackageResponseSchema,
+          );
+          latestVersion = pkg.version.replace(/^v/, '');
+          source = 'jsdelivr';
+        } catch {
+          // 兜底也失败：记未知，静默返回
+        }
+      }
+      const record: UpdateCheck = {
+        key: UPDATE_CHECK_KEY,
+        lastCheckedAt: Date.now(),
+        latestVersion,
+        releaseUrl,
+        source,
+      };
+      await updateCheckStore.saveUpdateCheck(record);
+      return statusOf({ ...record, currentVersion });
+    })().finally(() => {
+      inFlightCheck = undefined;
+    });
+  }
+  return inFlightCheck;
+};
 
 // 解析当前选中厂商：授权小窗与生成上下文共用同一厂商选择逻辑，避免选择漂移
 const resolveActiveVendor = async (): Promise<AiVendorRecord> => {
@@ -385,4 +486,5 @@ export default defineBackground(() => {
     }
   });
   onMessage('organizeResume', () => handleOrganizeResume());
+  onMessage('checkUpdate', () => handleCheckUpdate());
 });

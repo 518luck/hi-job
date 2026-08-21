@@ -13,11 +13,13 @@ const updateCheckSchema = z.object({
   source: z.enum(['github', 'jsdelivr', 'unknown']), // 本次结果来源端点
 });
 
-// 协议返回的检查状态：去掉存储主键，附加本地动态字段
-const updateCheckStatusSchema = updateCheckSchema.omit({ key: true }).extend({
-  currentVersion: z.string(), // 当前安装版本（读 manifest）
-  hasUpdate: z.boolean(), // 远端版本是否高于当前版本
-});
+// 协议返回的检查状态：去掉存储主键与检查时间，附加本地动态字段
+const updateCheckStatusSchema = updateCheckSchema
+  .omit({ key: true, lastCheckedAt: true })
+  .extend({
+    currentVersion: z.string(), // 当前安装版本（读 manifest）
+    hasUpdate: z.boolean(), // 远端版本是否高于当前版本
+  });
 
 // GitHub Releases latest 接口响应的最小字段集（外源响应契约）
 const githubReleaseResponseSchema = z.object({
@@ -36,9 +38,9 @@ type UpdateCheckStatus = z.infer<typeof updateCheckStatusSchema>;
 
 export type { UpdateCheck, UpdateCheckStatus };
 export {
-  UPDATE_CHECK_KEY,
   githubReleaseResponseSchema,
   jsdelivrPackageResponseSchema,
+  UPDATE_CHECK_KEY,
   updateCheckSchema,
   updateCheckStatusSchema,
 };

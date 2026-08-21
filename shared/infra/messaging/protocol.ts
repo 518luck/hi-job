@@ -13,6 +13,7 @@ import type {
   RejectionFeedbackInput,
   ReplyInput,
   SelectedJd,
+  UpdateCheckStatus,
 } from '@/shared/zod';
 
 // 消息协议表：消息名 -> 参数与返回类型，隔离世界与后台两端编译期一致
@@ -39,6 +40,7 @@ interface ProtocolMap {
   rejectionFeedback(data: RejectionFeedbackInput): AiStreamHandle; // 聊天 UI（隔离世界）	后台	启动流式生成请教反馈消息
   cancelAiStream(data: string): void; // 聊天 UI（隔离世界）	后台	取消进行中的流式生成（入参为 requestId）
   organizeResume(): string; // 侧边栏	后台	AI 梳理简历，返回整理后的 Markdown（简历从库读，无入参）
+  checkUpdate(): UpdateCheckStatus; // 侧边栏	后台	检查扩展新版本（后台自带 1 小时缓存），返回最新版本与是否有更新
 }
 
 // 类型安全消息收发：隔离世界内容脚本与后台使用
