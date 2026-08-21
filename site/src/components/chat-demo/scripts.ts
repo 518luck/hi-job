@@ -42,13 +42,21 @@ export const DEMO_SCRIPTS: readonly DemoScript[] = [
   },
 ];
 
+// 挑选下一个剧本的入参
+export interface PickNextScriptOptions {
+  scripts: readonly DemoScript[]; // 候选剧本表
+  previousIndex: number; // 上一条剧本下标（避免连续重复）
+}
+
 // 随机挑下一个剧本：避免与上一条重复
-export const pickNextScript = (
-  previousIndex: number,
-): { script: DemoScript; index: number } => {
-  const next = Math.floor(Math.random() * DEMO_SCRIPTS.length);
-  const index = DEMO_SCRIPTS.length > 1 && next === previousIndex
-    ? (next + 1) % DEMO_SCRIPTS.length
-    : next;
-  return { script: DEMO_SCRIPTS[index] ?? DEMO_SCRIPTS[0], index };
+export const pickNextScript = ({
+  scripts,
+  previousIndex,
+}: PickNextScriptOptions): { script: DemoScript; index: number } => {
+  const next = Math.floor(Math.random() * scripts.length);
+  const index =
+    scripts.length > 1 && next === previousIndex
+      ? (next + 1) % scripts.length
+      : next;
+  return { script: scripts[index] ?? scripts[0], index };
 };

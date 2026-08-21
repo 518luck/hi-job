@@ -51,7 +51,11 @@ interface GlassMaps {
 }
 
 // 由元素尺寸生成边缘透镜位移贴图：供 SVG 滤镜的 feImage 使用
-const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => {
+const buildGlassMaps = ({
+  width,
+  height,
+  radius,
+}: GlassMapInput): GlassMaps => {
   // 尺寸未测得（首帧为 0）时不生成，由组件据此跳过渲染，避免 createImageData 崩溃
   if (width < MIN_GLASS_SIZE_PX || height < MIN_GLASS_SIZE_PX) {
     return { displacementUrl: '', scale: 0 };
@@ -81,7 +85,13 @@ const buildGlassMaps = ({ width, height, radius }: GlassMapInput): GlassMaps => 
     for (let x = 0; x < width; x += 1) {
       const relX = x - centerX;
       const relY = y - centerY;
-      const sdf = roundedRectSDF(relX, relY, halfWidth, halfHeight, innerRadius);
+      const sdf = roundedRectSDF(
+        relX,
+        relY,
+        halfWidth,
+        halfHeight,
+        innerRadius,
+      );
       // 内层形内为 1（原样采样、中心清澈），向外过渡到 0（采样点收到中心、边缘最强折射）
       const falloff = smoothStep(band, 0, sdf);
       const scaled = falloff * falloff * (3 - 2 * falloff);

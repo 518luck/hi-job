@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { useLatestVersion } from '../hooks/use-latest-version';
 import { REPO_URL } from '../lib/site';
 import { cn } from '../lib/utils';
@@ -59,10 +60,10 @@ export function HeroSection() {
       </div>
       {/* 入场涟漪光环 */}
       <div aria-hidden className="hero-ripple-ring" />
-      {/* 滚动文字列：左上右下循环，悬停暂停 */}
+      {/* 滚动文字列：左上右下循环，悬停暂停；overlay 整体透传点击，仅跑马灯自身可交互 */}
       <div
         aria-hidden
-        className="hero-scroll-container absolute inset-y-0 left-0 right-0 hidden justify-between lg:flex"
+        className="hero-scroll-container pointer-events-none absolute inset-y-0 left-0 right-0 hidden justify-between lg:flex"
       >
         <HeroMarquee items={MARQUEE_JOBS} />
         <HeroMarquee items={MARQUEE_EVENTS} reverse />
@@ -81,7 +82,9 @@ export function HeroSection() {
         <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
           <span className="rounded-full border px-3 py-1">免费开源</span>
           <span className="rounded-full border px-3 py-1">数据本地存储</span>
-          <span className="rounded-full border px-3 py-1">不上传任何服务器</span>
+          <span className="rounded-full border px-3 py-1">
+            不上传任何服务器
+          </span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <DownloadButton />
@@ -120,7 +123,7 @@ function HeroMarquee({
   const half = [...items, ...items, ...items];
   const doubled = [...half, ...half];
   return (
-    <div className="hero-fade-y h-full w-44 overflow-hidden">
+    <div className="hero-fade-y pointer-events-auto h-full w-44 overflow-hidden">
       <div
         className={cn(
           'hero-scroll-col flex h-max flex-col',
@@ -129,6 +132,7 @@ function HeroMarquee({
       >
         {doubled.map((item, index) => (
           <span
+            // biome-ignore lint/suspicious/noArrayIndexKey: 静态文案双份拼接整体循环，文案大量重复不能作唯一 key，索引才是稳定身份
             key={`${item}-${index}`}
             className="mb-3 w-fit whitespace-nowrap rounded-md border bg-background/60 px-2.5 py-1 text-left text-xs text-muted-foreground"
           >

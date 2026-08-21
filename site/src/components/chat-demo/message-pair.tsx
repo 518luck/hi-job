@@ -6,7 +6,6 @@ import { CopyIcon, RefreshCwIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
-
 import { take } from './range';
 import { ghostButton, paper } from './surfaces';
 

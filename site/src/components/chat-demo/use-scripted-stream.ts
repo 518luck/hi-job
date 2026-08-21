@@ -13,6 +13,13 @@ const DONE_HOLD_MS = 4200;
 // 收尾「思考了 N 秒」的秒数：思考阶段时长折算
 const REASONING_SECONDS_BASE = 3;
 
+// 驱动选项：剧本表须为稳定引用（模块级常量），避免 effect 反复重跑
+interface ScriptedStreamOptions {
+  scripts?: readonly DemoScript[]; // 自定义剧本表（默认 DEMO_SCRIPTS）
+  cycle?: boolean; // 播完是否换剧本循环（默认 true）
+  enabled?: boolean; // 是否开演（false 时复位到等待态）
+}
+
 // 驱动状态：phase 推进 + 各计数
 interface ScriptedStreamState {
   script: DemoScript; // 当前剧本
@@ -24,7 +31,8 @@ interface ScriptedStreamState {
 }
 
 // 词切分：与扩展同规则的简化版——中文按 2 字符、其余按空白
-const splitWords = (text: string): string[] => text.match(/[\u4e00-\u9fff]{1,2}|[^\s]+/gu) ?? [];
+const splitWords = (text: string): string[] =>
+  text.match(/[\u4e00-\u9fff]{1,2}|[^\s]+/gu) ?? [];
 
 // 驱动返回：状态本体 + 派生的词序列与收尾秒数
 type ScriptedStreamResult = ScriptedStreamState & {
@@ -34,10 +42,14 @@ type ScriptedStreamResult = ScriptedStreamState & {
 
 // 剧本化流式驱动：按时间轴推进阶段与计数，播完停顿后换剧本循环；
 // 减弱动态时直接跳到完成态静态展示
-export const useScriptedStream = (): ScriptedStreamResult => {
+export const useScriptedStream = ({
+  scripts = DEMO_SCRIPTS,
+  cycle = true,
+  enabled = true,
+}: ScriptedStreamOptions = {}): ScriptedStreamResult => {
   const [index, setIndex] = useState(0);
   const [state, setState] = useState<ScriptedStreamState>(() => ({
-    script: DEMO_SCRIPTS[0],
+    script: scripts[0] ?? DEMO_SCRIPTS[0],
     phase: 'waiting',
     visibleReasoningLines: 0,
     visibleWords: 0,
@@ -60,9 +72,25 @@ export const useScriptedStream = (): ScriptedStreamResult => {
 
   // 剧本推进入：安排下一步定时并推进状态
   useEffect(() => {
+    const script = scripts[index] ?? scripts[0];
+    if (!script) {
+      return;
+    }
+    // 未开演：复位到等待态，交给外部时间轴决定何时启动
+    if (!enabled) {
+      setState({
+        script,
+        phase: 'waiting',
+        visibleReasoningLines: 0,
+        visibleWords: 0,
+        elapsedSeconds: 0,
+        ttftMs: null,
+      });
+      return;
+    }
     if (reducedMotion) {
       setState({
-        script: DEMO_SCRIPTS[index] ?? DEMO_SCRIPTS[0],
+        script,
         phase: 'done',
         visibleReasoningLines: Number.MAX_SAFE_INTEGER,
         visibleWords: Number.MAX_SAFE_INTEGER,
@@ -71,7 +99,6 @@ export const useScriptedStream = (): ScriptedStreamResult => {
       });
       return;
     }
-    const script = DEMO_SCRIPTS[index] ?? DEMO_SCRIPTS[0];
     const words = splitWords(script.reply);
 
     setState({
@@ -116,21 +143,24 @@ export const useScriptedStream = (): ScriptedStreamResult => {
           schedule(WORD_MS + Math.random() * WORD_JITTER_MS, nextWord);
         } else {
           setState((previous) => ({ ...previous, phase: 'done' }));
-          schedule(DONE_HOLD_MS, () => {
-            const next = pickNextScript(index);
-            setIndex(next.index);
-          });
+          if (cycle) {
+            schedule(DONE_HOLD_MS, () => {
+              const next = pickNextScript({ scripts, previousIndex: index });
+              setIndex(next.index);
+            });
+          }
         }
       };
       schedule(REASONING_LINE_MS, nextLine);
     });
 
     return () => clearTimeout(timerRef.current);
-  }, [index, reducedMotion]);
+  }, [index, reducedMotion, enabled, scripts, cycle]);
 
   // 秒表：从等待起累计，完成即停（收尾秒数与顶栏 total 共用）
+  // biome-ignore lint/correctness/useExhaustiveDependencies: index 不被 effect 体引用，刻意作为换剧本信号重启秒表归零计时
   useEffect(() => {
-    if (reducedMotion) {
+    if (reducedMotion || !enabled) {
       return;
     }
     const startedAt = Date.now();
@@ -139,18 +169,18 @@ export const useScriptedStream = (): ScriptedStreamResult => {
         if (previous.phase === 'done') {
           return previous;
         }
-        return { ...previous, elapsedSeconds: Math.floor((Date.now() - startedAt) / 1000) };
+        return {
+          ...previous,
+          elapsedSeconds: Math.floor((Date.now() - startedAt) / 1000),
+        };
       });
     }, 1000);
     return () => clearInterval(ticker);
-  }, [index, reducedMotion]);
+  }, [index, reducedMotion, enabled]);
 
   // 词序列与终态秒数派生
   const words = useMemo(() => splitWords(state.script.reply), [state.script]);
-  const restingSeconds = Math.max(
-    REASONING_SECONDS_BASE,
-    state.elapsedSeconds,
-  );
+  const restingSeconds = Math.max(REASONING_SECONDS_BASE, state.elapsedSeconds);
 
   return {
     ...state,

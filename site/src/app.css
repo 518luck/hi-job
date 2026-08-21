@@ -342,8 +342,7 @@
     animation: hijob-ripple-ring 0.92s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .hero-entry.hero-started .hero-content-rise {
-    animation: hijob-content-rise 0.68s cubic-bezier(0.16, 1, 0.3, 1) 0.62s
-      both;
+    animation: hijob-content-rise 0.68s cubic-bezier(0.16, 1, 0.3, 1) 0.62s both;
   }
   .site-header-drop.site-header-started {
     animation: hijob-header-drop 0.56s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both;
@@ -356,7 +355,8 @@
   .hero-scroll-col-reverse {
     animation-direction: reverse;
   }
-  .hero-scroll-container:hover .hero-scroll-col {
+  /* 悬停暂停收窄到跑马灯自身，不覆盖整个 hero overlay */
+  .hero-fade-y:hover .hero-scroll-col {
     animation-play-state: paused;
   }
 }
@@ -373,6 +373,94 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scroll-col {
+    animation: none;
+  }
+}
+
+/* # 操作演示（boss-mock）：固定浅色系统字体，场景切换/浮窗弹出/气泡浮入/点击涟漪 */
+.boss-mock {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+}
+/* > 液态玻璃悬浮按钮（演示版）：扩展 .hijob-fab 的简化近似——
+   磨砂仅用 backdrop-filter 提纯（无 SVG 位移滤镜与位移描边），
+   外阴影 + 底部内阴影模拟玻璃厚度，::after 承载半透明磨砂底 */
+.hijob-fab-demo {
+  padding: 9px 18px;
+  border-radius: 999px;
+  color: #18181b;
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+  isolation: isolate;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.25),
+    inset 0 -10px 25px rgba(0, 0, 0, 0.15);
+}
+.hijob-fab-demo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(2px) contrast(1.2) brightness(1.05) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* 场景层交叉淡入淡出：切换不露空容器 */
+.boss-layer {
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+@keyframes hijob-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes hijob-bubble-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hijob-click-ripple {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+.boss-pop {
+  animation: hijob-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.boss-bubble {
+  animation: hijob-bubble-in 0.4s ease-out both;
+}
+.boss-ripple {
+  animation: hijob-click-ripple 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-layer {
+    transition: none;
+  }
+  .boss-pop,
+  .boss-bubble,
+  .boss-ripple {
     animation: none;
   }
 }

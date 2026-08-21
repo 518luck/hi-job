@@ -11,7 +11,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from './collapsible';
-
 import { Ellipsis } from './ellipsis';
 import { take } from './range';
 import { collapsePanel, mono, ShimmerLabel, SwapLabel } from './surfaces';
