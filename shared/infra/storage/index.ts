@@ -15,3 +15,4 @@ export { resumeStore } from './resume';
 export { resumeSupplementStore } from './resume-supplement';
 export type { OriginUsage } from './storage-usage';
 export { storageUsageStore } from './storage-usage';
+export { updateCheckStore } from './update-check';

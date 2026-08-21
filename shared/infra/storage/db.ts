@@ -17,6 +17,7 @@ import type {
   RecordedJd,
   ResumeRecord,
   ResumeSupplementRecord,
+  UpdateCheck,
 } from '@/shared/zod';
 
 // 全局数据库实例：各领域的表统一在此注册类型
@@ -33,6 +34,7 @@ const db = new Dexie('hi-job') as Dexie & {
   resume: EntityTable<ResumeRecord, 'key'>; // 用户简历表（单行）
   resumeSupplement: EntityTable<ResumeSupplementRecord, 'key'>; // 简历外补充素材表（单行）
   consent: EntityTable<ConsentRecord, 'key'>; // 用户确认记录表（单行）
+  updateCheck: EntityTable<UpdateCheck, 'key'>; // 版本检查缓存表（单行）
 };
 
 // v1 初版表集合：历史版本声明原样保留，自 v2 起新增表以追加 version 方式演进，升级不清库
@@ -64,6 +66,23 @@ db.version(2).stores({
   resume: 'key',
   consent: 'key',
   resumeSupplement: 'key',
+});
+
+// v3：新增 updateCheck 表（远端版本检查缓存），stores 传全量表清单，历史声明原样保留
+db.version(3).stores({
+  jd: 'jobId, companyId, lastSeenAt',
+  company: 'companyId, lastSeenAt',
+  aiVendor: 'vendorId, name, updatedAt',
+  hr: 'encryptBossId, lastMsgAt, lastChatAt, status',
+  chatMessage: '[encryptBossId+msgId], encryptBossId, msgAt',
+  debugSetting: 'key',
+  blockedCompany: 'key',
+  aiLog: '++id, createdAt',
+  aiPreference: 'key',
+  resume: 'key',
+  consent: 'key',
+  resumeSupplement: 'key',
+  updateCheck: 'key',
 });
 
 export { db };
